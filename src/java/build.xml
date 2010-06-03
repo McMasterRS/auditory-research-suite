@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<project name="MapleLab" default="all">
+    <description>
+	     Create project deployment objects.
+    </description>
+
+	<tstamp>
+		<format property="DTS" pattern="DDD.HH.mm.ss"/>
+	</tstamp>
+	
+    <property name="src" value="${basedir}" />
+    <property name="build" value="${basedir}" />
+	
+    <property name="rhythm.jar" value="rhythm.jar" />
+	
+	<property name="rhythm.dist.dir" value="${build}/www/rhythm" />
+    <property name="rhythm.jar.path" location="${rhythm.dist.dir}/${rhythm.jar}"/>	
+	
+    <patternset id="common.classes">
+	    <include name="edu/mcmaster/maplelab/common/**/*.class" />
+        <include name="edu/mcmaster/maplelab/common/**/*.png" />
+        <include name="edu/mcmaster/maplelab/common/**/*.properties" />      	
+    </patternset>
+
+    <patternset id="rhythm.classes">
+	    <include name="edu/mcmaster/maplelab/rhythm/*.class" />
+	    <include name="edu/mcmaster/maplelab/rhythm/**/*.class" />
+        <include name="edu/mcmaster/maplelab/rhythm/**/*.png" />
+        <include name="edu/mcmaster/maplelab/rhythm/**/*.properties" />       	
+    </patternset>
+	
+	<path id="used.jars.path">
+        <fileset dir="lib">
+	        <include name="junit-4.1.jar" />
+        </fileset>
+    </path>	
+	
+    <target name="all" depends="rhythm"/> 
+	
+	<target name="cache_version.update">
+		<!-- Update applet cache number to browser knows to re-download it -->
+    	<replaceregexp byline="yes">
+    		<regexp pattern="^.*cache_version.*$"/>
+    		<substitution expression="    &lt;param name=&quot;cache_version&quot; value=&quot;${DTS}&quot;/&gt;"/>
+    		
+    		<fileset dir="${basedir}">
+    			<include name="www/**/*.html"/>
+			</fileset>
+    		<!--
+    		<fileset dir="${iat.destdir}">
+	    		<include name="mondrian.jsp" if="iat.exists"/>
+    		</fileset>
+    		-->
+    	</replaceregexp>		
+	</target>
+
+	
+	<target name="rhythm" depends="rhythm.jar">
+	    <ant antfile="${basedir}/app/build.xml" dir="${basedir}/app" />
+	</target>
+	
+    <target name="rhythm.jar" depends="compile">
+		<jar destfile="${rhythm.jar.path}">
+            <fileset dir="${build}">
+                <patternset refid="common.classes" />
+                <patternset refid="rhythm.classes" />
+            </fileset>
+            <manifest>
+                    <attribute name="Built-By" value="${user.name}" />
+            </manifest>			
+		</jar>
+    </target>	
+	
+    <target name="compile">
+	    <javac nowarn="yes" source="1.6" srcdir="${src}" destdir="${build}">
+    		<include name="edu/**/*.java"/>
+	    	<classpath refid="used.jars.path" />
+        </javac>
+    </target>	
+
+</project>
