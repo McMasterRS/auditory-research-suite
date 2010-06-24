@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: PrevNextButtons.java 468 2008-12-04 20:42:37Z bhocking $
+* $Id$
 */
 package edu.mcmaster.maplelab.common.gui;
 
@@ -19,17 +19,13 @@ import javax.swing.*;
 
 /**
  * Wrapper around layout and control of buttons for prev/next operation.
- * @version   $Revision: 468 $
+ * @version   $Revision$
  * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since   May 10, 2006
  */
 public class PrevNextButtons extends JPanel {
 
-    /**
-	 * Automatically generated serial version UID
-	 */
-	private static final long serialVersionUID = -5188456976337085348L;
-	private JPanel jPanel = null;
+    private JPanel jPanel = null;
     /**
      * @uml.property  name="prev"
      */

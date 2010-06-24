@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: RhythmExperimentApplet.java 474 2009-03-20 17:53:30Z bhocking $
+* $Id$
 */
 package edu.mcmaster.maplelab.rhythm;
 
@@ -20,24 +20,19 @@ import java.util.Properties;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.TrialLogger;
 import edu.mcmaster.maplelab.common.gui.ExperimentApplet;
-import edu.mcmaster.maplelab.rhythm.datamodel.*;
+import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession;
 
 /**
  * Top level applet container for rhythm experiment.
  * 
  * 
- * @version $Revision: 474 $
+ * @version $Revision$
  * @author <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since May 10, 2006
  */
 public class RhythmExperimentApplet extends ExperimentApplet<RhythmSession> {
 
-    /**
-	 * Automatically generated serial version UID
-	 */
-	private static final long serialVersionUID = 4385730654355580183L;
-
-	@Override
+    @Override
     protected Container createContent(RhythmSession session) {
         return new RhythmExperiment(session);
     }
@@ -48,7 +43,7 @@ public class RhythmExperimentApplet extends ExperimentApplet<RhythmSession> {
     }
 
     @Override
-    protected TrialLogger<RhythmBlock, RhythmTrial> initTrialLogger() {
+    protected TrialLogger initTrialLogger() {
         String idStr = getParameter("experiment_id");
         if(idStr == null) {
             logError(null, "Parameter 'experiment_id' is missing.");

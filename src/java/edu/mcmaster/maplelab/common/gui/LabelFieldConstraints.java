@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: LabelFieldConstraints.java 468 2008-12-04 20:42:37Z bhocking $
+* $Id$
 */
 
 package edu.mcmaster.maplelab.common.gui;
@@ -21,17 +21,12 @@ import javax.swing.JLabel;
  * Specialization of {@link GridBagConstraints} with convenience methods for
  * laying out label/field ordered forms.
  * 
- * @version $Revision: 468 $
+ * @version $Revision:$
  * @author <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since Dec 20, 2007
  */
 public class LabelFieldConstraints extends GridBagConstraints {
-    /**
-	 * Automatically generated serial version UID
-	 */
-	private static final long serialVersionUID = 7918041402309825166L;
-
-	public LabelFieldConstraints() {
+    public LabelFieldConstraints() {
         insets = new Insets(2, 2, 2, 2);
         gridwidth = 1;
         gridheight = 1;

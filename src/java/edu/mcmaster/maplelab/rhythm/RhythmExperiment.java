@@ -7,7 +7,7 @@
  * Distributed under the terms of the GNU Lesser General Public License
  * (LGPL). See LICENSE.TXT that came with this file.
  * 
- * $Id: RhythmExperiment.java 468 2008-12-04 20:42:37Z bhocking $
+ * $Id$
  */
 package edu.mcmaster.maplelab.rhythm;
 
@@ -27,17 +27,12 @@ import edu.mcmaster.maplelab.rhythm.datamodel.*;
 
 /**
  * Main container and configuration for the rhythm experiment.
- * @version   $Revision: 468 $
+ * @version   $Revision$
  * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since   Nov 7, 2006
  */
 public class RhythmExperiment extends JPanel {
-    /**
-	 * Automatically generated serial version UID
-	 */
-	private static final long serialVersionUID = -4625016324027416162L;
-
-	public static final String CONF_BASENAME = "rhythm";
+    public static final String CONF_BASENAME = "rhythm";
     
     private final RhythmSession _session;
     private JPanel _contentCard;
@@ -77,11 +72,7 @@ public class RhythmExperiment extends JPanel {
     }
     
     private static class RFrame extends ExperimentFrame<RhythmSession, RhythmBlock, RhythmTrial> {
-        /**
-		 * Automatically generated serial version UID
-		 */
-		private static final long serialVersionUID = -6095969462563113383L;
-		private final int _midiID;
+        private final int _midiID;
 
         public RFrame(SimpleSetupScreen setup, int midiID) {
             super(setup);

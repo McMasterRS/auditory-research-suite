@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: Pitch.java 474 2009-03-20 17:53:30Z bhocking $
+* $Id$
 */
 package edu.mcmaster.maplelab.common.sound;
 
@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 
 /**
  * Encapsulation of a pitch stimulus.
- * @version   $Revision: 474 $
+ * @version   $Revision$
  * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since   Apr 17, 2006
  */
@@ -38,7 +38,7 @@ public class Pitch implements Comparable<Pitch> {
     private static final Pattern P_PAT = Pattern.compile("([a-gA-G])([1-9])([+-]\\d+)?");
         
     /**
-     * Constructor
+     * Ctor
      * 
      * @param note Note value
      * @param octave octave [-1, 9]
@@ -48,7 +48,7 @@ public class Pitch implements Comparable<Pitch> {
     }
     
     /**
-     * Constructor
+     * Ctor
      * 
      * @param note note value
      * @param octave octave [-1, 9]
@@ -265,16 +265,17 @@ public class Pitch implements Comparable<Pitch> {
      * {@inheritDoc} 
      * @see java.lang.Object#toString()
      */
-    @Override
     public String toString() {
         String retval = _note + String.valueOf(getOctave());
         
         int detune = getDetuneCents();
         if(detune != 0) {
             if(detune > 0) {
-                retval += "+";
+                retval += "+" + detune;
             }
-            retval += detune;
+            else {
+                retval += detune;
+            }
         }
         return retval;
     }

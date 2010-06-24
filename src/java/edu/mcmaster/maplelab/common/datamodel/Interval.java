@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: Interval.java 470 2008-12-04 21:03:41Z bhocking $
+* $Id$
 */
 
 package edu.mcmaster.maplelab.common.datamodel;
@@ -18,7 +18,7 @@ import java.util.Random;
 
 /**
  * Representation of a closed interval, or range.
- * @version  $Revision: 470 $
+ * @version  $Revision$
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  Dec 14, 2006
  */
@@ -62,9 +62,7 @@ public class Interval<T extends Number> {
      */
     public ArrayList<Double> slice(int numSlices) {
     	ArrayList<Double> retval = new ArrayList<Double>();
-    	// If there's only one slice, spacing is irrelevant, but dividing by
-    	// zero will still give you problems.
-    	double spacing = (numSlices>1) ? (width())/(numSlices-1) : 0;
+    	double spacing = (width())/(numSlices-1);
     	for(int i = 0; i < numSlices; i++) {
     		retval.add(getMin().doubleValue()+spacing*i);    		
     	}

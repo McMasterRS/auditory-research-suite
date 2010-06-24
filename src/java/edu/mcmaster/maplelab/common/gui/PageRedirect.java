@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: PageRedirect.java 471 2008-12-05 15:08:27Z bhocking $
+* $Id$
 */
 package edu.mcmaster.maplelab.common.gui;
 
@@ -22,19 +22,14 @@ import edu.mcmaster.maplelab.common.datamodel.Session;
 
 /**
  * Experiment step to redirect the applet container (browser) to a new page.
- * @version  $Revision: 471 $
+ * @version  $Revision$
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  May 10, 2006
  */
-public class PageRedirect<S extends Session<?, ?>> extends BasicStep {
+public class PageRedirect<S extends Session> extends BasicStep {
     
     /**
-	 * Automatically generated serial version UID
-	 */
-	private static final long serialVersionUID = 7871705988240149015L;
-
-	/**
-     * @version   $Revision: 471 $
+     * @version   $Revision$
      * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
      * @since   Feb 28, 2007
      */
@@ -69,6 +64,7 @@ public class PageRedirect<S extends Session<?, ?>> extends BasicStep {
     @Override
     protected void onVisible() {
         Applet applet = _session.getApplet();
+        
         
         if(applet == null) {
             String loc = _session.getString(ConfigKeys.applicationRedirectURL, null);

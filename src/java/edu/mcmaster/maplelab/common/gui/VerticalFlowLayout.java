@@ -5,16 +5,12 @@ package edu.mcmaster.maplelab.common.gui;
  * horizontal. Too bad Sun didn't provide this class by default.
  * 
  * @author Unknown. Public Domain
- * @version $Revision: 468 $
+ * @version $Revision:$
  */
 import java.awt.*;
 
 public class VerticalFlowLayout extends FlowLayout {
-    /**
-	 * Automatically generated serial version UID
-	 */
-	private static final long serialVersionUID = 5730604346076626509L;
-	public static final int TOP    = 0;
+    public static final int TOP    = 0;
     public static final int MIDDLE = 1;
     public static final int BOTTOM = 2;
     

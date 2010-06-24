@@ -7,7 +7,7 @@
  * Distributed under the terms of the GNU Lesser General Public License
  * (LGPL). See LICENSE.TXT that came with this file.
  *
- * $Id: PitchRange.java 474 2009-03-20 17:53:30Z bhocking $
+ * $Id$
  */
 package edu.mcmaster.maplelab.common.sound;
 
@@ -17,7 +17,7 @@ import edu.mcmaster.maplelab.common.datamodel.PropertyFileValue;
 
 /**
  * Encapsulation of an upper/lower bound on a range of tones.
- * @version   $Revision: 474 $
+ * @version   $Revision$
  * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since   Sep 14, 2006
  */
@@ -52,7 +52,7 @@ public class PitchRange implements PropertyFileValue {
     }
 
     /**
-     * Lower pitch of range.
+     * Lower pitch ofrange.
      * @uml.property  name="lower"
      */
     public Pitch getLower() {

@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: MIDITestPanel.java 474 2009-03-20 17:53:30Z bhocking $
+* $Id$
 */
 
 package edu.mcmaster.maplelab.rhythm;
@@ -29,16 +29,12 @@ import edu.mcmaster.maplelab.common.sound.*;
  * Simple widget for testing MIDI subsystem.
  * 
  * 
- * @version $Revision: 474 $
+ * @version $Revision:$
  * @author <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since Apr 5, 2007
  */
 public class MIDITestPanel extends JPanel {
-    /**
-	 * Automatically generated serial version UID
-	 */
-	private static final long serialVersionUID = -5842580791544424298L;
-	private final JTextPane _console;
+    private final JTextPane _console;
     private JSpinner _midiDevID;
     
     public static JDialog createDialog(Component parent) {
@@ -112,25 +108,17 @@ public class MIDITestPanel extends JPanel {
     
     private java.util.List<Note> tune(int len) {
         java.util.List<Note> tune = new LinkedList<Note>();
-        //tune.add(new Note(new Pitch(NotesEnum.C, 4), len));
-        //tune.add(new Note(new Pitch(NotesEnum.E, 4), len));
-        //tune.add(new Note(new Pitch(NotesEnum.G, 4), len));
-        //tune.add(new Note(new Pitch(NotesEnum.C, 5), len*2));
-        //tune.add(new Note(new Pitch(NotesEnum.G, 4), len));
-        tune.add(new Note(new Pitch(NotesEnum.C, 5), len));
-        tune.add(new Note(new Pitch(NotesEnum.C, 5), len));
-        tune.add(new Note(null, len*3));
-        tune.add(new Note(new Pitch(NotesEnum.C, 5), len));
+        tune.add(new Note(new Pitch(NotesEnum.C, 4), len));
+        tune.add(new Note(new Pitch(NotesEnum.E, 4), len));
+        tune.add(new Note(new Pitch(NotesEnum.G, 4), len));
+        tune.add(new Note(new Pitch(NotesEnum.C, 5), len*2));
+        tune.add(new Note(new Pitch(NotesEnum.G, 4), len));
+        tune.add(new Note(new Pitch(NotesEnum.C, 5), len*3));
         return tune;
     }
     
     private class PlayAction extends AbstractAction {
-        /**
-		 * Automatically generated serial version UID
-		 */
-		private static final long serialVersionUID = -1344126282055774754L;
-
-		public PlayAction() {
+        public PlayAction() {
             super("Test MIDI playback");
         }
 
@@ -148,12 +136,7 @@ public class MIDITestPanel extends JPanel {
     }
     
     private class ListMidiAction extends AbstractAction {
-        /**
-		 * Automatically generated serial version UID
-		 */
-		private static final long serialVersionUID = -6754158868129460079L;
-
-		public ListMidiAction() {
+        public ListMidiAction() {
             super("List MIDI devices");
         }
 
@@ -184,11 +167,7 @@ public class MIDITestPanel extends JPanel {
     }
     
     private class TestTapRecord extends AbstractAction {
-        /**
-		 * Automatically generated serial version UID
-		 */
-		private static final long serialVersionUID = 6383269097417130391L;
-		private TapRecorder _tapRecorder;
+        private TapRecorder _tapRecorder;
         private Sequence _currSequence;
 
         private MetaEventListener _endListener = new MetaEventListener() {

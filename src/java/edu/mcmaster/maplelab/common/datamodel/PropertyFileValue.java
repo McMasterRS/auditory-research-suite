@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: PropertyFileValue.java 399 2008-01-11 22:20:55Z sfitch $
+* $Id$
 */
 
 package edu.mcmaster.maplelab.common.datamodel;
@@ -17,7 +17,7 @@ package edu.mcmaster.maplelab.common.datamodel;
  * Interface for classes providing a special string representation
  * for string in properties file.
  * 
- * @version $Revision: 399 $
+ * @version $Revision:$
  * @author <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since Dec 21, 2007
  */

@@ -1,19 +1,19 @@
 /*
 * Copyright (C) 2006 University of Virginia
-* Supported by grants to the University of Virginia from the National Eye Institute
+* Supported by grants to the University of Virginia from the National Eye Institute 
 * and the National Institute of Deafness and Communicative Disorders.
 * PI: Prof. Michael Kubovy <kubovy@virginia.edu>
 *
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: Trial.java 484 2009-06-22 13:26:59Z bhocking $
+* $Id$
 */
 package edu.mcmaster.maplelab.common.datamodel;
 
 /**
  * Abstract base class for trial data.
- * @version  $Revision: 484 $
+ * @version  $Revision$
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  Sep 14, 2006
  */
@@ -26,27 +26,26 @@ public abstract class Trial<T> {
 
     public Trial() {
     }
-
-    @Override
+    
     public String toString() {
         return String.format("Trial %d", _trialNum);
     }
 
     /**
-     * Get the trail number.
-     *
+     * Get the trail number. 
+     * 
      */
     public final int getNum() {
         return _trialNum;
     }
-
+    
     /**
      * Set the trial number.
      */
     public final void setNum(int trialNum) {
         _trialNum = trialNum;
     }
-
+    
     /**
      * Set the response value.
      * @uml.property  name="response"
@@ -54,7 +53,7 @@ public abstract class Trial<T> {
     public void setResponse(T response) {
         _response = response;
     }
-
+    
     /**
      * Get the response value.
      * @uml.property  name="response"
@@ -62,5 +61,5 @@ public abstract class Trial<T> {
     public T getResponse() {
         return _response;
     }
-
+    
 }

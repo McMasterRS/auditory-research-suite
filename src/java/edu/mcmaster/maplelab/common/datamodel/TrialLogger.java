@@ -7,17 +7,15 @@
  * Distributed under the terms of the GNU Lesser General Public License
  * (LGPL). See LICENSE.TXT that came with this file.
  * 
- * $Id: TrialLogger.java 474 2009-03-20 17:53:30Z bhocking $
+ * $Id$
  */
 package edu.mcmaster.maplelab.common.datamodel;
 
 import java.io.IOException;
 
-import edu.mcmaster.maplelab.common.gui.Questionnaire.QuestionnaireResponse;
-
 /**
  * Interface for classes supplying trial logging services.
- * @version     $Revision: 474 $
+ * @version     $Revision:$
  * @author     <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since     Nov 22, 2006
  * @param <B> Block type
@@ -45,13 +43,5 @@ public interface TrialLogger<B extends Block<?,?>, T extends Trial<?>> {
      * to logger that resources may be released or cleaned up.
      */
     public abstract void shutdown();
-
-    /**
-     * To be called by the experiment after questionnaire has been filled out
-     * 
-     * @param responses Responses from Questionnaire
-     * @throws IOException 
-     */
-    public abstract void setQuestionnaireResponses(QuestionnaireResponse[] responses) throws IOException;
 
 }

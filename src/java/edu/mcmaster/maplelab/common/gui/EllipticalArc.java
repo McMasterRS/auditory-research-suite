@@ -71,12 +71,12 @@ import java.awt.geom.*;
 public class EllipticalArc
   implements Shape {
 
-  private static final double _twoPi = 2 * Math.PI;
+  private static final double twoPi = 2 * Math.PI;
 
   // coefficients for error estimation
-  // while using quadratic Bï¿½zier curves for approximation
+  // while using quadratic Bézier curves for approximation
   // 0 < b/a < 1/4
-  private static final double[][][] _coeffs2Low = new double[][][] {
+  private static final double[][][] coeffs2Low = new double[][][] {
     {
       {  3.92478,   -13.5822,     -0.233377,    0.0128206   },
       { -1.08814,     0.859987,    0.000362265, 0.000229036 },
@@ -91,9 +91,9 @@ public class EllipticalArc
   };
 
   // coefficients for error estimation
-  // while using quadratic Bï¿½zier curves for approximation
+  // while using quadratic Bézier curves for approximation
   // 1/4 <= b/a <= 1
-  private static final double[][][] _coeffs2High = new double[][][] {
+  private static final double[][][] coeffs2High = new double[][][] {
     {
       {  0.0863805, -11.5595,     -2.68765,     0.181224    },
       {  0.242856,   -1.81073,     1.56876,     1.68544     },
@@ -109,14 +109,14 @@ public class EllipticalArc
 
   // safety factor to convert the "best" error approximation
   // into a "max bound" error
-  private static final double[] _safety2 = new double[] {
+  private static final double[] safety2 = new double[] {
     0.02, 2.83, 0.125, 0.01
   };
 
   // coefficients for error estimation
-  // while using cubic Bï¿½zier curves for approximation
+  // while using cubic Bézier curves for approximation
   // 0 < b/a < 1/4
-  private static final double[][][] _coeffs3Low = new double[][][] {
+  private static final double[][][] coeffs3Low = new double[][][] {
     {
       {  3.85268,   -21.229,      -0.330434,    0.0127842  },
       { -1.61486,     0.706564,    0.225945,    0.263682   },
@@ -131,9 +131,9 @@ public class EllipticalArc
   };
 
   // coefficients for error estimation
-  // while using cubic Bï¿½zier curves for approximation
+  // while using cubic Bézier curves for approximation
   // 1/4 <= b/a <= 1
-  private static final double[][][] _coeffs3High = new double[][][] {
+  private static final double[][][] coeffs3High = new double[][][] {
     {
       {  0.0899116, -19.2349,     -4.11711,     0.183362   },
       {  0.138148,   -1.45804,     1.32044,     1.38474    },
@@ -149,79 +149,82 @@ public class EllipticalArc
 
   // safety factor to convert the "best" error approximation
   // into a "max bound" error
-  private static final double[] _safety3 = new double[] {
+  private static final double[] safety3 = new double[] {
     0.001, 4.98, 0.207, 0.0067
   };
 
   /** Abscissa of the center of the ellipse. */
-  protected double _cx;
+  protected double cx;
 
   /** Ordinate of the center of the ellipse. */
-  protected double _cy;
+  protected double cy;
 
   /** Semi-major axis. */
-  protected double _a;
+  protected double a;
 
   /** Semi-minor axis. */
-  protected double _b;
+  protected double b;
 
   /** Orientation of the major axis with respect to the x axis. */
-  protected double _theta;
-  private   double _cosTheta;
-  private   double _sinTheta;
+  protected double theta;
+  private   double cosTheta;
+  private   double sinTheta;
 
   /** Start angle of the arc. */
-  protected double _eta1;
+  protected double eta1;
 
   /** End angle of the arc. */
-  protected double _eta2;
+  protected double eta2;
 
   /** Abscissa of the start point. */
-  protected double _x1;
+  protected double x1;
 
   /** Ordinate of the start point. */
-  protected double _y1;
+  protected double y1;
 
   /** Abscissa of the end point. */
-  protected double _x2;
+  protected double x2;
 
   /** Ordinate of the end point. */
-  protected double _y2;
+  protected double y2;
 
   /** Abscissa of the first focus. */
-  protected double _xF1;
+  protected double xF1;
 
   /** Ordinate of the first focus. */
-  protected double _yF1;
+  protected double yF1;
 
   /** Abscissa of the second focus. */
-  protected double _xF2;
+  protected double xF2;
 
   /** Ordinate of the second focus. */
-  protected double _yF2;
+  protected double yF2;
 
   /** Abscissa of the leftmost point of the arc. */
-  private double _xLeft;
+  private double xLeft;
 
   /** Ordinate of the highest point of the arc. */
-  private double _yUp;
+  private double yUp;
 
   /** Horizontal width of the arc. */
-  private double _width;
+  private double width;
 
   /** Vertical height of the arc. */
-  private double _height;
+  private double height;
 
-  /** Maximal degree for Bï¿½zier curve approximation. */
-  private int _maxDegree;
+  /** Indicator for center to endpoints line inclusion. */
+  protected boolean isPieSlice;
 
-  /** Default flatness for Bï¿½zier curve approximation. */
-  private double _defaultFlatness;
+  /** Maximal degree for Bézier curve approximation. */
+  private int maxDegree;
 
-  protected double _f;
-  protected double _e2;
-  protected double _g;
-  protected double _g2;
+  /** Default flatness for Bézier curve approximation. */
+  private double defaultFlatness;
+
+  protected double f;
+  protected double e2;
+  protected double g;
+  protected double g2;
 
   /** Simple constructor.
    * Build an elliptical arc composed of the full unit circle centered
@@ -229,17 +232,18 @@ public class EllipticalArc
    */
   public EllipticalArc() {
 
-    _cx         = 0;
-    _cy         = 0;
-    _a          = 1;
-    _b          = 1;
-    _theta      = 0;
-    _eta1       = 0;
-    _eta2       = 2 * Math.PI;
-    _cosTheta   = 1;
-    _sinTheta   = 0;
-    _maxDegree  = 3;
-    _defaultFlatness = 0.5; // half a pixel
+    cx         = 0;
+    cy         = 0;
+    a          = 1;
+    b          = 1;
+    theta      = 0;
+    eta1       = 0;
+    eta2       = 2 * Math.PI;
+    cosTheta   = 1;
+    sinTheta   = 0;
+    isPieSlice = false;
+    maxDegree  = 3;
+    defaultFlatness = 0.5; // half a pixel
 
     computeFocii();
     computeEndPoints();
@@ -259,8 +263,9 @@ public class EllipticalArc
    * and the endpoints are part of the shape (it is pie slice like)
    */
   public EllipticalArc(Point2D.Double center, double a, double b,
-                       double theta, double lambda1, double lambda2) {
-    this(center.x, center.y, a, b, theta, lambda1, lambda2);
+                       double theta, double lambda1, double lambda2,
+                       boolean isPieSlice) {
+    this(center.x, center.y, a, b, theta, lambda1, lambda2, isPieSlice);
   }
 
   /** Build an elliptical arc from its canonical geometrical elements.
@@ -275,30 +280,32 @@ public class EllipticalArc
    * and the endpoints are part of the shape (it is pie slice like)
    */
   public EllipticalArc(double cx, double cy, double a, double b,
-                       double theta, double lambda1, double lambda2) {
+                       double theta, double lambda1, double lambda2,
+                       boolean isPieSlice) {
 
-    _cx         = cx;
-    _cy         = cy;
-    _a          = a;
-    _b          = b;
-    _theta      = theta;
+    this.cx         = cx;
+    this.cy         = cy;
+    this.a          = a;
+    this.b          = b;
+    this.theta      = theta;
+    this.isPieSlice = isPieSlice;
 
-    _eta1       = Math.atan2(Math.sin(lambda1) / b,
+    eta1       = Math.atan2(Math.sin(lambda1) / b,
                             Math.cos(lambda1) / a);
-    _eta2       = Math.atan2(Math.sin(lambda2) / b,
+    eta2       = Math.atan2(Math.sin(lambda2) / b,
                             Math.cos(lambda2) / a);
-    _cosTheta   = Math.cos(theta);
-    _sinTheta   = Math.sin(theta);
-    _maxDegree  = 3;
-    _defaultFlatness = 0.5; // half a pixel
+    cosTheta   = Math.cos(theta);
+    sinTheta   = Math.sin(theta);
+    maxDegree  = 3;
+    defaultFlatness = 0.5; // half a pixel
 
     // make sure we have eta1 <= eta2 <= eta1 + 2 PI
-    _eta2 -= _twoPi * Math.floor((_eta2 - _eta1) / _twoPi);
+    eta2 -= twoPi * Math.floor((eta2 - eta1) / twoPi);
 
     // the preceding correction fails if we have exactly et2 - eta1 = 2 PI
     // it reduces the interval to zero length
-    if ((lambda2 - lambda1 > Math.PI) && (_eta2 - _eta1 < Math.PI)) {
-      _eta2 += 2 * Math.PI;
+    if ((lambda2 - lambda1 > Math.PI) && (eta2 - eta1 < Math.PI)) {
+      eta2 += 2 * Math.PI;
     }
 
     computeFocii();
@@ -329,18 +336,19 @@ public class EllipticalArc
   public EllipticalArc(double cx, double cy, double a, double b,
                        double theta) {
 
-    _cx         = cx;
-    _cy         = cy;
-    _a          = a;
-    _b          = b;
-    _theta      = theta;
+    this.cx         = cx;
+    this.cy         = cy;
+    this.a          = a;
+    this.b          = b;
+    this.theta      = theta;
+    this.isPieSlice = false;
 
-    _eta1      = 0;
-    _eta2      = 2 * Math.PI;
-    _cosTheta  = Math.cos(theta);
-    _sinTheta  = Math.sin(theta);
-    _maxDegree = 3;
-    _defaultFlatness = 0.5; // half a pixel
+    eta1      = 0;
+    eta2      = 2 * Math.PI;
+    cosTheta  = Math.cos(theta);
+    sinTheta  = Math.sin(theta);
+    maxDegree = 3;
+    defaultFlatness = 0.5; // half a pixel
 
     computeFocii();
     computeEndPoints();
@@ -349,7 +357,7 @@ public class EllipticalArc
 
   }
 
-  /** Set the maximal degree allowed for Bï¿½zier curve approximation.
+  /** Set the maximal degree allowed for Bézier curve approximation.
    * @param maxDegree maximal allowed degree (must be between 1 and 3)
    * @exception IllegalArgumentException if maxDegree is not between 1 and 3
    */
@@ -357,10 +365,10 @@ public class EllipticalArc
     if ((maxDegree < 1) || (maxDegree > 3)) {
       throw new IllegalArgumentException("maxDegree must be between 1 and 3");
     }
-    _maxDegree = maxDegree;
+    this.maxDegree = maxDegree;
   }
 
-  /** Set the default flatness for Bï¿½zier curve approximation.
+  /** Set the default flatness for Bézier curve approximation.
    * @param defaultFlatness default flatness (must be greater than 1.0e-10)
    * @exception IllegalArgumentException if defaultFlatness is lower
    * than 1.0e-10
@@ -370,20 +378,20 @@ public class EllipticalArc
       throw new IllegalArgumentException("defaultFlatness must be"
                                          + " greater than 1.0e-10");
     }
-    _defaultFlatness = defaultFlatness;
+    this.defaultFlatness = defaultFlatness;
   }
 
   /** Compute the locations of the focii. */
   private void computeFocii() {
 
-    double d  = Math.sqrt(_a * _a - _b * _b);
-    double dx = d * _cosTheta;
-    double dy = d * _sinTheta;
+    double d  = Math.sqrt(a * a - b * b);
+    double dx = d * cosTheta;
+    double dy = d * sinTheta;
 
-    _xF1 = _cx - dx;
-    _yF1 = _cy - dy;
-    _xF2 = _cx + dx;
-    _yF2 = _cy + dy;
+    xF1 = cx - dx;
+    yF1 = cy - dy;
+    xF2 = cx + dx;
+    yF2 = cy + dy;
 
   }
 
@@ -391,27 +399,27 @@ public class EllipticalArc
   private void computeEndPoints() {
 
     // start point
-    double aCosEta1 = _a * Math.cos(_eta1);
-    double bSinEta1 = _b * Math.sin(_eta1);
-    _x1 = _cx + aCosEta1 * _cosTheta - bSinEta1 * _sinTheta;
-    _y1 = _cy + aCosEta1 * _sinTheta + bSinEta1 * _cosTheta;
+    double aCosEta1 = a * Math.cos(eta1);
+    double bSinEta1 = b * Math.sin(eta1);
+    x1 = cx + aCosEta1 * cosTheta - bSinEta1 * sinTheta;
+    y1 = cy + aCosEta1 * sinTheta + bSinEta1 * cosTheta;
 
     // end point
-    double aCosEta2 = _a * Math.cos(_eta2);
-    double bSinEta2 = _b * Math.sin(_eta2);
-    _x2 = _cx + aCosEta2 * _cosTheta - bSinEta2 * _sinTheta;
-    _y2 = _cy + aCosEta2 * _sinTheta + bSinEta2 * _cosTheta;
+    double aCosEta2 = a * Math.cos(eta2);
+    double bSinEta2 = b * Math.sin(eta2);
+    x2 = cx + aCosEta2 * cosTheta - bSinEta2 * sinTheta;
+    y2 = cy + aCosEta2 * sinTheta + bSinEta2 * cosTheta;
 
   }
 
   /** Compute the bounding box. */
   private void computeBounds() {
 
-    double bOnA = _b / _a;
+    double bOnA = b / a;
     double etaXMin, etaXMax, etaYMin, etaYMax;
-    if (Math.abs(_sinTheta) < 0.1) {
-      double tanTheta = _sinTheta / _cosTheta;
-      if (_cosTheta < 0) {
+    if (Math.abs(sinTheta) < 0.1) {
+      double tanTheta = sinTheta / cosTheta;
+      if (cosTheta < 0) {
         etaXMin = -Math.atan(tanTheta * bOnA);
         etaXMax = etaXMin + Math.PI;
         etaYMin = 0.5 * Math.PI - Math.atan(tanTheta / bOnA);
@@ -423,8 +431,8 @@ public class EllipticalArc
         etaYMin = etaYMax - Math.PI;
       }
     } else {
-      double invTanTheta = _cosTheta / _sinTheta;
-      if (_sinTheta < 0) {
+      double invTanTheta = cosTheta / sinTheta;
+      if (sinTheta < 0) {
         etaXMax = 0.5 * Math.PI + Math.atan(invTanTheta / bOnA);
         etaXMin = etaXMax - Math.PI;
         etaYMin = Math.atan(invTanTheta * bOnA);
@@ -437,31 +445,31 @@ public class EllipticalArc
       }
     }
 
-    etaXMin -= _twoPi * Math.floor((etaXMin - _eta1) / _twoPi);
-    etaYMin -= _twoPi * Math.floor((etaYMin - _eta1) / _twoPi);
-    etaXMax -= _twoPi * Math.floor((etaXMax - _eta1) / _twoPi);
-    etaYMax -= _twoPi * Math.floor((etaYMax - _eta1) / _twoPi);
+    etaXMin -= twoPi * Math.floor((etaXMin - eta1) / twoPi);
+    etaYMin -= twoPi * Math.floor((etaYMin - eta1) / twoPi);
+    etaXMax -= twoPi * Math.floor((etaXMax - eta1) / twoPi);
+    etaYMax -= twoPi * Math.floor((etaYMax - eta1) / twoPi);
 
-    _xLeft = (etaXMin <= _eta2)
-      ? (_cx + _a * Math.cos(etaXMin) * _cosTheta - _b * Math.sin(etaXMin) * _sinTheta)
-      : Math.min(_x1, _x2);
-    _yUp = (etaYMin <= _eta2)
-      ? (_cy + _a * Math.cos(etaYMin) * _sinTheta + _b * Math.sin(etaYMin) * _cosTheta)
-      : Math.min(_y1, _y2);
-    _width = ((etaXMax <= _eta2)
-             ? (_cx + _a * Math.cos(etaXMax) * _cosTheta - _b * Math.sin(etaXMax) * _sinTheta)
-             : Math.max(_x1, _x2)) - _xLeft;
-    _height = ((etaYMax <= _eta2)
-              ? (_cy + _a * Math.cos(etaYMax) * _sinTheta + _b * Math.sin(etaYMax) * _cosTheta)
-              : Math.max(_y1, _y2)) - _yUp;
+    xLeft = (etaXMin <= eta2)
+      ? (cx + a * Math.cos(etaXMin) * cosTheta - b * Math.sin(etaXMin) * sinTheta)
+      : Math.min(x1, x2);
+    yUp = (etaYMin <= eta2)
+      ? (cy + a * Math.cos(etaYMin) * sinTheta + b * Math.sin(etaYMin) * cosTheta)
+      : Math.min(y1, y2);
+    width = ((etaXMax <= eta2)
+             ? (cx + a * Math.cos(etaXMax) * cosTheta - b * Math.sin(etaXMax) * sinTheta)
+             : Math.max(x1, x2)) - xLeft;
+    height = ((etaYMax <= eta2)
+              ? (cy + a * Math.cos(etaYMax) * sinTheta + b * Math.sin(etaYMax) * cosTheta)
+              : Math.max(y1, y2)) - yUp;
 
   }
 
   private void computeDerivedFlatnessParameters() {
-    _f   = (_a - _b) / _a;
-    _e2  = _f * (2.0 - _f);
-    _g   = 1.0 - _f;
-    _g2  = _g * _g;
+    f   = (a - b) / a;
+    e2  = f * (2.0 - f);
+    g   = 1.0 - f;
+    g2  = g * g;
   }
 
   /** Compute the value of a rational function.
@@ -475,10 +483,10 @@ public class EllipticalArc
   }
 
   /** Estimate the approximation error for a sub-arc of the instance.
-   * @param degree degree of the Bï¿½zier curve to use (1, 2 or 3)
+   * @param degree degree of the Bézier curve to use (1, 2 or 3)
    * @param tA start angle of the sub-arc
    * @param tB end angle of the sub-arc
-   * @return upper bound of the approximation error between the Bï¿½zier
+   * @return upper bound of the approximation error between the Bézier
    * curve and the real ellipse
    */
   protected double estimateError(int degree, double etaA, double etaB) {
@@ -488,22 +496,22 @@ public class EllipticalArc
     if (degree < 2) {
 
       // start point
-      double aCosEtaA  = _a * Math.cos(etaA);
-      double bSinEtaA  = _b * Math.sin(etaA);
-      double xA        = _cx + aCosEtaA * _cosTheta - bSinEtaA * _sinTheta;
-      double yA        = _cy + aCosEtaA * _sinTheta + bSinEtaA * _cosTheta;
+      double aCosEtaA  = a * Math.cos(etaA);
+      double bSinEtaA  = b * Math.sin(etaA);
+      double xA        = cx + aCosEtaA * cosTheta - bSinEtaA * sinTheta;
+      double yA        = cy + aCosEtaA * sinTheta + bSinEtaA * cosTheta;
 
       // end point
-      double aCosEtaB  = _a * Math.cos(etaB);
-      double bSinEtaB  = _b * Math.sin(etaB);
-      double xB        = _cx + aCosEtaB * _cosTheta - bSinEtaB * _sinTheta;
-      double yB        = _cy + aCosEtaB * _sinTheta + bSinEtaB * _cosTheta;
+      double aCosEtaB  = a * Math.cos(etaB);
+      double bSinEtaB  = b * Math.sin(etaB);
+      double xB        = cx + aCosEtaB * cosTheta - bSinEtaB * sinTheta;
+      double yB        = cy + aCosEtaB * sinTheta + bSinEtaB * cosTheta;
 
       // maximal error point
-      double aCosEta   = _a * Math.cos(eta);
-      double bSinEta   = _b * Math.sin(eta);
-      double x         = _cx + aCosEta * _cosTheta - bSinEta * _sinTheta;
-      double y         = _cy + aCosEta * _sinTheta + bSinEta * _cosTheta;
+      double aCosEta   = a * Math.cos(eta);
+      double bSinEta   = b * Math.sin(eta);
+      double x         = cx + aCosEta * cosTheta - bSinEta * sinTheta;
+      double y         = cy + aCosEta * sinTheta + bSinEta * cosTheta;
 
       double dx = xB - xA;
       double dy = yB - yA;
@@ -513,7 +521,7 @@ public class EllipticalArc
 
     } else {
 
-      double x    = _b / _a;
+      double x    = b / a;
       double dEta = etaB - etaA;
       double cos2 = Math.cos(2 * eta);
       double cos4 = Math.cos(4 * eta);
@@ -523,11 +531,11 @@ public class EllipticalArc
       double[][][] coeffs;
       double[] safety;
       if (degree == 2) {
-        coeffs = (x < 0.25) ? _coeffs2Low : _coeffs2High;
-        safety = _safety2;
+        coeffs = (x < 0.25) ? coeffs2Low : coeffs2High;
+        safety = safety2;
       } else {
-        coeffs = (x < 0.25) ? _coeffs3Low : _coeffs3High;
-        safety = _safety3;
+        coeffs = (x < 0.25) ? coeffs3Low : coeffs3High;
+        safety = safety3;
       }
 
       double c0 = rationalFunction(x, coeffs[0][0])
@@ -540,7 +548,7 @@ public class EllipticalArc
          + cos4 * rationalFunction(x, coeffs[1][2])
          + cos6 * rationalFunction(x, coeffs[1][3]);
 
-      return rationalFunction(x, safety) * _a * Math.exp(c0 + c1 * dEta);
+      return rationalFunction(x, safety) * a * Math.exp(c0 + c1 * dEta);
 
     }
 
@@ -559,12 +567,12 @@ public class EllipticalArc
       p = new Point2D.Double();
     }
 
-    double eta      = Math.atan2(Math.sin(lambda) / _b, Math.cos(lambda) / _a);
-    double aCosEta  = _a * Math.cos(eta);
-    double bSinEta  = _b * Math.sin(eta);
+    double eta      = Math.atan2(Math.sin(lambda) / b, Math.cos(lambda) / a);
+    double aCosEta  = a * Math.cos(eta);
+    double bSinEta  = b * Math.sin(eta);
 
-    p.x = _cx + aCosEta * _cosTheta - bSinEta * _sinTheta;
-    p.y = _cy + aCosEta * _sinTheta + bSinEta * _cosTheta;
+    p.x = cx + aCosEta * cosTheta - bSinEta * sinTheta;
+    p.y = cy + aCosEta * sinTheta + bSinEta * cosTheta;
 
     return p;
 
@@ -579,20 +587,33 @@ public class EllipticalArc
   public boolean contains(double x, double y) {
 
     // position relative to the focii
-    double dx1 = x - _xF1;
-    double dy1 = y - _yF1;
-    double dx2 = x - _xF2;
-    double dy2 = y - _yF2;
-    if ((dx1 * dx1 + dy1 * dy1 + dx2 * dx2 + dy2 * dy2) > (4 * _a * _a)) {
+    double dx1 = x - xF1;
+    double dy1 = y - yF1;
+    double dx2 = x - xF2;
+    double dy2 = y - yF2;
+    if ((dx1 * dx1 + dy1 * dy1 + dx2 * dx2 + dy2 * dy2) > (4 * a * a)) {
       // the point is outside of the ellipse
       return false;
     }
 
-    // check the location of the test point with respect to the
-    // line joining the start and end points
-    double dx = _x2 - _x1;
-    double dy = _y2 - _y1;
-    return ((x * dy - y * dx + _x2 * _y1 - _x1 * _y2) >= 0);
+    if (isPieSlice) {
+      // check the location of the test point with respect to the
+      // angular sector counted from the center of the ellipse
+      double dxC = x - cx;
+      double dyC = y - cy;
+      double u   = dxC * cosTheta + dyC * sinTheta;
+      double v   = dyC * cosTheta - dxC * sinTheta;
+      double eta = Math.atan2(v / b, u / a);
+      eta -= twoPi * Math.floor((eta - eta1) / twoPi);
+      return (eta <= eta2);
+    } else {
+      // check the location of the test point with respect to the
+      // line joining the start and end points
+      double dx = x2 - x1;
+      double dy = y2 - y1;
+      return ((x * dy - y * dx + x2 * y1 - x1 * y2) >= 0);
+
+    }
 
   }
 
@@ -609,28 +630,29 @@ public class EllipticalArc
     double dx = xA - xB;
     double dy = yA - yB;
     double l  = Math.sqrt(dx * dx + dy * dy);
-    if (l < (1.0e-10 * _a)) {
+    if (l < (1.0e-10 * a)) {
       // too small line segment, we consider it doesn't intersect anything
       return false;
     }
-    double cz = (dx * _cosTheta + dy * _sinTheta) / l;
-    double sz = (dy * _cosTheta - dx * _sinTheta) / l;
+    double cz = (dx * cosTheta + dy * sinTheta) / l;
+    double sz = (dy * cosTheta - dx * sinTheta) / l;
 
     // express position of the first point in canonical frame
-    dx = xA - _cx;
-    dy = yA - _cy;
-    double u = dx * _cosTheta + dy * _sinTheta;
-    double v = dy * _cosTheta - dx * _sinTheta;
+    dx = xA - cx;
+    dy = yA - cy;
+    double u = dx * cosTheta + dy * sinTheta;
+    double v = dy * cosTheta - dx * sinTheta;
 
     double u2         = u * u;
     double v2         = v * v;
-    double g2u2ma2    = _g2 * (u2 - _a * _a);
+    double g2u2ma2    = g2 * (u2 - a * a);
+    double g2u2ma2mv2 = g2u2ma2 - v2;
     double g2u2ma2pv2 = g2u2ma2 + v2;
 
     // compute intersections with the ellipse along the line
     // as the roots of a 2nd degree polynom : c0 k^2 - 2 c1 k + c2 = 0
-    double c0   = 1.0 - _e2 * cz * cz;
-    double c1   = _g2 * u * cz + v * sz;
+    double c0   = 1.0 - e2 * cz * cz;
+    double c1   = g2 * u * cz + v * sz;
     double c2   = g2u2ma2pv2;
     double c12  = c1 * c1;
     double c0c2 = c0 * c2;
@@ -646,9 +668,9 @@ public class EllipticalArc
     if ((k >= 0) && (k <= l)) {
       double uIntersect = u - k * cz;
       double vIntersect = v - k * sz;
-      double eta = Math.atan2(vIntersect / _b, uIntersect / _a);
-      eta -= _twoPi * Math.floor((eta - _eta1) / _twoPi);
-      if (eta <= _eta2) {
+      double eta = Math.atan2(vIntersect / b, uIntersect / a);
+      eta -= twoPi * Math.floor((eta - eta1) / twoPi);
+      if (eta <= eta2) {
         return true;
       }
     }
@@ -657,9 +679,9 @@ public class EllipticalArc
     if ((k >= 0) && (k <= l)) {
       double uIntersect = u - k * cz;
       double vIntersect = v - k * sz;
-      double eta = Math.atan2(vIntersect / _b, uIntersect / _a);
-      eta -= _twoPi * Math.floor((eta - _eta1) / _twoPi);
-      if (eta <= _eta2) {
+      double eta = Math.atan2(vIntersect / b, uIntersect / a);
+      eta -= twoPi * Math.floor((eta - eta1) / twoPi);
+      if (eta <= eta2) {
         return true;
       }
     }
@@ -718,7 +740,13 @@ public class EllipticalArc
       return true;
     }
 
-    return intersect(_x1, _y1, _x2, _y2, xA, yA, xB, yB);
+    if (isPieSlice) {
+      return (intersect(cx, cy, x1, y1, xA, yA, xB, yB)
+              || intersect(cx, cy, x2, y2, xA, yA, xB, yB));
+    } else {
+      return intersect(x1, y1, x2, y2, xA, yA, xB, yB);
+    }
+
   }
 
   /** Tests if the interior of the Shape entirely contains the
@@ -765,10 +793,10 @@ public class EllipticalArc
   /** Returns an integer Rectangle that completely encloses the Shape.
    */
   public Rectangle getBounds() {
-    int xMin = (int) Math.rint(_xLeft - 0.5);
-    int yMin = (int) Math.rint(_yUp   - 0.5);
-    int xMax = (int) Math.rint(_xLeft + _width  + 0.5);
-    int yMax = (int) Math.rint(_yUp   + _height + 0.5);
+    int xMin = (int) Math.rint(xLeft - 0.5);
+    int yMin = (int) Math.rint(yUp   - 0.5);
+    int xMax = (int) Math.rint(xLeft + width  + 0.5);
+    int yMax = (int) Math.rint(yUp   + height + 0.5);
     return new Rectangle(xMin, yMin, xMax - xMin, yMax - yMin);
   }
 
@@ -776,16 +804,11 @@ public class EllipticalArc
    * Shape than the getBounds method.
    */
   public Rectangle2D getBounds2D() {
-    return new Rectangle2D.Double(_xLeft, _yUp, _width, _height);
-  }
-
-  private PathIterator buildStraightLine(AffineTransform at) {
-      GeneralPath path = new GeneralPath(PathIterator.WIND_EVEN_ODD);
-      return path.getPathIterator(at);      
+    return new Rectangle2D.Double(xLeft, yUp, width, height);
   }
 
   /** Build an approximation of the instance outline.
-   * @param degree degree of the Bï¿½zier curve to use
+   * @param degree degree of the Bézier curve to use
    * @param threshold acceptable error
    * @param at affine transformation to apply
    * @return a path iterator
@@ -793,13 +816,13 @@ public class EllipticalArc
   private PathIterator buildPathIterator(int degree, double threshold,
                                          AffineTransform at) {
 
-    // find the number of Bï¿½zier curves needed
+    // find the number of Bézier curves needed
     boolean found = false;
     int n = 1;
     while ((! found) && (n < 1024)) {
-      double dEta = (_eta2 - _eta1) / n;
+      double dEta = (eta2 - eta1) / n;
       if (dEta <= 0.5 * Math.PI) {
-        double etaB = _eta1;
+        double etaB = eta1;
         found = true;
         for (int i = 0; found && (i < n); ++i) {
           double etaA = etaB;
@@ -811,27 +834,33 @@ public class EllipticalArc
     }
 
     GeneralPath path = new GeneralPath(PathIterator.WIND_EVEN_ODD);
-    double dEta = (_eta2 - _eta1) / n;
-    double etaB = _eta1;
+    double dEta = (eta2 - eta1) / n;
+    double etaB = eta1;
 
     double cosEtaB  = Math.cos(etaB);
     double sinEtaB  = Math.sin(etaB);
-    double aCosEtaB = _a * cosEtaB;
-    double bSinEtaB = _b * sinEtaB;
-    double aSinEtaB = _a * sinEtaB;
-    double bCosEtaB = _b * cosEtaB;
-    double xB       = _cx + aCosEtaB * _cosTheta - bSinEtaB * _sinTheta;
-    double yB       = _cy + aCosEtaB * _sinTheta + bSinEtaB * _cosTheta;
-    double xBDot    = -aSinEtaB * _cosTheta - bCosEtaB * _sinTheta;
-    double yBDot    = -aSinEtaB * _sinTheta + bCosEtaB * _cosTheta;
+    double aCosEtaB = a * cosEtaB;
+    double bSinEtaB = b * sinEtaB;
+    double aSinEtaB = a * sinEtaB;
+    double bCosEtaB = b * cosEtaB;
+    double xB       = cx + aCosEtaB * cosTheta - bSinEtaB * sinTheta;
+    double yB       = cy + aCosEtaB * sinTheta + bSinEtaB * cosTheta;
+    double xBDot    = -aSinEtaB * cosTheta - bCosEtaB * sinTheta;
+    double yBDot    = -aSinEtaB * sinTheta + bCosEtaB * cosTheta;
 
-    path.moveTo((float) xB, (float) yB);
+    if (isPieSlice) {
+      path.moveTo((float) cx, (float) cy);
+      path.lineTo((float) xB, (float) yB);
+    } else {
+      path.moveTo((float) xB, (float) yB);
+    }
 
     double t     = Math.tan(0.5 * dEta);
     double alpha = Math.sin(dEta) * (Math.sqrt(4 + 3 * t * t) - 1) / 3;
 
     for (int i = 0; i < n; ++i) {
 
+      double etaA  = etaB;
       double xA    = xB;
       double yA    = yB;
       double xADot = xBDot;
@@ -840,14 +869,14 @@ public class EllipticalArc
       etaB    += dEta;
       cosEtaB  = Math.cos(etaB);
       sinEtaB  = Math.sin(etaB);
-      aCosEtaB = _a * cosEtaB;
-      bSinEtaB = _b * sinEtaB;
-      aSinEtaB = _a * sinEtaB;
-      bCosEtaB = _b * cosEtaB;
-      xB       = _cx + aCosEtaB * _cosTheta - bSinEtaB * _sinTheta;
-      yB       = _cy + aCosEtaB * _sinTheta + bSinEtaB * _cosTheta;
-      xBDot    = -aSinEtaB * _cosTheta - bCosEtaB * _sinTheta;
-      yBDot    = -aSinEtaB * _sinTheta + bCosEtaB * _cosTheta;
+      aCosEtaB = a * cosEtaB;
+      bSinEtaB = b * sinEtaB;
+      aSinEtaB = a * sinEtaB;
+      bCosEtaB = b * cosEtaB;
+      xB       = cx + aCosEtaB * cosTheta - bSinEtaB * sinTheta;
+      yB       = cy + aCosEtaB * sinTheta + bSinEtaB * cosTheta;
+      xBDot    = -aSinEtaB * cosTheta - bCosEtaB * sinTheta;
+      yBDot    = -aSinEtaB * sinTheta + bCosEtaB * cosTheta;
 
       if (degree == 1) {
         path.lineTo((float) xB, (float) yB);
@@ -864,6 +893,10 @@ public class EllipticalArc
 
     }
 
+    if (isPieSlice) {
+      path.closePath();
+    }
+
     return path.getPathIterator(at);
 
   }
@@ -873,21 +906,9 @@ public class EllipticalArc
    * outline.
    */
   public PathIterator getPathIterator(AffineTransform at) {
-    return buildPathIterator(_maxDegree, _defaultFlatness, at);
+    return buildPathIterator(maxDegree, defaultFlatness, at);
   }
 
-  /** Returns an iterator object that iterates along the Shape
-   * boundary and provides access to the geometry of the Shape
-   * outline.
-   */
-  public PathIterator getPathIterator(AffineTransform at, boolean isStraightLine) {
-    if (isStraightLine) {
-        return buildStraightLine(at);
-    } else {
-        return buildPathIterator(_maxDegree, _defaultFlatness, at);
-    }
-  }
-  
   /** Returns an iterator object that iterates along the Shape
    * boundary and provides access to a flattened view of the Shape
    * outline geometry.

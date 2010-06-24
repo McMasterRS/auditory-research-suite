@@ -7,7 +7,7 @@
  * Distributed under the terms of the GNU Lesser General Public License
  * (LGPL). See LICENSE.TXT that came with this file.
  * 
- * $Id: RhythmTrialLogger.java 437 2008-03-06 19:03:16Z rjbruneel $
+ * $Id$
  */
 package edu.mcmaster.maplelab.rhythm;
 
@@ -23,7 +23,7 @@ import edu.mcmaster.maplelab.rhythm.datamodel.*;
 /**
  * Specialization of trial logger for posting Trial data.
  * 
- * @version $Revision: 437 $
+ * @version $Revision$
  * @author <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since Nov 3, 2006
  */

@@ -7,7 +7,7 @@
  * Distributed under the terms of the GNU Lesser General Public License
  * (LGPL). See LICENSE.TXT that came with this file.
  *
- * $Id: ResponseInputs.java 468 2008-12-04 20:42:37Z bhocking $
+ * $Id$
  */
 
 package edu.mcmaster.maplelab.rhythm;
@@ -23,7 +23,7 @@ import edu.mcmaster.maplelab.rhythm.datamodel.ConfidenceRatingEnum;
 import edu.mcmaster.maplelab.rhythm.datamodel.Response;
 
 /**
- * @version  $Revision: 468 $
+ * @version  $Revision$
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  Nov 9, 2006
  */
@@ -80,7 +80,7 @@ public class ResponseInputs extends JPanel {
     @Override
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
-        Enumeration<AbstractButton>[] buttons = buttonEnumeratorArray();        
+        Enumeration[] buttons = buttonEnumeratorArray();        
         
         for(Enumeration<AbstractButton> elements : buttons) {
             while(elements.hasMoreElements()) {
@@ -252,8 +252,7 @@ public class ResponseInputs extends JPanel {
         return retval;
     }
     
-    @SuppressWarnings("unchecked")
-	private Enumeration<AbstractButton>[] buttonEnumeratorArray() {
+    private Enumeration[] buttonEnumeratorArray() {
         return new Enumeration[] {
             _timingGroup.getElements(),
             _confGroup.getElements()
@@ -261,7 +260,7 @@ public class ResponseInputs extends JPanel {
     }
     
     public void addActionListener(ActionListener l) {
-        Enumeration<AbstractButton>[] buttons = buttonEnumeratorArray();
+        Enumeration[] buttons = buttonEnumeratorArray();
         
         for(Enumeration<AbstractButton> elements : buttons) {
             while(elements.hasMoreElements()) {
@@ -271,7 +270,7 @@ public class ResponseInputs extends JPanel {
     }
     
     public void removeActionListener(ActionListener l) {
-        Enumeration<AbstractButton>[] buttons = buttonEnumeratorArray();
+        Enumeration[] buttons = buttonEnumeratorArray();
         
         for(Enumeration<AbstractButton> elements : buttons) {
             while(elements.hasMoreElements()) {

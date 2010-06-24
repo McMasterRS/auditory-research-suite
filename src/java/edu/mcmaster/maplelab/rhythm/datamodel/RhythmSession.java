@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: RhythmSession.java 399 2008-01-11 22:20:55Z sfitch $
+* $Id$
 */
 package edu.mcmaster.maplelab.rhythm.datamodel;
 
@@ -20,7 +20,7 @@ import edu.mcmaster.maplelab.common.sound.Pitch;
  * Context data for the experiment session.
  * 
  * 
- * @version $Revision: 399 $
+ * @version $Revision$
  * @author <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since May 10, 2006
  */
@@ -29,7 +29,7 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial> {
     // NB: These are in camel case so that the "name()" matches 
     // properties file values.
     /**
-     * @version   $Revision: 399 $
+     * @version   $Revision$
      * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
      * @since   Feb 28, 2007
      */

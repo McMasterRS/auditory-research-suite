@@ -7,7 +7,7 @@
  * Distributed under the terms of the GNU Lesser General Public License
  * (LGPL). See LICENSE.TXT that came with this file.
  *
- * $Id: StimulusResponseScreen.java 474 2009-03-20 17:53:30Z bhocking $
+ * $Id$
  */
 
 package edu.mcmaster.maplelab.rhythm;
@@ -25,7 +25,6 @@ import javax.sound.midi.*;
 import javax.swing.*;
 
 import edu.mcmaster.maplelab.common.LogContext;
-import edu.mcmaster.maplelab.common.datamodel.Session;
 import edu.mcmaster.maplelab.common.gui.*;
 import edu.mcmaster.maplelab.common.sound.Note;
 import edu.mcmaster.maplelab.common.sound.ToneGenerator;
@@ -34,19 +33,14 @@ import edu.mcmaster.maplelab.rhythm.datamodel.*;
 
 /**
  * Screen where the stimulus is generated and the user provides a response.
- * @version   $Revision: 474 $
+ * @version   $Revision$
  * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since   Nov 8, 2006
  */
 public class StimulusResponseScreen extends BasicStep {
 
     /**
-	 * Automatically generated serial version UID
-	 */
-	private static final long serialVersionUID = -2906616878722844795L;
-
-	/**
-     * @version   $Revision: 474 $
+     * @version   $Revision$
      * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
      * @since   Feb 28, 2007
      */
@@ -125,12 +119,7 @@ public class StimulusResponseScreen extends BasicStep {
                 // registered to receive events.
                 
                 class TapTarget extends JComponent {
-                    /**
-					 * Automatically generated serial version UID
-					 */
-					private static final long serialVersionUID = -6808782517661855930L;
-
-					public TapTarget() {
+                    public TapTarget() {
                         enableEvents(AWTEvent.KEY_EVENT_MASK);
                     }
                 }
@@ -343,7 +332,7 @@ public class StimulusResponseScreen extends BasicStep {
                     }
                 });
                 // Give user time to prepare.
-                Session.sleep(_session.getPreStimulusSilence());
+                Thread.sleep(_session.getPreStimulusSilence());
             }
             catch (InterruptedException ex) {
                 // Ignore
@@ -355,7 +344,7 @@ public class StimulusResponseScreen extends BasicStep {
     }
     
     /**
-     * @version   $Revision: 474 $
+     * @version   $Revision$
      * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
      * @since   Feb 28, 2007
      */
@@ -459,7 +448,7 @@ public class StimulusResponseScreen extends BasicStep {
                 });
                 
                 // Give user time to read results
-                Session.sleep(_session.getPreStimulusSilence());
+                Thread.sleep(_session.getPreStimulusSilence());
             }
             catch (InterruptedException ex) {
                 // ignore

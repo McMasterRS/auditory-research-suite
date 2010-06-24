@@ -1,13 +1,13 @@
 /*
 * Copyright (C) 2006-2007 University of Virginia
-* Supported by grants to the University of Virginia from the National Eye Institute
+* Supported by grants to the University of Virginia from the National Eye Institute 
 * and the National Institute of Deafness and Communicative Disorders.
 * PI: Prof. Michael Kubovy <kubovy@virginia.edu>
 *
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: Session.java 484 2009-06-22 13:26:59Z bhocking $
+* $Id$
 */
 package edu.mcmaster.maplelab.common.datamodel;
 
@@ -18,17 +18,17 @@ import java.util.concurrent.*;
 
 /**
  * Context data for the experiment session.
- * @version     $Revision: 484 $
+ * @version     $Revision$
  * @author     <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since     May 10, 2006
  * @param <B> Block type
  * @param <T> Trial type
  */
 public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implements Executor {
-    // NB: These are in camel case so that the "name()" matches
+    // NB: These are in camel case so that the "name()" matches 
     // properties file values.
     /**
-     * @version   $Revision: 484 $
+     * @version   $Revision$
      * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
      * @since   Feb 28, 2007
      */
@@ -36,17 +36,10 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
         raid,
         subject,
         session,
-        sex,
-        dataDir,
+        dataDir,        
         experiment_id,
         numBlocks,
-        sequences,
-        probePractice,
         numWarmupTrials,
-        maxProbePractice,
-        reqProbeConsistent,
-        maxSeqPractice,
-        reqSeqConsistent,
         debug,
         demo,
         defaultFontSize
@@ -63,68 +56,62 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
     /**
      * @uml.property  name="applet"
      */
-    private Applet _applet = null;
-
+    private Applet _applet = null;    
+    
     /**
      * Default ctor.
      * @param props Initial values
      */
     protected Session(Properties props) {
         _executorService = Executors.newSingleThreadExecutor();
-
-        Enumeration<Object> e = props.keys();
+        
+        Enumeration<?> e = props.keys();
         while(e.hasMoreElements()) {
             String key = (String) e.nextElement();
             setProperty(key, props.getProperty(key));
         }
     }
-
+    
     /**
      * Set the initialized trial logger.
      * @uml.property  name="trialLogger"
      */
-    public final void setTrialLogger(TrialLogger<B, T> trialLogger)
-
+    public final void setTrialLogger(TrialLogger<B, T> trialLogger) 
+    
     {
         _trialLogger = trialLogger;
     }
-
+    
     /**
      * Get the trial logger.
      * @uml.property  name="trialLogger"
      */
-    public final TrialLogger<B, T> getTrialLogger()
-
+    public final TrialLogger<B, T> getTrialLogger() 
+    
     {
         return _trialLogger;
     }
-
+    
     /**
      * Execute the given object in a worker thread.
-     * {@inheritDoc}
+     * {@inheritDoc} 
      * @see java.util.concurrent.Executor#execute(java.lang.Runnable)
      */
     public final void execute(Runnable command) {
         _executorService.execute(command);
     }
-
-    public static void sleep(long milliseconds) {
-        try {
-            Thread.sleep(milliseconds);
-        }
-        catch (InterruptedException ex) {
-            // ignore
-        }
-    }
-
+    
+    
     /**
      * Get the applet if experiment is running inside an applet container.
      * @uml.property  name="applet"
      */
-    public Applet getApplet() {
+    public Applet getApplet() 
+    
+    {
         return _applet;
     }
-
+    
     /**
      * For use when running inside an applet, set the outer applet object.
      * @deprecated Need to remove this. Check availability through global
@@ -134,36 +121,22 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
     public void setApplet(Applet applet)  {
         _applet = applet;
     }
-
+    
     /**
      * Get the experiment identifier (database key.
      */
     public int getExperimentID() {
         return getInteger(ConfigKeys.experiment_id, -1);
-    }
-
-    public int getNumBlocksFromSequences() {
-        return getNumBlocksFromSequences(false);
-    }
-
-    /**
-     * Get NumBlocks property
-     * @return Value for NumBlocks
-     */
-    public int getNumBlocksFromSequences(boolean useProbeList) {
-        ConfigKeys seqKey = (useProbeList) ? ConfigKeys.probePractice : ConfigKeys.sequences;
-        String[] sequences = getString(seqKey, "seq1,seq2,seq3").split(",");
-        return sequences.length;
-    }
-
+    }    
+    
     /**
      * Get NumBlocks property
      * @return Value for NumBlocks
      */
     public int getNumBlocks() {
-        return getInteger(ConfigKeys.numBlocks, 1);
+        return getInteger(ConfigKeys.numBlocks, 7);
     }
-
+    
      /**
      * Get NumWarmupTrials property
      * @return Value for NumWarmupTrials
@@ -171,38 +144,28 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
      public int getNumWarmupTrials() {
          return getInteger(ConfigKeys.numWarmupTrials, 1);
      }
-
-     public String[] getSequences() {
-         return getSequences(false);
-     }
-
-     public String[] getSequences(boolean useProbeList) {
-         ConfigKeys seqKey = (useProbeList) ? ConfigKeys.probePractice : ConfigKeys.sequences;
-         String[] toReturn = getString(seqKey, "seq1,seq2,seq3").split(",");
-         return toReturn;
-     }
-
+ 
     /**
      * Determine if debug mode has been requested.
      */
     public boolean isDebug() {
         return getBoolean(ConfigKeys.debug, false);
     }
-
+    
     /**
      * Determine if demo mode has been requested.
      */
      public boolean isDemo() {
          return getBoolean(ConfigKeys.demo, false);
      }
-
+     
      /**
       * Override the demo mode setting in config file.
       */
      public void setDemo(boolean state) {
          setProperty(ConfigKeys.demo, state);
      }
-
+     
      /**
       * Set RAID property
       * @param val Value for RAID
@@ -218,7 +181,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
      public int getRAID() {
          return getInteger(ConfigKeys.raid, -1);
      }
-
+     
      /**
       * Set Subject property
       * @param val Value for Subject
@@ -235,23 +198,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
          Integer subject = (Integer) getProperty(ConfigKeys.subject);
          return subject != null ? subject : getExperimentID();
      }
-
-     /**
-      * Set Sex property
-      * @param val Value for Sex
-      */
-     public void setSex(String val) {
-         setProperty(ConfigKeys.sex, val);
-     }
-
-     /**
-      * Get Sex property
-      * @return Value for Sex
-      */
-     public String getSex() {
-         return (String) getProperty(ConfigKeys.sex);
-     }
-
+     
      /**
       * Set Session property
       * @param val Value for Session
@@ -268,7 +215,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
          Integer session = (Integer) getProperty(ConfigKeys.session);
          return session != null ? session : getExperimentID();
      }
-
+     
      /**
       * Set DataDir property
       * @param val Value for DataDir
@@ -284,7 +231,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
      public File getDataDir() {
          return (File) getProperty(ConfigKeys.dataDir);
      }
-
+     
      /**
       * Default text font size, primarily for instruction text.
       */
@@ -294,23 +241,15 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
 
     /**
      * Get the boolean property value with the given key.
-     *
+     * 
      * @param key key name
      * @param def default value if property not found.
      * @return property value.
      */
-    public final boolean getBoolean(Enum<?> key, boolean def) {
+    protected final boolean getBoolean(Enum<?> key, boolean def) {
         boolean retval = def;
-
+        
         String str = getString(key, null);
-        if (str != null) {
-            if (str.equals("true")) {
-                return true;
-            }
-            if (str.equals("false")) {
-                return false;
-            }
-        }
         try {
             retval = Boolean.parseBoolean(str);
         }
@@ -319,25 +258,25 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
 
         return retval;
     }
-
+    
     /**
      * Get the integer property value with the given enum key.
-     *
+     * 
      * @param key key name
      * @param def default value if property not found.
      * @return property value.
      */
-    public final int getInteger(Enum<?> key, int def) {
+    protected final int getInteger(Enum<?> key, int def) {
         return getInteger(key.name(), def);
     }
-
+    
     /**
      * Get the integer property value with the given string key.
-     *
+     * 
      * @param key key name
      * @param def default value if property not found.
      * @return property value.
-     */
+     */    
     protected final int getInteger(String key, int def) {
         int retval = def;
         Object val = getProperty(key);
@@ -356,16 +295,16 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
 
     /**
      * Get property value as a list of integers
-     *
+     * 
      * @param key property name
      * @param def default value if property name not defeined
      * @return property value parsed as a comma delimited list of integers
      */
     protected final List<Integer> getIntegerList(Enum<?> key, Integer... def) {
         List<Integer> retval = null;
-
+        
         Object val = getProperty(key);
-
+        
         if(val instanceof String) {
             retval = new ArrayList<Integer>();
             Scanner s = new Scanner((String)val);
@@ -377,26 +316,26 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
         else if(val instanceof Integer[]) {
             retval = Arrays.asList((Integer[]) val);
         }
-
+        
         if(retval == null && def != null) {
-            retval = Arrays.asList(def);
+            retval = Arrays.asList(def);            
         }
-
+        
         return retval;
     }
-
+    
     /**
      * Get property value as a list of floats
-     *
+     * 
      * @param key property name
      * @param def default value if property name not defeined
      * @return property value parsed as a comma delimited list of integers
      */
     protected final List<Float> getFloatList(Enum<?> key, Float[] def) {
         List<Float> retval = null;
-
+        
         Object val = getProperty(key);
-
+        
         if(val instanceof String) {
             retval = new ArrayList<Float>();
             Scanner s = new Scanner((String)val);
@@ -408,16 +347,16 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
         else if(val instanceof Float[]) {
             retval = Arrays.asList((Float[]) val);
         }
-
+        
         if(retval == null && def != null) {
-            retval = Arrays.asList(def);
+            retval = Arrays.asList(def);            
         }
-
+        
         return retval;
-    }
+    }    
     /**
      * Get the float property value with the given key.
-     *
+     * 
      * @param key key name
      * @param def default value if property not found
      * @return property value
@@ -437,30 +376,30 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
         }
         return retval;
     }
-
+    
     /**
      * Get property value as a list of strings from an enum key
-     *
+     * 
      * @param key property name
-     * @param def default value if property name not defined
+     * @param def default value if property name not defeined
      * @return property value parsed as a comma delimited list of integers
      */
     protected final List<String> getStringList(Enum<?> key, String... def) {
         return getStringList(key.name(), def);
     }
-
+    
     /**
      * Get property value as a list of strings from a string key
-     *
+     * 
      * @param key property name
-     * @param def default value if property name not defined
+     * @param def default value if property name not defeined
      * @return property value parsed as a comma delimited list of integers
      */
     protected final List<String> getStringList(String key, String... def) {
         List<String> retval = null;
-
+        
         Object val = getProperty(key);
-
+        
         if(val instanceof String) {
             retval = new ArrayList<String>();
             Scanner s = new Scanner((String)val);
@@ -472,32 +411,32 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
         else if(val instanceof Integer[]) {
             retval = Arrays.asList((String[]) val);
         }
-
+        
         if(retval == null && def != null) {
-            retval = Arrays.asList(def);
+            retval = Arrays.asList(def);            
         }
-
+        
         return retval;
-    }
-
+    }    
+    
     /**
      * Look up the property value with the given key.
-     *
+     * 
      * @param name key
      * @return value
      */
     public final String getString(Enum<?> key, String def) {
         String retval = def;
         Object val = getProperty(key);
-        if (val instanceof String) {
+        if(val instanceof String) {
             retval = (String) val;
         }
         return retval;
     }
-
+    
     /**
      * Lookup a string value with the given key.
-     *
+     * 
      * @param key value key.
      * @return key value, or null if no String value with key found.
      */
@@ -505,11 +444,6 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
         Object val = getProperty(key);
         if(val instanceof String) {
             return (String) val;
-        }
-        System.out.println("key=" + key);
-        System.out.println("val=" + val);
-        if(val!=null) {
-        	System.out.println(" {" + val.getClass() + "}");
         }
         return null;
     }
@@ -521,30 +455,27 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
     protected Object getProperty(Enum<?> key) {
         return getProperty(key.name());
     }
-
+    
     /**
      * Retrieve a property with a string key.
      */
     protected Object getProperty(String key) {
-        if (_properties.get(key) == null) {
-            System.out.println("Entry for key '" + key + "' not found");
-        }
         return _properties.get(key);
     }
-
-    /**
+    
+    /** 
      * Store a property.
      */
     protected void setProperty(String key, Object value) {
         _properties.put(key, value);
     }
-
-    /**
+    
+    /** 
      * Store a property.
      */
     protected void setProperty(Enum<?> key, Object value) {
         _properties.put(key.name(), value);
-    }
+    }    
 
     /**
      * Convert the current settings to a string in (more or less) .properties
@@ -554,7 +485,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
 
     /**
      * Utility method for constructing value for toPropertiesString().
-     *
+     * 
      * @param e enumeration values to iterate over.
      * @return properties file like string.
      */
@@ -572,10 +503,10 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
         }
         return buf.toString();
     }
-
+    
     /**
      * Utility method for constructing value for toPropertiesString().
-     *
+     * 
      * @param e enumeration values to iterate over.
      * @return properties file like string.
      */
@@ -594,5 +525,12 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
         }
         return buf.toString();
     }
+
+	public static void sleep(int duration) {
+		try {
+			Thread.sleep(duration);
+		} catch (InterruptedException e) {
+		}
+	}
 
 }

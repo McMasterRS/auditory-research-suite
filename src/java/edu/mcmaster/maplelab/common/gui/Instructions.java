@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: Instructions.java 468 2008-12-04 20:42:37Z bhocking $
+* $Id$
 */
 package edu.mcmaster.maplelab.common.gui;
 
@@ -17,18 +17,13 @@ package edu.mcmaster.maplelab.common.gui;
  * Container for displaying instructions or other info.
  * 
  * 
- * @version $Revision: 468 $
+ * @version $Revision$
  * @author <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since May 10, 2006
  */
 public class Instructions extends BasicStep {
 
     /**
-	 * Automatically generated serial version UID
-	 */
-	private static final long serialVersionUID = -7643372937718112227L;
-
-	/**
      * This is the default constructor
      */
     public Instructions() {

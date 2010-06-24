@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: PitchField.java 468 2008-12-04 20:42:37Z bhocking $
+* $Id$
 */
 package edu.mcmaster.maplelab.common.gui;
 
@@ -20,17 +20,13 @@ import edu.mcmaster.maplelab.common.sound.Pitch;
 
 /**
  * Widget for selecting a chromatic pitch.
- * @version  $Revision: 468 $
+ * @version  $Revision$
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  May 10, 2006
  */
 public class PitchField extends JPanel {
 
     /**
-	 * Automatically generated serial version UID
-	 */
-	private static final long serialVersionUID = 5753255560484579320L;
-	/**
      * @uml.property  name="note"
      */
     private JComboBox _note = null;

@@ -7,14 +7,15 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: SimpleSetupScreen.java 474 2009-03-20 17:53:30Z bhocking $
+* $Id$
 */
 
 package edu.mcmaster.maplelab.common.gui;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
@@ -28,17 +29,12 @@ import edu.mcmaster.maplelab.common.datamodel.Session;
 /**
  * Setup editor for non-applet mode.
  * 
- * @version   $Revision: 474 $
+ * @version   $Revision$
  * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since   Dec 4, 2006
  */
 public class SimpleSetupScreen extends JPanel  {
-    /**
-	 * Automatically generated serial version UID
-	 */
-	private static final long serialVersionUID = 8595156800591101562L;
-
-	enum ConfigKeys {
+    enum ConfigKeys {
         isFullScreen,
         isDemoMode
     }
@@ -46,8 +42,6 @@ public class SimpleSetupScreen extends JPanel  {
     private final JFormattedTextField _raID;
     private final JFormattedTextField _subject;
     private final JFormattedTextField _session;
-    private final boolean _includeSex;
-    private ButtonGroup _sexOptions = null;
     private final FileBrowseField _dataDir;
     private final String _prefsPrefix;
     private GridBagConstraints _labelGBC;
@@ -56,10 +50,10 @@ public class SimpleSetupScreen extends JPanel  {
     private JCheckBox _demoMode;
 
     public SimpleSetupScreen(String prefsPrefix) {
-        this(prefsPrefix, false, false);
+        this(prefsPrefix, false);
     }
     
-    public SimpleSetupScreen(String prefsPrefix, boolean includeDemoModeSwitch, boolean includeSex) {
+    public SimpleSetupScreen(String prefsPrefix, boolean includeDemoModeSwitch) {
         super(new GridBagLayout());
         _prefsPrefix = prefsPrefix;
         setBorder(BorderFactory.createTitledBorder("Setup"));
@@ -89,20 +83,6 @@ public class SimpleSetupScreen extends JPanel  {
         _session.setValue(new Integer(1));
         addField(_session);
         
-        _includeSex = includeSex;
-        if (includeSex) {
-            addLabel("Sex:");
-            JPanel sexPanel = new JPanel();
-            _sexOptions = new ButtonGroup();
-            String[] options = {"M", "F"};
-            for (String opt: options) {
-                JRadioButton curOption = new JRadioButton(opt);
-                _sexOptions.add(curOption);
-                sexPanel.add(curOption);
-            }
-            addField(sexPanel);
-        }        
-        
         addLabel("Data directory:");
         _dataDir = new FileBrowseField(true);
         addField(_dataDir);
@@ -126,7 +106,12 @@ public class SimpleSetupScreen extends JPanel  {
         _labelGBC.weighty = 0;
         _fieldGBC.weighty = 0;
         
-        _dataDir.setFile(new File("."));
+        String home = System.getProperty("user.home");
+        if(home == null) {
+            home = ".";
+        }
+        
+        _dataDir.setFile(new File(home));
         
         restore();
     }
@@ -158,18 +143,6 @@ public class SimpleSetupScreen extends JPanel  {
         session.setRAID(Integer.parseInt(_raID.getText()));
         session.setSession(Integer.parseInt(_session.getText()));
         session.setSubject(Integer.parseInt(_subject.getText()));
-        String sex = "NA";
-        if (_includeSex) {
-            Enumeration<AbstractButton> enumAB = _sexOptions.getElements();
-            while (enumAB.hasMoreElements()) {
-                AbstractButton ab = enumAB.nextElement();
-                if (ab.isSelected()) {
-                    sex = ab.getText();
-                    break;
-                }
-            }
-        }
-        session.setSex(sex);
         session.setDataDir(_dataDir.getFile());
         if(_demoMode != null) {
             session.setDemo(_demoMode.isSelected());
@@ -252,9 +225,14 @@ public class SimpleSetupScreen extends JPanel  {
         _subject.setValue(++subject);
         _session.setText(prefs.get(Session.ConfigKeys.session.name(), "1"));
         
+        String home = System.getProperty("user.home");
+        if(home == null) {
+            home = ".";
+        }
+        
         String path = prefs.get(Session.ConfigKeys.dataDir.name(),  null);
         if(path == null) {
-            path = ".";
+            path = home;
         }
             
         _dataDir.setFile(new File(path));
@@ -274,7 +252,24 @@ public class SimpleSetupScreen extends JPanel  {
     public void display() {
         final JDialog d = new JDialog((Frame)null, "Experiment Setup", true);
         d.getContentPane().add(this);
-        CloseButton.createClosePanel(d, null);        
+        
+        // TODO: refactor into CloseButton
+        CloseButton close = new CloseButton("OK");
+        JPanel p = new JPanel();
+        p.add(close);
+        d.getRootPane().setDefaultButton(close);
+        
+        
+        JButton b = new JButton("Cancel");
+        b.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+        p.add(b);
+        
+        d.getContentPane().add(p, BorderLayout.SOUTH);
+        
         d.setSize(400, 300);
         d.setLocationRelativeTo(null);
         d.setVisible(true);

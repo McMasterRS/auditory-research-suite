@@ -28,11 +28,7 @@ import javax.swing.*;
  */
 public class DebugConsole extends JFrame {
 
-    /**
-	 * Automatically generated serial version UID
-	 */
-	private static final long serialVersionUID = 1198664122371975432L;
-	private JPanel jContentPane = null;
+    private JPanel jContentPane = null;
     private JTextArea console = null;
     private JScrollPane consoleScrollPane = null;
 

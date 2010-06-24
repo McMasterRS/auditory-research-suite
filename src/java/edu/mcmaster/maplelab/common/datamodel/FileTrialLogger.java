@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: FileTrialLogger.java 474 2009-03-20 17:53:30Z bhocking $
+* $Id$
 */
 
 package edu.mcmaster.maplelab.common.datamodel;
@@ -17,24 +17,22 @@ import java.util.*;
 import java.util.logging.Level;
 
 import edu.mcmaster.maplelab.common.LogContext;
-import edu.mcmaster.maplelab.common.gui.Questionnaire.QuestionnaireResponse;
 
 
 /**
  * Class responsible for logging trial data to a file.
- * @version  $Revision: 474 $
+ * @version  $Revision:$
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  Nov 22, 2006
  */
 public abstract class FileTrialLogger<T extends Session<?,?>, Q extends 
     Block<?, ?>, R extends Trial<?>> implements TrialLogger<Q, R> {
     
-    protected final T _session;
+    private final T _session;
     private final File _file;
     private final String _basename;
     private final boolean _deleteTempFile;
     private File _outputDir;
-    protected QuestionnaireResponse[] _responses = null;
 
     public FileTrialLogger(T session, File workingDirectory, String basename) throws IOException {
         this(session, workingDirectory, basename, true, false);
@@ -64,28 +62,6 @@ public abstract class FileTrialLogger<T extends Session<?,?>, Q extends
         
         LogContext.getLogger().fine("Output file: " + _file);
         
-    }
-    
-    public void setQuestionnaireResponses(QuestionnaireResponse[] responses) throws IOException {
-        _responses = responses;
-        File fileQuestionnaire = new File(_outputDir, String.format("%s-questionnaire.txt", _basename));
-        boolean addHeader = !fileQuestionnaire.exists();
-        FileWriter out = null;
-        try {
-            out = new FileWriter(fileQuestionnaire, true);
-            if (addHeader) {
-                for(QuestionnaireResponse r : _responses) {
-                    out.write(String.format("%s\t", r.getQuestion()));
-                }            
-                finishRow(out);
-            }
-            for(QuestionnaireResponse r : _responses) {
-                out.write(String.format("%s\t", r.getResponse()));
-            }            
-            finishRow(out);
-        } finally {
-            if(out != null) out.close();
-        }
     }
     
     /**
@@ -185,62 +161,21 @@ public abstract class FileTrialLogger<T extends Session<?,?>, Q extends
     }
 
     /**
-     * Write out a partial row of data contained in the given map.
-     *   (Does not insert carriage return.)
-     * 
-     * @param map Map containing data.
-     * @param out output to write to.
-     * @throws IOException on output error.
-     */
-    protected void writePartialRow(EnumMap<? extends Enum<?>, String> map, Writer out) throws IOException {
-        Set<? extends Enum<?>> keys = map.keySet();
-        
-        for(Enum<?> e : keys) {
-            out.write(String.format("%s\t", map.get(e)));
-        }
-    }
-
-    /**
      * Write out a row of data contained in the given map.
      * 
      * @param map Map containing data.
      * @param out output to write to.
      * @throws IOException on output error.
      */
-    protected void writeRow(EnumMap<? extends Enum<?>, String> map, FileWriter out) throws IOException {
-        writePartialRow(map, out);
-        finishRow(out);
-    }
-    
-    /**
-     * Write out the partial header for the given set of keys.
-     *  (Does not add carriage return.)
-     *  
-     * @param keys data set keys.
-     * @param ctr number to append to key names
-     * @param out output to write to.
-     * @throws IOException on output error.
-     */
-    protected void writePartialHeader(Set<? extends Enum<?>> keys, int ctr, FileWriter out) throws IOException {
+    protected void writeRow(EnumMap<? extends Enum<?>, String> map, Writer out) throws IOException {
+        Set<? extends Enum<?>> keys = map.keySet();
+        
         for(Enum<?> e : keys) {
-            out.write(String.format("%s\t", e.name()+ctr));
+            out.write(String.format("%s\t", map.get(e)));
         }
+        out.write(String.format("%n"));
     }
-    
-    /**
-     * Write out the partial header for the given set of keys.
-     *  (Does not add carriage return.)
-     *  
-     * @param keys data set keys.
-     * @param out output to write to.
-     * @throws IOException on output error.
-     */
-    protected void writePartialHeader(Set<? extends Enum<?>> keys, FileWriter out) throws IOException {
-        for(Enum<?> e : keys) {
-            out.write(String.format("%s\t", e.name()));
-        }
-    }
-    
+
     /**
      * Write out the header for the given set of keys.
      * 
@@ -249,19 +184,12 @@ public abstract class FileTrialLogger<T extends Session<?,?>, Q extends
      * @throws IOException on output error.
      */
     protected void writeHeader(Set<? extends Enum<?>> keys, FileWriter out) throws IOException {
-        writePartialHeader(keys, out);
-        finishRow(out);
-    }
-    
-    /**
-     * Write out carriage return;
-     * 
-     * @param out output to write to.
-     * @throws IOException on output error.
-     */
-    protected void finishRow(FileWriter out) throws IOException {
+        for(Enum<?> e : keys) {
+            out.write(String.format("%s\t", e.name()));
+        }
         out.write(String.format("%n"));
     }
+ 
     
     protected abstract EnumMap<? extends Enum<?>, String> marshalToMap(Q block, R trial, int responseNum); 
 

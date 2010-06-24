@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: Completion.java 474 2009-03-20 17:53:30Z bhocking $
+* $Id$
 */
 package edu.mcmaster.maplelab.common.gui;
 
@@ -17,17 +17,12 @@ import edu.mcmaster.maplelab.common.datamodel.TrialLogger;
 
 /**
  * Completion text screen
- * @version   $Revision: 474 $
+ * @version   $Revision$
  * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since   May 10, 2006
  */
 public class Completion extends Instructions {
-    /**
-	 * Automatically generated serial version UID
-	 */
-	private static final long serialVersionUID = -6726463466974908234L;
-
-	public enum ConfigKeys {
+    public enum ConfigKeys {
         completionTitle,
         completionText
     }
@@ -54,11 +49,6 @@ public class Completion extends Instructions {
     @Override
     protected void onVisible() {
         _logger.shutdown();
-    }
-    
-    @Override
-    protected void doNext() {
-        System.exit(0);
     }
     
     @Override

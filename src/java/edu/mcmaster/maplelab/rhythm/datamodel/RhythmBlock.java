@@ -7,7 +7,7 @@
  * Distributed under the terms of the GNU Lesser General Public License
  * (LGPL). See LICENSE.TXT that came with this file.
  * 
- * $Id: RhythmBlock.java 474 2009-03-20 17:53:30Z bhocking $
+ * $Id$
  */
 package edu.mcmaster.maplelab.rhythm.datamodel;
 
@@ -17,11 +17,13 @@ import edu.mcmaster.maplelab.common.datamodel.Block;
 
 /**
  * Specialization of Block for Pitch Magnitude experiment.
- * @version  $Revision: 474 $
+ * @version  $Revision$
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  Sep 7, 2006
  */
 public class RhythmBlock extends Block<RhythmSession, RhythmTrial> {
+    private List<RhythmTrial> _trials;
+
     public RhythmBlock(RhythmSession session, int blockNum, boolean withTap, int baseIOI) {
         super(session, blockNum);
         
@@ -37,6 +39,20 @@ public class RhythmBlock extends Block<RhythmSession, RhythmTrial> {
         Collections.shuffle(_trials);
         
         assignTrialNumbers();
+    }
+
+    /**
+     * Reduce the number of trials in this block to the given number. If number
+     * is greater than current number then call is ignored. Used for constructing
+     * warmup blocks.
+     * TODO: refactor into Block
+     * 
+     * @param numWarmupTrials number of trials to clip to.
+     */
+    public void clipTrials(int numWarmupTrials) {
+        if(numWarmupTrials < _trials.size()) {
+            _trials = _trials.subList(0, numWarmupTrials);
+        }
     }
 
     /**

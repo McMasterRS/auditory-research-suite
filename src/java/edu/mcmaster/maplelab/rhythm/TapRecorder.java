@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: TapRecorder.java 474 2009-03-20 17:53:30Z bhocking $
+* $Id$
 */
 
 package edu.mcmaster.maplelab.rhythm;
@@ -28,7 +28,7 @@ import edu.mcmaster.maplelab.common.sound.ToneGenerator;
 /**
  * Traps AWT key events and generates midi key events.
  * 
- * @version $Revision: 474 $
+ * @version $Revision:$
  * @author <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since Apr 10, 2007
  */
@@ -69,8 +69,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
         
         // Send a program change just so we have our own unique sound.
         try {
-            ToneGenerator.prepareTrack(_track);
-            ToneGenerator.setMidiBank(_track, 1, 0);
+            ToneGenerator.prepareTrack(_track, (short)1, (short)0);
         }
         catch (InvalidMidiDataException e) {
         }
@@ -134,7 +133,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
     private void recordEvent(boolean down) {
         try {
             MidiEvent event = down ? 
-                ToneGenerator.createNoteOnEvent(MIDI_NOTE, 1, -1) :
+                ToneGenerator.createNoteOnEvent(MIDI_NOTE, -1) :
                     ToneGenerator.createNoteOffEvent(MIDI_NOTE, -1);
             recordEvent(event);
         }

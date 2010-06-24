@@ -35,11 +35,7 @@ import edu.mcmaster.maplelab.common.LogContext;
  * @since   May 10, 2006
  */
 public abstract class BasicStep extends JPanel {
-    /**
-	 * Automatically generated serial version UID
-	 */
-	private static final long serialVersionUID = -6753520521743872624L;
-	private final JLabel _title;
+    private final JLabel _title;
     private final boolean _showPrevNext;
     private JTextPane _instructions;
     private StepManager _stepManager;

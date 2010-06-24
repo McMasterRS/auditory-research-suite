@@ -7,7 +7,7 @@
 * Distributed under the terms of the GNU Lesser General Public License
 * (LGPL). See LICENSE.TXT that came with this file.
 *
-* $Id: ConfidenceRatingEnum.java 399 2008-01-11 22:20:55Z sfitch $
+* $Id$
 */
 
 package edu.mcmaster.maplelab.rhythm.datamodel;
@@ -15,7 +15,7 @@ package edu.mcmaster.maplelab.rhythm.datamodel;
 
 /**
  * Enumeration of user confidence ratings.
- * @version   $Revision: 399 $
+ * @version   $Revision$
  * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since   Nov 8, 2006
  */
