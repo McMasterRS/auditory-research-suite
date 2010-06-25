@@ -137,14 +137,14 @@ public class RhythmExperiment extends JPanel {
             // in the python experiments.
             int midiDevID = setup.prefs().getInt(RhythmSession.ConfigKeys.midiDevID.name(), 0);
             
-            setup.addLabel("MIDI Device:");
+            setup.addLabel("<html><p align=right>Tap Source (MIDI <br>Device #):");
             final JFormattedTextField midiDev = new JFormattedTextField();
             midiDev.setValue(new Integer(midiDevID));
             setup.addField(midiDev);            
             
 
             // Kludge to provide simple MIDI testing utility.
-            JButton midiTest = new JButton("Test");
+            JButton midiTest = new JButton("List and Test Devices");
             midiTest.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     Component source = (Component) e.getSource();

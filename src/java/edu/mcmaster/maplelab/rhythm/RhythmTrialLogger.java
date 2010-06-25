@@ -216,7 +216,8 @@ public class RhythmTrialLogger extends
                         // hack to allow us to reuse the marshalToMap
                         // method, just because it's conceptually clean
                         MidiEvent currEvent = track.get(j);
-                        if(currEvent.getMessage().getStatus() != ShortMessage.NOTE_ON) continue;
+                        
+                        if (!isNoteOnEvent(currEvent)) continue;
                         
                         _tick = (int) currEvent.getTick();
                         
@@ -235,6 +236,21 @@ public class RhythmTrialLogger extends
             finally {
                 if (out != null) out.close();
             }
+        }
+        
+        /**
+         * Indicate if the given event is a note on event.
+         */
+        private boolean isNoteOnEvent(MidiEvent event) {
+        	return !(event.getMessage().getStatus() != ShortMessage.NOTE_ON || getVelocity(event.getMessage()) == 0);
+        }
+        
+        /**
+         * Get the velocity property from the given message.  Returns null
+         * if not present.
+         */
+        private Integer getVelocity(MidiMessage message) {
+        	return message.getLength() > 2 ? Integer.valueOf(message.getMessage()[2]) : null;
         }
     }
 }

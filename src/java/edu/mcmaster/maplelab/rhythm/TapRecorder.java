@@ -75,7 +75,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
         }
         _sequencer.recordEnable(_track, -1);
         
-        if(_midiInput == null && _midiDevID >= 0) {
+        if(_midiDevID >= 0) {
             try {
                 Info[] devices = MidiSystem.getMidiDeviceInfo();
                 if(_midiDevID >= devices.length) {
@@ -83,16 +83,25 @@ public class TapRecorder implements AWTEventListener, Receiver {
                         "MIDI device index %d is outside bounds of devices list (length = %d)", _midiDevID, devices.length));
                 }
                 
-                _midiInput = MidiSystem.getMidiDevice(devices[_midiDevID]);
-                _midiInput.open();
-                // test == 0 only because -1 indicates unlimited:
-                if(_midiInput.getMaxTransmitters() == 0) {
-                    throw new MidiUnavailableException(String.format(
-                        "Specified device with ID/index=%d (%s) doesn't support transmitting.", 
-                        _midiDevID, _midiInput.getDeviceInfo().getName()));
-                }
+                MidiDevice device = MidiSystem.getMidiDevice(devices[_midiDevID]);
                 
-                _midiInput.getTransmitter().setReceiver(this);
+                if (_midiInput != device) {
+                	if (_midiInput != null) _midiInput.close();
+                	
+                	_midiInput = device;
+                	
+                	if (_midiInput != null) {
+                		_midiInput.open();
+                        // test == 0 only because -1 indicates unlimited:
+                        if(_midiInput.getMaxTransmitters() == 0) {
+                            throw new MidiUnavailableException(String.format(
+                                "Specified device with ID/index=%d (%s) doesn't support transmitting.", 
+                                _midiDevID, _midiInput.getDeviceInfo().getName()));
+                        }
+                        
+                        _midiInput.getTransmitter().setReceiver(this);
+                	}
+                }
             }
             catch(Exception ex) {
                 LogContext.getLogger().log(Level.SEVERE, "Couldn't initialize MIDI recording device", ex);
@@ -105,6 +114,21 @@ public class TapRecorder implements AWTEventListener, Receiver {
         }
         
         _sequencer.startRecording();
+    }
+    
+    /**
+     * Indicates if the MidiDevice with the given id has transmission capability,
+     * which is necessary for recording.
+     */
+    public static boolean isValidTransmittingDevice(int deviceID) {
+    	Info[] devices = MidiSystem.getMidiDeviceInfo();
+    	try {
+    		MidiDevice device = MidiSystem.getMidiDevice(devices[deviceID]);
+    		return device.getMaxTransmitters() != 0;
+    	}
+    	catch (Exception e) {
+    		return false;
+    	}
     }
     
     public void stop() {
@@ -164,7 +188,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
      * @see javax.sound.midi.Receiver#send(javax.sound.midi.MidiMessage, long)
      */
     public void send(MidiMessage message, long timeStamp) {
-        recordEvent(new MidiEvent(message, timeStamp));
+    	recordEvent(new MidiEvent(message, timeStamp));
     }    
 
     /**

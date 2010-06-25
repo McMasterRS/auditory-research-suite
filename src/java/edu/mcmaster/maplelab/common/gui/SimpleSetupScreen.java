@@ -270,7 +270,7 @@ public class SimpleSetupScreen extends JPanel  {
         
         d.getContentPane().add(p, BorderLayout.SOUTH);
         
-        d.setSize(400, 300);
+        d.setSize(600, 300);
         d.setLocationRelativeTo(null);
         d.setVisible(true);
         

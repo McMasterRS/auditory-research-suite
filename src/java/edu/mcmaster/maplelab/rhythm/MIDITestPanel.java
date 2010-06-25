@@ -15,14 +15,17 @@ package edu.mcmaster.maplelab.rhythm;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.*;
+import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.sound.midi.*;
 import javax.swing.*;
+import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
+import edu.mcmaster.maplelab.common.gui.CloseButton;
 import edu.mcmaster.maplelab.common.sound.*;
 
 /**
@@ -36,22 +39,25 @@ import edu.mcmaster.maplelab.common.sound.*;
 public class MIDITestPanel extends JPanel {
     private final JTextPane _console;
     private JSpinner _midiDevID;
+    private static JDialog _dialog = null;
     
     public static JDialog createDialog(Component parent) {
         Window window = SwingUtilities.windowForComponent(parent);
         
-        JDialog win;
-        if(window instanceof Frame) {
-            win = new JDialog((Frame) window, "MIDI Test");
-        }
-        else {
-            win = new JDialog((Dialog) window, "MIDI Test");
+        if (_dialog == null) {
+        	if(window instanceof Frame) {
+                _dialog = new JDialog((Frame) window, "MIDI Devices and Testing");
+            }
+            else {
+                _dialog = new JDialog((Dialog) window, "MIDI Devices and Testing");
+            }
+            
+            _dialog.getContentPane().add(new MIDITestPanel());
+            _dialog.pack();
+            _dialog.setLocationRelativeTo(parent);
         }
         
-        win.getContentPane().add(new MIDITestPanel());
-        win.pack();
-        win.setLocationRelativeTo(parent);
-        return win;
+        return _dialog;
     }
     
     public MIDITestPanel() {
@@ -60,24 +66,28 @@ public class MIDITestPanel extends JPanel {
         JPanel top = new JPanel(new FlowLayout(FlowLayout.CENTER));
         add(top, BorderLayout.NORTH);
         
-        
-        
-        top.add(new JButton(new PlayAction()));
         top.add(new JButton(new ListMidiAction()));
-        top.add(new JButton(new TestTapRecord()));
+        top.add(new JButton(new PlayAction()));
         
-        top.add(new JLabel("Dev:"));
-        
+        JPanel p = new JPanel();
+        p.setBorder(BorderFactory.createEtchedBorder());
+        p.add(new JButton(new TestTapRecord()));
+        p.add(new JLabel("Device:"));
         _midiDevID = new JSpinner(new SpinnerNumberModel(-1, -1, 15, 1));
-        top.add(_midiDevID);
+        p.add(_midiDevID);
+        top.add(p);
         
         _console = new JTextPane();
         _console.setContentType("text/plain");
         _console.setFont(new Font("monospaced", Font.PLAIN, 10));
-        _console.setPreferredSize(new Dimension(500, 200));
+        _console.setPreferredSize(new Dimension(700, 300));
         _console.setEditable(false);
-        
         add(new JScrollPane(_console), BorderLayout.CENTER);
+        
+        p = new JPanel();
+        p.add(new JButton(new ClearConsoleAction()));
+        p.add(new CloseButton());
+        add(p, BorderLayout.SOUTH);
     }
     
     private void printf(String print, Object... args) {
@@ -106,6 +116,10 @@ public class MIDITestPanel extends JPanel {
         printf(buf.toString());
     }
     
+    private void printSeparator() {
+    	printf("---------------------------------------------------------\n");
+    }
+    
     private java.util.List<Note> tune(int len) {
         java.util.List<Note> tune = new LinkedList<Note>();
         tune.add(new Note(new Pitch(NotesEnum.C, 4), len));
@@ -132,6 +146,21 @@ public class MIDITestPanel extends JPanel {
             }
             
             printf("Played %s", tune);
+            printSeparator();
+        }
+    }
+    
+    private class ClearConsoleAction extends AbstractAction {
+        public ClearConsoleAction() {
+            super("Clear Console");
+        }
+
+        public void actionPerformed(ActionEvent e) {
+        	Document doc = _console.getDocument();
+            try {
+				doc.remove(0, doc.getLength());
+			} 
+            catch (BadLocationException e1) {} // should clear; not worth an exception
         }
     }
     
@@ -163,6 +192,7 @@ public class MIDITestPanel extends JPanel {
             if (deviceInfo.length == 0) {
                 printf("No MIDI devices available");
             }
+            printSeparator();
         }
     }
     
@@ -194,17 +224,48 @@ public class MIDITestPanel extends JPanel {
         public void actionPerformed(ActionEvent e) {
             setEnabled(false);
             
+            int dev = getCurrentDeviceID();
+            
+            // determine notice for selected device
+            String message = null;
+            if (dev >= MidiSystem.getMidiDeviceInfo().length || dev < 0) {
+            	message = "Invalid device . . . \nStart tapping via the computer keyboard";
+            }
+            else if (!TapRecorder.isValidTransmittingDevice(dev)) {
+            	message = "The selected device does not have transmit functionality . . . \n" +
+            			"Start tapping via the computer keyboard";
+            }
+            else {
+            	_tapRecorder.setMIDIInputID(dev);
+            	message = "Start tapping via the selected device, or use the computer keyboard";
+            }
+            
+            // begin recording
             try {
                 ToneGenerator.getInstance().getSequencer().addMetaEventListener(_endListener);
                 _currSequence = ToneGenerator.getInstance().play(tune(1000), false);
-                _tapRecorder.setMIDIInputID((Integer) _midiDevID.getValue());
                 _tapRecorder.start(_currSequence);
-                printf("Start tapping");
             }
             catch (Exception ex) {
                 print(ex);
             }
+            printf(message);
         }
+        
+        private Integer getCurrentDeviceID() {
+        	try {
+        		_midiDevID.commitEdit();
+        	}
+        	catch (ParseException pe) {
+        		JComponent editor = _midiDevID.getEditor();
+        		if (editor instanceof DefaultEditor) {
+        			((DefaultEditor) editor).getTextField().setValue(_midiDevID.getValue());
+        		}
+        	}
+        	
+        	return (Integer) _midiDevID.getValue();
+        }
+        
         private void sessionEnded() {
             printf("Stop tapping");
             _tapRecorder.stop();
@@ -220,7 +281,8 @@ public class MIDITestPanel extends JPanel {
             catch (IOException e) {
                 print(e);
             }                    
-            setEnabled(true);            
+            setEnabled(true);      
+            printSeparator();
         }
     }
     
