@@ -1,0 +1,7 @@
+*.mid
+*.app
+*/rhythm.jar
+.classpath
+.project
+bin
+*.zip
