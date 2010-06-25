@@ -193,7 +193,10 @@ public class StimulusResponseScreen extends BasicStep {
      */
     @Override
     protected void doNext() {
-        recordResponse();
+    	// block user input and allow response collection code to re-enable
+    	getPrevNextButtons().setEnabled(false);
+    	
+    	recordResponse();
         if(!isDone()) {
             doNextTrial();
         }
@@ -261,7 +264,7 @@ public class StimulusResponseScreen extends BasicStep {
     }
     
     private void recordResponse() {
-        RhythmBlock block = currBlock();
+    	RhythmBlock block = currBlock();
         RhythmTrial t = currTrial();
         if(t == null) return;
         
@@ -430,7 +433,7 @@ public class StimulusResponseScreen extends BasicStep {
         }
 
         public void run() {
-           _completed++;
+        	_completed++;
             
             final boolean wasCorrect = _currTrial.isResponseCorrect();
 

@@ -85,7 +85,8 @@ public class TapRecorder implements AWTEventListener, Receiver {
                 
                 _midiInput = MidiSystem.getMidiDevice(devices[_midiDevID]);
                 _midiInput.open();
-                if(_midiInput.getMaxTransmitters() <= 0) {
+                // test == 0 only because -1 indicates unlimited:
+                if(_midiInput.getMaxTransmitters() == 0) {
                     throw new MidiUnavailableException(String.format(
                         "Specified device with ID/index=%d (%s) doesn't support transmitting.", 
                         _midiDevID, _midiInput.getDeviceInfo().getName()));

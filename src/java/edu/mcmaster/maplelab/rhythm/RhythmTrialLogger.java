@@ -48,7 +48,15 @@ public class RhythmTrialLogger extends
     public RhythmTrialLogger(RhythmSession session, File workingDirectory, String basename) throws IOException {
         super(session, workingDirectory, basename);
         
-        _tapLogger = new TapLogger(session, workingDirectory, basename + "-tap");
+        _tapLogger = new TapLogger(session, workingDirectory, basename);
+    }
+    
+    @Override
+    protected File createFile() {
+    	RhythmSession session = getSession();
+    	String fileName = String.format("%s-%s-%s-responses.txt", 
+    			getFileBasename(), session.getSubject(), session.getSession());
+    	return new File(getOutputDirectory(), fileName);
     }
 
     @Override
@@ -91,8 +99,7 @@ public class RhythmTrialLogger extends
      * Delegate logger for recording tap data when available. Uses
      * FileTrialLogger base class mostly out of convenience.
      */
-    private static class TapLogger extends
-        FileTrialLogger<RhythmSession, RhythmBlock, RhythmTrial> {
+    private static class TapLogger extends FileTrialLogger<RhythmSession, RhythmBlock, RhythmTrial> {
 
         private enum TapKeys {
             session,
@@ -116,6 +123,24 @@ public class RhythmTrialLogger extends
 
         public TapLogger(RhythmSession session, File workingDirectory, String basename) throws IOException {
             super(session, workingDirectory, basename);
+        }
+        
+        @Override
+        protected File createFile() {
+        	RhythmSession session = getSession();
+        	String fileName = String.format("%s-%s-%s-taps.txt", 
+        			getFileBasename(), session.getSubject(), session.getSession());
+        	return new File(getOutputDirectory(), fileName);
+        }
+        
+        /**
+         * Create a file for midi output for the given block and trial.
+         */
+        private File createMidiFile(RhythmBlock block, RhythmTrial trial) {
+        	RhythmSession session = getSession();
+        	String fileName = String.format("%s-%s-%s-%s-%s-rec.mid", getFileBasename(), session.getSubject(), 
+        			session.getSession(), block.getNum(), trial.getNum());
+        	return new File(getOutputDirectory(), fileName);
         }
 
         @Override
@@ -152,18 +177,32 @@ public class RhythmTrialLogger extends
          *      edu.mcmaster.maplelab.common.datamodel.Trial)
          */
         @Override
-        public void submit(RhythmBlock block, RhythmTrial trial)
-            throws IOException {
+        public void submit(RhythmBlock block, RhythmTrial trial) throws IOException {
             Sequence recording = trial.getRecording();
             if (recording == null) return;
 
-            File file = getFile();
+            writeMidiFile(recording, block, trial);
+            writeTextFile(recording, block, trial);
+        }
+        
+        /**
+         * Write the designated midi file to contain tracks for experiment and participant events.
+         */
+        private void writeMidiFile(Sequence recording, RhythmBlock block, RhythmTrial trial) throws IOException {
+        	MidiSystem.write(recording, 1, createMidiFile(block, trial));
+		}
 
-            boolean addHeader = !file.exists();
+		/**
+         * Write a text file containing a table of all block and trial information.
+         */
+        private void writeTextFile(Sequence recording, RhythmBlock block, RhythmTrial trial) throws IOException {
+            File textFile = getFile();
+
+            boolean addHeader = !textFile.exists();
 
             FileWriter out = null;
             try {
-                out = new FileWriter(file, true);
+                out = new FileWriter(textFile, true);
                 if (addHeader) {
                     writeHeader(EnumSet.allOf(TapKeys.class), out);
                 }

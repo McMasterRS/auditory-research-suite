@@ -56,12 +56,16 @@ public abstract class FileTrialLogger<T extends Session<?,?>, Q extends
             throw new IOException(String.format("'%s' is not a writable directory", _outputDir.getAbsoluteFile()));
         }
 
-        String stamp = String.format("%1$ty%1$tm%1$td%1$tH%1$tM", new Date());
-        
-        _file = new File(_outputDir, String.format("%s-%s.txt", basename, stamp));
+        _file = createFile();
         
         LogContext.getLogger().fine("Output file: " + _file);
         
+    }
+    
+    protected File createFile() {
+    	String stamp = String.format("%1$ty%1$tm%1$td%1$tH%1$tM", new Date());
+        
+        return new File(_outputDir, String.format("%s-%s.txt", getFileBasename(), stamp));
     }
     
     /**
@@ -77,6 +81,13 @@ public abstract class FileTrialLogger<T extends Session<?,?>, Q extends
      */
     protected File getFile() {
         return _file;
+    }
+    
+    /**
+     * Get the basename for output files.
+     */
+    protected String getFileBasename() {
+        return _basename;
     }
     
     /**

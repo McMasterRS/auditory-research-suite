@@ -72,11 +72,15 @@ public class RhythmExperiment extends JPanel {
     }
     
     private static class RFrame extends ExperimentFrame<RhythmSession, RhythmBlock, RhythmTrial> {
-        private final int _midiID;
-
-        public RFrame(SimpleSetupScreen setup, int midiID) {
-            super(setup);
-            _midiID = midiID;
+    	// hackish way to store this value before creating session
+    	private static int _midiID;
+    	
+    	public static void setMidiDeviceID(int id) {
+    		_midiID = id;
+    	}
+       
+        public RFrame(SimpleSetupScreen setup) {
+            super(setup); 
         }
 
         @Override
@@ -156,11 +160,11 @@ public class RhythmExperiment extends JPanel {
             setup.display();
             
             // TODO: Yuck. Refactor.
-            setup.prefs().putInt(RhythmSession.ConfigKeys.midiDevID.name(), Integer.parseInt(midiDev.getText()));
+            midiDevID = Integer.parseInt(midiDev.getText());
+            setup.prefs().putInt(RhythmSession.ConfigKeys.midiDevID.name(), midiDevID);
+            RFrame.setMidiDeviceID(midiDevID);
             
-            int midiID = Integer.parseInt(midiDev.getText());
-            
-            RFrame f = new RFrame(setup, midiID);
+            RFrame f = new RFrame(setup);
             f.setTitle("Rhythm Experiment");
             f.pack();
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

@@ -88,7 +88,7 @@ public class PrevNextButtons extends JPanel {
     }
     
     public void setEnabled(boolean enabled) {
-        super.setEnabled(enabled);
+    	super.setEnabled(enabled);
         getPrev().setEnabled(enabled);
         getNext().setEnabled(enabled);
         updateVisible();
