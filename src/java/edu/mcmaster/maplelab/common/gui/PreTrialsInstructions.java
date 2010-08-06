@@ -28,7 +28,7 @@ public class PreTrialsInstructions extends Instructions {
         preTrialText
     }
     
-    public PreTrialsInstructions(StepManager mgr, Session<?,?> session) {
+    public PreTrialsInstructions(StepManager mgr, Session<?,?,?> session) {
         setStepManager(mgr);
         setTitleText(session.getString(ConfigKeys.preTrialTitle, null));
         setInstructionText(session.getString(ConfigKeys.preTrialText, null));

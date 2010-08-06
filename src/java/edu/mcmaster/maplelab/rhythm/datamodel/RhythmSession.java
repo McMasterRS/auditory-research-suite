@@ -11,10 +11,14 @@
 */
 package edu.mcmaster.maplelab.rhythm.datamodel;
 
+import java.io.File;
 import java.util.*;
 
 import edu.mcmaster.maplelab.common.datamodel.Session;
 import edu.mcmaster.maplelab.common.sound.Pitch;
+import edu.mcmaster.maplelab.rhythm.RhythmExperiment;
+import edu.mcmaster.maplelab.rhythm.RhythmTrialLogger;
+import edu.mcmaster.maplelab.rhythm.RhythmTrialLogger.FileType;
 
 /**
  * Context data for the experiment session.
@@ -24,8 +28,8 @@ import edu.mcmaster.maplelab.common.sound.Pitch;
  * @author <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since May 10, 2006
  */
-public class RhythmSession extends Session<RhythmBlock, RhythmTrial> {
-
+public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrialLogger> {
+	
     // NB: These are in camel case so that the "name()" matches 
     // properties file values.
     /**
@@ -44,9 +48,14 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial> {
         silenceMultiplier, 
         preStimulusSilence,
         speedMode,
-        midiDevID
+        midiDevID,
+        tapTestSound,
+        computerKeyInput,
+        recordNoteOff,
+        suppressionWindow,
+        allowFeedback
     }
-
+    
     /**
      * Default ctor.
      * @param props Initial values
@@ -55,11 +64,21 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial> {
         super(props);
     }
     
+    @Override
+    public String getExperimentBaseName() {
+    	return RhythmExperiment.EXPERIMENT_BASENAME;
+    }
+    
+    @Override
+	public File getDebugLogFile()  {
+    	return getTrialLogger().getOutputFile(FileType.DEBUG);
+    }
+
     /**
      * Get the experiment identifier (database key.
      */
     @Override
-    public int getExperimentID() {
+    public int getExperimentDBKey() {
         return getSubject() * 10000 + getSession();
     }     
     
@@ -74,6 +93,44 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial> {
             retval = Boolean.parseBoolean((String)val);
         }
         return retval;
+    }
+    
+    /**
+     * Flag to indicate that tones will be played in the
+     * background during tap testing on the test panel.
+     */
+    public boolean playTapTestSound() {
+    	return getBoolean(ConfigKeys.tapTestSound, false);
+    }
+    
+    /**
+     * Flag to indicate if computer keyboard taps should be allowed.
+     */
+    public boolean allowComputerKeyInput() {
+    	return getBoolean(ConfigKeys.computerKeyInput, true);
+    }
+    
+    /**
+     * Flag to indicate if note-off events should be recorded.
+     */
+    public boolean recordNoteOffEvents() {
+    	return getBoolean(ConfigKeys.recordNoteOff, false);
+    }
+    
+    /**
+     * Flag to indicate if text feedback relating to subject
+     * responses should be displayed.
+     */
+    public boolean allowResponseFeedback() {
+    	return getBoolean(ConfigKeys.allowFeedback, true);
+    }
+    
+    /**
+     * Get the period of time (in milliseconds) within which
+     * to ignore repeat note-on events.
+     */
+    public long getSuppressionWindow() {
+    	return getLong(ConfigKeys.suppressionWindow, 0);
     }
     
     /**
@@ -199,8 +256,5 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial> {
          retval += toPropertiesStringWithEnum(EnumSet.allOf(ConfigKeys.class));
          return retval;
      }
-
-
-
 
 }

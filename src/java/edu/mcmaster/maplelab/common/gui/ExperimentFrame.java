@@ -31,10 +31,10 @@ import edu.mcmaster.maplelab.common.datamodel.*;
  * @since         May 10, 2006
  */
 public abstract class ExperimentFrame
-    <T extends Session<Q, R>,  Q extends Block<T, R>, R extends Trial<?> > 
+    <T extends Session<Q, R, L>,  Q extends Block<T, R>, R extends Trial<?>, L extends TrialLogger <Q, R> > 
     extends JFrame {
-    
-    static {
+	
+	static {
         // Not sure this is still needed.
         System.setProperty("apple.laf.useScreenMenuBar", "true");     
         System.setProperty("com.apple.mrj.application.growbox.intrudes", "false");
@@ -83,8 +83,10 @@ public abstract class ExperimentFrame
             ex.printStackTrace();
         }
         
+        _session.setTrialLogger(initTrialLogger(setup.getDataDir()));
+        
         if(_session.isDebug()) {
-            _console = new DebugConsole();
+            _console = new DebugConsole(_session);
             // If the console sits on a different monitor and we are in full screen mode,
             // then attempt to make the console full screen too.
             if(_isFullScreen && this.getGraphicsConfiguration() != _console.getGraphicsConfiguration()) {
@@ -105,8 +107,6 @@ public abstract class ExperimentFrame
                 logger.warning(ex.toString());
             }
         }        
-        
-        _session.setTrialLogger(initTrialLogger(setup.getDataDir()));
         
         this.setContentPane(createContent(_session));
         
@@ -271,7 +271,7 @@ public abstract class ExperimentFrame
      * 
      * @param dataDir user specified data directory.
      */
-    protected abstract TrialLogger<Q,R> initTrialLogger(File dataDir);
+    protected abstract L initTrialLogger(File dataDir);
     
     protected void logError(Throwable ex, String msg, Object... args) {
         msg = String.format(msg, args);

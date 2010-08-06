@@ -24,7 +24,7 @@ import java.util.concurrent.*;
  * @param <B> Block type
  * @param <T> Trial type
  */
-public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implements Executor {
+public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extends TrialLogger<B, T>> implements Executor {
     // NB: These are in camel case so that the "name()" matches 
     // properties file values.
     /**
@@ -37,12 +37,16 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
         subject,
         session,
         dataDir,        
-        experiment_id,
+        db_experiment_id,
+        experimentID, 
+        subExperimentID,
         numBlocks,
         numWarmupTrials,
         debug,
         demo,
-        defaultFontSize
+        defaultFontSize,
+        buildVersion,
+        buildDate
     }
 
     /**
@@ -52,7 +56,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
     private final Map<String, Object> _properties = new HashMap<String, Object>();
     private final ExecutorService _executorService;
 
-    private TrialLogger<B, T> _trialLogger;
+    private L _trialLogger;
     /**
      * @uml.property  name="applet"
      */
@@ -76,7 +80,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
      * Set the initialized trial logger.
      * @uml.property  name="trialLogger"
      */
-    public final void setTrialLogger(TrialLogger<B, T> trialLogger) 
+    public final void setTrialLogger(L trialLogger) 
     
     {
         _trialLogger = trialLogger;
@@ -86,7 +90,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
      * Get the trial logger.
      * @uml.property  name="trialLogger"
      */
-    public final TrialLogger<B, T> getTrialLogger() 
+    public final L getTrialLogger() 
     
     {
         return _trialLogger;
@@ -123,10 +127,35 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
     }
     
     /**
-     * Get the experiment identifier (database key.
+     * Get the file to which the debug log file should be written.
      */
-    public int getExperimentID() {
-        return getInteger(ConfigKeys.experiment_id, -1);
+    public abstract File getDebugLogFile();
+    
+    /**
+     * Get a string denoting the base name/type of experiment this session
+     * encapsulates.  Will be used for file/directory naming.
+     */
+    public abstract String getExperimentBaseName();
+    
+    /**
+     * Get the experiment identifier database key.
+     */
+    public int getExperimentDBKey() {
+        return getInteger(ConfigKeys.db_experiment_id, -1);
+    }    
+    
+    /**
+     * Get the experiment identifier property.
+     */
+    public String getExperimentID() {
+    	return getString(ConfigKeys.experimentID, "-1");
+    }
+    
+    /**
+     * Get the sub-experiment identifier property.
+     */
+    public String getSubExperimentID() {
+        return getString(ConfigKeys.subExperimentID, "-1");
     }    
     
     /**
@@ -170,7 +199,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
       * Set RAID property
       * @param val Value for RAID
       */
-     public void setRAID(int val) {
+     public void setRAID(String val) {
          setProperty(ConfigKeys.raid, val);
      }
 
@@ -178,8 +207,8 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
       * Get RAID property
       * @return Value for RAID
       */
-     public int getRAID() {
-         return getInteger(ConfigKeys.raid, -1);
+     public String getRAID() {
+         return getString(ConfigKeys.raid, "-1");
      }
      
      /**
@@ -196,7 +225,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
       */
      public int getSubject() {
          Integer subject = (Integer) getProperty(ConfigKeys.subject);
-         return subject != null ? subject : getExperimentID();
+         return subject != null ? subject : getExperimentDBKey();
      }
      
      /**
@@ -213,7 +242,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
       */
      public int getSession() {
          Integer session = (Integer) getProperty(ConfigKeys.session);
-         return session != null ? session : getExperimentID();
+         return session != null ? session : getExperimentDBKey();
      }
      
      /**
@@ -289,6 +318,40 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
         }
         else if(val instanceof Integer) {
             retval = ((Integer)val).intValue();
+        }
+        return retval;
+    }
+
+    /**
+     * Get the long property value with the given enum key.
+     * 
+     * @param key key name
+     * @param def default value if property not found.
+     * @return property value.
+     */
+    protected final long getLong(Enum<?> key, int def) {
+        return getLong(key.name(), def);
+    }
+    
+    /**
+     * Get the long property value with the given string key.
+     * 
+     * @param key key name
+     * @param def default value if property not found.
+     * @return property value.
+     */    
+    protected final long getLong(String key, long def) {
+        long retval = def;
+        Object val = getProperty(key);
+        if(val instanceof String) {
+            try {
+                retval = Long.parseLong((String)val);
+            }
+            catch(NumberFormatException ex) {
+            }
+        }
+        else if(val instanceof Long) {
+            retval = ((Long)val).longValue();
         }
         return retval;
     }
@@ -426,10 +489,10 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
      * @return value
      */
     public final String getString(Enum<?> key, String def) {
-        String retval = def;
+    	String retval = def;
         Object val = getProperty(key);
         if(val instanceof String) {
-            retval = (String) val;
+            retval = ((String) val).trim();
         }
         return retval;
     }
@@ -474,7 +537,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>> implemen
      * Store a property.
      */
     protected void setProperty(Enum<?> key, Object value) {
-        _properties.put(key.name(), value);
+    	_properties.put(key.name(), value);
     }    
 
     /**

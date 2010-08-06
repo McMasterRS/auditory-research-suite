@@ -85,7 +85,7 @@ public abstract class ExperimentApplet<T extends Session> extends JApplet {
     @SuppressWarnings("unchecked")
     public void init() {
         
-        _console = new DebugConsole();
+        _console = new DebugConsole(_session);
         LogContext.getLogger().setLevel(Level.WARNING);
         
         Properties props = initProperties();
@@ -97,7 +97,7 @@ public abstract class ExperimentApplet<T extends Session> extends JApplet {
         if(_session.isDebug()) {
             LogContext.getLogger().setLevel(Level.ALL);
             
-            _console = new DebugConsole();
+            _console = new DebugConsole(_session);
             _console.setVisible(true);
             _console.toBack();
             LogContext.getLogger().finest("java.version="+System.getProperty("java.version"));

@@ -28,7 +28,7 @@ public class PreWarmupInstructions extends Instructions {
         preWarmupText
     }
     
-    public PreWarmupInstructions(StepManager mgr, Session<?,?> session) {
+    public PreWarmupInstructions(StepManager mgr, Session<?,?,?> session) {
         setStepManager(mgr);
         setTitleText(session.getString(ConfigKeys.preWarmupTitle, null));
         setInstructionText(session.getString(ConfigKeys.preWarmupText, null));

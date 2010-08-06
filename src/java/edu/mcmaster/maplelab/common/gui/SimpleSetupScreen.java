@@ -70,7 +70,7 @@ public class SimpleSetupScreen extends JPanel  {
         
         addLabel("RA ID:");
         _raID = new JFormattedTextField();
-        _raID.setValue(new Integer(1));
+        _raID.setValue("1");
         addField(_raID);
 
         addLabel("Subject #:");
@@ -139,8 +139,8 @@ public class SimpleSetupScreen extends JPanel  {
     }
     
     
-    public void applySettings(Session<?,?> session) {
-        session.setRAID(Integer.parseInt(_raID.getText()));
+    public void applySettings(Session<?,?,?> session) {
+        session.setRAID(_raID.getText());
         session.setSession(Integer.parseInt(_session.getText()));
         session.setSubject(Integer.parseInt(_subject.getText()));
         session.setDataDir(_dataDir.getFile());
@@ -154,7 +154,7 @@ public class SimpleSetupScreen extends JPanel  {
         return _fullScreen.isSelected();
     }
 
-    public void setRAID(int val) {
+    public void setRAID(String val) {
         _raID.setValue(val);
     }
     
@@ -222,7 +222,7 @@ public class SimpleSetupScreen extends JPanel  {
         catch(Throwable ex){
         }
         
-        _subject.setValue(++subject);
+        _subject.setValue(subject);
         _session.setText(prefs.get(Session.ConfigKeys.session.name(), "1"));
         
         String home = System.getProperty("user.home");

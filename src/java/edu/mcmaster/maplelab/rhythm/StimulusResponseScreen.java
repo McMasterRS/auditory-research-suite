@@ -18,6 +18,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -113,14 +114,16 @@ public class StimulusResponseScreen extends BasicStep {
         
         try {
             if(!isWarmup) {
-                _tapRecorder = new TapRecorder();
+                _tapRecorder = new TapRecorder(_session.allowComputerKeyInput(), _session.getSuppressionWindow());
                 _tapRecorder.setMIDIInputID(session.getMIDIInputDeviceID());
                 // We have to add a key listener to make sure this gets
                 // registered to receive events.
                 
                 class TapTarget extends JComponent {
                     public TapTarget() {
-                        enableEvents(AWTEvent.KEY_EVENT_MASK);
+                        if (_session.allowComputerKeyInput()) {
+                        	enableEvents(AWTEvent.KEY_EVENT_MASK);
+                        }
                     }
                 }
                 
@@ -250,6 +253,7 @@ public class StimulusResponseScreen extends BasicStep {
 
         RhythmTrial currTrial = currTrial();
         if(currTrial == null) return;
+        currTrial.setTimeStamp(new Date());
         
         LogContext.getLogger().fine(
             String.format("-> %s: %s", currBlock, currTrial));
@@ -302,12 +306,17 @@ public class StimulusResponseScreen extends BasicStep {
     }    
     
     private void updateResultsText() {
-        int percent = _completed == 0 ? 100 :
-            (int)Math.round(_correct/(float)_completed*100);
-        
-        _results.setText(String.format(
-            _session.getString(ConfigKeys.resultsFormatText, "??"),
-            _correct, _completed, percent));
+    	if (_session.allowResponseFeedback()) {
+    		int percent = _completed == 0 ? 100 :
+                (int)Math.round(_correct/(float)_completed*100);
+            
+            _results.setText(String.format(
+                _session.getString(ConfigKeys.resultsFormatText, "??"),
+                _correct, _completed, percent));
+    	}
+    	else {
+    		_results.setText("");
+    	}
     }
     
     /** Task to update screen and prepare user for running trial. */
@@ -378,7 +387,10 @@ public class StimulusResponseScreen extends BasicStep {
                 _playbackStart = System.currentTimeMillis();
                 LogContext.getLogger().fine("Playback started @ " + _playbackStart);
                 _currSequence = tg.play(seq, false);
-                if(_trial.isWithTap() && _tapRecorder != null) {
+                if (_tapRecorder != null) {
+                	// this is not intuitive, but we still want the 
+                	// tap recorder to handle computer taps
+                	_tapRecorder.enableUserInput(_trial.isWithTap());
                     _tapRecorder.start(_currSequence);
                 }
             }
@@ -402,7 +414,7 @@ public class StimulusResponseScreen extends BasicStep {
                     "Playback ended @ %s: duration (approx) = %s milliseconds", 
                     playbackStop,  playbackStop - _playbackStart));
                 ToneGenerator.getInstance().getSequencer().removeMetaEventListener(_endListener);
-                if(_trial.isWithTap() && _tapRecorder != null) {
+                if (_tapRecorder != null) {
                     _tapRecorder.stop();
                     
                     RhythmTrial trial = currTrial();
@@ -444,14 +456,21 @@ public class StimulusResponseScreen extends BasicStep {
             try {
                 SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
-                        _statusText.setText(_session.getString(wasCorrect ?
-                            ConfigKeys.accuracyCorrectText : ConfigKeys.accuracyIncorrectText, null));
-                        updateResultsText();
+                    	if (_session.allowResponseFeedback()) {
+                    		_statusText.setText(_session.getString(wasCorrect ?
+                                    ConfigKeys.accuracyCorrectText : ConfigKeys.accuracyIncorrectText, null)); 
+                    	}
+                    	else {
+                    		_statusText.setText("");
+                    	}
+                    	updateResultsText();
                     }
                 });
                 
-                // Give user time to read results
-                Thread.sleep(_session.getPreStimulusSilence());
+                // Give user time to read results, if necessary.
+                if (_session.allowResponseFeedback()) {
+                	Thread.sleep(_session.getPreStimulusSilence());
+                }
             }
             catch (InterruptedException ex) {
                 // ignore
@@ -470,9 +489,12 @@ public class StimulusResponseScreen extends BasicStep {
         }
 
         public void send(MidiMessage midimessage, long l) {
-            if(midimessage instanceof ShortMessage) {
-                if(((ShortMessage)midimessage).getCommand() == ShortMessage.NOTE_ON) {
+            if (midimessage instanceof ShortMessage) {
+                if (((ShortMessage)midimessage).getCommand() == ShortMessage.NOTE_ON) {
                     LogContext.getLogger().fine(String.format("%8d -> tap", l));
+                }
+                else if (((ShortMessage)midimessage).getCommand() == ShortMessage.NOTE_OFF) {
+                	LogContext.getLogger().fine(String.format("%8d -> release", l));
                 }
             }
         }

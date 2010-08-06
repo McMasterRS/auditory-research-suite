@@ -19,7 +19,7 @@ import java.util.List;
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  Sep 7, 2006
  */
-public abstract class Block<S extends Session<?,?>, T extends Trial<?>> {
+public abstract class Block<S extends Session<?,?, ?>, T extends Trial<?>> {
 
     private final S _session;
     private int _blockNum;

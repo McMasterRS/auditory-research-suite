@@ -29,18 +29,18 @@ public class Completion extends Instructions {
 
     private TrialLogger<?, ?> _logger;
     
-    public Completion(StepManager mgr, Session<?,?> session) {
+    public Completion(StepManager mgr, Session<?,?,?> session) {
         this(mgr, session, true);
     }
     
-    public Completion(StepManager mgr, Session<?,?> session, boolean showPrevNext) {
+    public Completion(StepManager mgr, Session<?,?,?> session, boolean showPrevNext) {
         super(showPrevNext);
         setStepManager(mgr);
         _logger = session.getTrialLogger();
         initText(session);
     }
     
-    protected void initText(Session<?,?> session) {
+    protected void initText(Session<?,?,?> session) {
         setTitleText(session.getString(ConfigKeys.completionTitle, "completion title missing"));
         setInstructionText(session.getString(ConfigKeys.completionText, "completion text missing"));
         setInstructionTextFontSize(session.getDefaultFontSize());

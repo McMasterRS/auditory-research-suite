@@ -22,6 +22,8 @@ import java.util.List;
 import javax.sound.midi.*;
 import javax.swing.*;
 import javax.swing.JSpinner.DefaultEditor;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
@@ -40,6 +42,7 @@ public class MIDITestPanel extends JPanel {
     private final JTextPane _console;
     private JSpinner _midiDevID;
     private static JDialog _dialog = null;
+    private JScrollPane _scrollPane;
     
     public static JDialog createDialog(Component parent) {
         Window window = SwingUtilities.windowForComponent(parent);
@@ -82,7 +85,8 @@ public class MIDITestPanel extends JPanel {
         _console.setFont(new Font("monospaced", Font.PLAIN, 10));
         _console.setPreferredSize(new Dimension(700, 300));
         _console.setEditable(false);
-        add(new JScrollPane(_console), BorderLayout.CENTER);
+        _scrollPane = new JScrollPane(_console);
+        add(_scrollPane, BorderLayout.CENTER);
         
         p = new JPanel();
         p.add(new JButton(new ClearConsoleAction()));
@@ -97,7 +101,10 @@ public class MIDITestPanel extends JPanel {
         }
         catch (BadLocationException e1) {
             e1.printStackTrace();
-        }        
+        }     
+        finally {
+        	scrollDown();
+        }
     }
     
     private void print(int character) {
@@ -107,7 +114,10 @@ public class MIDITestPanel extends JPanel {
         }
         catch (BadLocationException e1) {
             e1.printStackTrace();
-        }        
+        }   
+        finally {
+        	scrollDown();
+        }
     }    
     
     private void print(Throwable e) {
@@ -129,6 +139,11 @@ public class MIDITestPanel extends JPanel {
         tune.add(new Note(new Pitch(NotesEnum.G, 4), len));
         tune.add(new Note(new Pitch(NotesEnum.C, 5), len*3));
         return tune;
+    }
+    
+    private void scrollDown() {
+			JScrollBar sb = _scrollPane.getVerticalScrollBar();
+	        sb.setValue(sb.getMaximum());
     }
     
     private class PlayAction extends AbstractAction {
@@ -213,7 +228,7 @@ public class MIDITestPanel extends JPanel {
         public TestTapRecord() {
             super("Test Tap Recording");
             try {
-                _tapRecorder = new TapRecorder();
+                _tapRecorder = new TapRecorder(true, 0);
                 _tapRecorder.setReceiver(new ConsoleReceiver());
             }
             catch (MidiUnavailableException e) {

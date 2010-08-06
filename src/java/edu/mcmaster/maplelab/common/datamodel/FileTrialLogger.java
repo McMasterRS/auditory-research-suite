@@ -16,6 +16,8 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
 
+import javax.sound.midi.MidiEvent;
+
 import edu.mcmaster.maplelab.common.LogContext;
 
 
@@ -25,22 +27,20 @@ import edu.mcmaster.maplelab.common.LogContext;
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  Nov 22, 2006
  */
-public abstract class FileTrialLogger<T extends Session<?,?>, Q extends 
+public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends 
     Block<?, ?>, R extends Trial<?>> implements TrialLogger<Q, R> {
     
     private final T _session;
     private final File _file;
-    private final String _basename;
     private final boolean _deleteTempFile;
-    private File _outputDir;
+    private static File _outputDir;
 
-    public FileTrialLogger(T session, File workingDirectory, String basename) throws IOException {
-        this(session, workingDirectory, basename, true, false);
+    public FileTrialLogger(T session, File workingDirectory) throws IOException {
+        this(session, workingDirectory, true, false);
     }
     
-    public FileTrialLogger(T session, File workingDirectory, String basename, boolean separateOutput, boolean deleteTempFile) throws IOException {
+    public FileTrialLogger(T session, File workingDirectory, boolean separateOutput, boolean deleteTempFile) throws IOException {
         _session = session;
-        _basename = basename;
         _deleteTempFile = deleteTempFile;
         
         if(!workingDirectory.isDirectory() || !workingDirectory.canWrite()) {
@@ -62,17 +62,26 @@ public abstract class FileTrialLogger<T extends Session<?,?>, Q extends
         
     }
     
-    protected File createFile() {
-    	String stamp = String.format("%1$ty%1$tm%1$td%1$tH%1$tM", new Date());
-        
-        return new File(_outputDir, String.format("%s-%s.txt", getFileBasename(), stamp));
+    /**
+     * Get the timestamp in a standard format.
+     */
+    public static String getTimeStamp() {
+    	return String.format("%1$ty%1$tm%1$td%1$tH%1$tM", new Date());
     }
+    
+    protected abstract File createFile();
+    
+    /**
+     * Get the overall file to which data from individual
+     * files should be written.
+     */
+    protected abstract File getCollectedOutputFile();
     
     /**
      * Get the directory where data output is written. May be workingDirectory,
      * or a sub directory depending on how instantiated.
      */
-    protected File getOutputDirectory() {
+    protected static File getBaseOutputDirectory() {
         return _outputDir;
     }
     
@@ -81,13 +90,6 @@ public abstract class FileTrialLogger<T extends Session<?,?>, Q extends
      */
     protected File getFile() {
         return _file;
-    }
-    
-    /**
-     * Get the basename for output files.
-     */
-    protected String getFileBasename() {
-        return _basename;
     }
     
     /**
@@ -105,7 +107,7 @@ public abstract class FileTrialLogger<T extends Session<?,?>, Q extends
      * @see edu.mcmaster.maplelab.common.datamodel.TrialLogger#shutdown()
      */
     public void shutdown() {
-        File collected = new File(getFile().getParentFile(), _basename + ".txt");
+        File collected = getCollectedOutputFile();
         boolean cExists = collected.exists();
         LineNumberReader input = null;
         PrintWriter output = null;
@@ -151,7 +153,7 @@ public abstract class FileTrialLogger<T extends Session<?,?>, Q extends
      */
     public void submit(Q block, R trial) throws IOException {
         
-        EnumMap<? extends Enum<?>,String> map = marshalToMap(block, trial, 0);
+        EnumMap<? extends Enum<?>,String> map = marshalToMap(block, trial, 0, null);
         
         File file = getFile();
         
@@ -202,6 +204,7 @@ public abstract class FileTrialLogger<T extends Session<?,?>, Q extends
     }
  
     
-    protected abstract EnumMap<? extends Enum<?>, String> marshalToMap(Q block, R trial, int responseNum); 
+    protected abstract EnumMap<? extends Enum<?>, String> marshalToMap(Q block, R trial, 
+    		int responseNum, MidiEvent event); 
 
 }

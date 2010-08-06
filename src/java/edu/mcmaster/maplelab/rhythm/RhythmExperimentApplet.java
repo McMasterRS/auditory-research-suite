@@ -56,7 +56,7 @@ public class RhythmExperimentApplet extends ExperimentApplet<RhythmSession> {
         try {
 //            return new RhythmTrialLogger(getSession(), base);
             File trialLog = File.createTempFile("rhythm", "txt");
-            return new RhythmTrialLogger(getSession(), trialLog.getParentFile(), trialLog.getName());
+            return new RhythmTrialLogger(getSession(), trialLog.getParentFile());
         }
         catch (IOException ex) {
             logError(ex, "Couldn't connect to experiment_id: %s", idStr);

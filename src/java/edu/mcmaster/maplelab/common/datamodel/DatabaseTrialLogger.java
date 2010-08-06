@@ -27,7 +27,7 @@ import edu.mcmaster.maplelab.common.LogContext;
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  Sep 7, 2006
  */
-public abstract class DatabaseTrialLogger<S extends Session<?,?>, T extends Trial<?>, B extends Block<?,?>> implements TrialLogger<B,T> {
+public abstract class DatabaseTrialLogger<S extends Session<?,?,?>, T extends Trial<?>, B extends Block<?,?>> implements TrialLogger<B,T> {
 
     private final URL _base;
     /**
@@ -46,7 +46,7 @@ public abstract class DatabaseTrialLogger<S extends Session<?,?>, T extends Tria
         _base = base;
         _submitExecutor = Executors.newSingleThreadExecutor();
         
-        int id = _session.getExperimentID();
+        int id = _session.getExperimentDBKey();
         if(id >= 0) {
             testConnection();
             saveSessionConfig();
@@ -196,7 +196,7 @@ public abstract class DatabaseTrialLogger<S extends Session<?,?>, T extends Tria
             public void run() {
                 // NB: In development mode we set a negative experiment id
                 // causing logging to be ignored.
-                final int id = getSession().getExperimentID();
+                final int id = getSession().getExperimentDBKey();
                 if(id < 0) return;
                 
 
@@ -285,7 +285,7 @@ public abstract class DatabaseTrialLogger<S extends Session<?,?>, T extends Tria
         
         LogContext.getLogger().finer("-> config log: " + row);
         
-        if(getSession().getExperimentID() >= 0) {
+        if(getSession().getExperimentDBKey() >= 0) {
             OutputStreamWriter out = null;
             try {
                 out = new OutputStreamWriter(conn.getOutputStream());

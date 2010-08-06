@@ -61,10 +61,10 @@ public class SoundClip implements Playable {
      * @param name key name used in config file.
      * @return translated Playable type.
      */
-    public static Playable findPlayable(String name, Session<?, ?> session) {
+    public static Playable findPlayable(String name, Session<?, ?, ?> session) {
         return findPlayable(name, session, -1);
     }
-    public static Playable findPlayable(String name, Session<?, ?> session, int desiredDur) {
+    public static Playable findPlayable(String name, Session<?, ?, ?> session, int desiredDur) {
         Playable p = _soundCache.get(name);
         if(p == null) {
             String fileName = session.getString(name);

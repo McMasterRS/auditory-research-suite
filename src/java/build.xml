@@ -16,6 +16,8 @@
 	<property name="rhythm.dist.dir" value="${build}/www/rhythm" />
     <property name="rhythm.jar.path" location="${rhythm.dist.dir}/${rhythm.jar}"/>	
 	
+	<property name="rhythm.vprops" value="${basedir}/edu/mcmaster/maplelab/rhythm/rhythm.version.properties"/>
+	
     <patternset id="common.classes">
 	    <include name="edu/mcmaster/maplelab/common/**/*.class" />
         <include name="edu/mcmaster/maplelab/common/**/*.png" />
@@ -59,7 +61,7 @@
 	    <ant antfile="${basedir}/app/build.xml" dir="${basedir}/app" />
 	</target>
 	
-    <target name="rhythm.jar" depends="compile">
+    <target name="rhythm.jar" depends="rhythm.version, compile">
 		<jar destfile="${rhythm.jar.path}">
             <fileset dir="${build}">
                 <patternset refid="common.classes" />
@@ -70,6 +72,55 @@
             </manifest>			
 		</jar>
     </target>	
+	
+	<!-- Get the SVN build version. -->
+	<target name="svn.version" if="is.svn">
+		<exec executable="svnversion">
+        	<redirector outputproperty="build-num">
+        		<outputfilterchain>
+        			<tokenfilter>
+        				<!-- Strip anything after the first integer -->
+        				<trim/>
+                        <replaceregex pattern="^([0-9]+).*$" replace="\1"/>
+                        <replaceregex pattern="^exported$" replace="-1"/>
+        			</tokenfilter>
+        		</outputfilterchain>
+        	</redirector>
+    	</exec>
+	</target>
+	
+	<!-- Get the SVN build version from git. -->
+	<target name="git.version" unless="is.svn">
+		<exec executable="git">
+			<arg value="svn" />
+			<arg value="info" />
+        	<redirector outputproperty="build-num">
+        		<outputfilterchain>
+        			<linecontains>
+					  	 <contains value="Revision:"/>
+				 	</linecontains>
+        			<tokenfilter>
+        				<!-- Strip anything but the number. -->
+        				<trim/>
+        				<replaceregex pattern="Revision: " replace=""/>
+        			</tokenfilter>
+        		</outputfilterchain>
+        	</redirector>
+    	</exec>
+	</target>
+	
+	<target name="rhythm.version" depends="svn.version, git.version" >
+		<available property="is.svn" file=".svn" type="dir" />
+		
+		<echo>Got build num.</echo>
+		<echo>Got build num=${build-num}.</echo>
+		
+		<!-- Write the property file using the current date and time. -->
+		<propertyfile file="${rhythm.vprops}" comment="Rhythm Experiment Build Information File">
+			<entry key="buildVersion" type="int" value="${build-num}"/>
+			<entry key="buildDate" type="date" value="now" pattern="yyyy-MM-dd HH-mm-ss zzz"/>
+		</propertyfile>
+	</target>
 	
     <target name="compile">
 	    <javac nowarn="yes" source="1.6" srcdir="${src}" destdir="${build}">

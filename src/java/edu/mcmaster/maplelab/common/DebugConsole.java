@@ -12,6 +12,9 @@
 package edu.mcmaster.maplelab.common;
 
 import java.awt.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.security.AccessControlException;
@@ -19,6 +22,10 @@ import java.util.Scanner;
 import java.util.logging.*;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+
+import edu.mcmaster.maplelab.common.datamodel.Session;
 
 /**
  * Simple frame displaying log messages.
@@ -31,13 +38,15 @@ public class DebugConsole extends JFrame {
     private JPanel jContentPane = null;
     private JTextArea console = null;
     private JScrollPane consoleScrollPane = null;
+    private File _logFile = null;
 
     /**
      * This is the default constructor
      */
-    public DebugConsole() {
+    public DebugConsole(Session<?, ?, ?> session) {
         super(selectScreenConfiguration());
         initialize();
+        _logFile = session.getDebugLogFile();
     }
 
     /**
@@ -120,12 +129,26 @@ public class DebugConsole extends JFrame {
         return consoleScrollPane;
     }
     
+    private void writeLogFile() throws Exception {
+    	FileWriter f = new FileWriter(_logFile);
+    	Document d = getConsole().getDocument();
+    	f.append(d.getText(0, d.getLength()));
+    	f.close();
+    }
+    
     private class LogHandler extends Handler {
         public LogHandler() {
         }
         @Override
         public void close() throws SecurityException {
-            DebugConsole.this.setVisible(false);
+        	try {
+        		writeLogFile();
+        	}
+        	catch (Exception e) {
+        		// just don't write file
+        	}
+        	
+        	DebugConsole.this.setVisible(false);
         }
 
         @Override

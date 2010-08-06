@@ -32,7 +32,7 @@ public class Introduction extends Instructions {
         introScreenText        
     }
     
-    public Introduction(StepManager mgr, Session<?,?> session) {
+    public Introduction(StepManager mgr, Session<?,?,?> session) {
         setStepManager(mgr);
         setInstructionTextFontSize(session.getDefaultFontSize());
         setTitleText(session.getString(ConfigKeys.introScreenTitle, null));

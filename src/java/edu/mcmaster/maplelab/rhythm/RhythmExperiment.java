@@ -21,7 +21,6 @@ import java.util.logging.Level;
 import javax.swing.*;
 
 import edu.mcmaster.maplelab.common.LogContext;
-import edu.mcmaster.maplelab.common.datamodel.TrialLogger;
 import edu.mcmaster.maplelab.common.gui.*;
 import edu.mcmaster.maplelab.rhythm.datamodel.*;
 
@@ -32,9 +31,16 @@ import edu.mcmaster.maplelab.rhythm.datamodel.*;
  * @since   Nov 7, 2006
  */
 public class RhythmExperiment extends JPanel {
-    public static final String CONF_BASENAME = "rhythm";
+    public static final String EXPERIMENT_BASENAME = "Rhythm";
     
-    private final RhythmSession _session;
+    private enum VersionProps {
+		buildVersion,
+		buildDate
+	}
+	
+	private static String _buildVersion;
+	private static String _buildDate;
+	private final RhythmSession _session;
     private JPanel _contentCard;
 
     public RhythmExperiment(RhythmSession session) {
@@ -47,7 +53,23 @@ public class RhythmExperiment extends JPanel {
         
         setPreferredSize(new Dimension(640, 480));
     }
-
+    
+    /**
+     * Load build information from the given properties.
+     */
+	private static void loadBuildInfo(Properties props) {
+		_buildVersion = props.getProperty(VersionProps.buildVersion.name(), "-1");
+		_buildDate = props.getProperty(VersionProps.buildDate.name(), "00000000");
+	}
+	
+	public static String getBuildVersion() {
+		return _buildVersion;
+	}
+	
+	public static String getBuildDate() {
+		return _buildDate;
+	}
+    
     /**
      * This method initializes jContentPane
      * 
@@ -71,7 +93,35 @@ public class RhythmExperiment extends JPanel {
         return _contentCard;
     }
     
-    private static class RFrame extends ExperimentFrame<RhythmSession, RhythmBlock, RhythmTrial> {
+    /**
+     * Initialize build information.
+     */
+    private void initializeBuildInfo(File dataDir) throws IOException {
+    	String name = EXPERIMENT_BASENAME.toLowerCase() + ".version.properties";
+        File f = new File(dataDir, name);
+        InputStream is = null;
+        if (f.exists()) {
+            is = new FileInputStream(f);            
+        }
+        else {
+            is = getClass().getResourceAsStream(name);
+        }
+        
+        Properties props = new Properties();
+        try {
+            props.load(is);
+        }
+        catch (Exception ex) {
+        	LogContext.getLogger().log(Level.SEVERE, "Error reading version file", ex);
+        }
+        finally {
+            if(is != null)  try { is.close(); } catch (IOException e) {}
+        }
+        
+        loadBuildInfo(props);
+    }
+
+    private static class RFrame extends ExperimentFrame<RhythmSession, RhythmBlock, RhythmTrial, RhythmTrialLogger> {
     	// hackish way to store this value before creating session
     	private static int _midiID;
     	
@@ -85,7 +135,14 @@ public class RhythmExperiment extends JPanel {
 
         @Override
         protected Container createContent(RhythmSession session) {
-            return new RhythmExperiment(session);
+        	RhythmExperiment re = new RhythmExperiment(session);
+        	try {
+				re.initializeBuildInfo(session.getDataDir());
+			} 
+            catch (IOException e) {
+				LogContext.getLogger().log(Level.SEVERE, "Could not load build information.", e);
+			}
+        	return re;
         }
 
         @Override
@@ -97,12 +154,11 @@ public class RhythmExperiment extends JPanel {
 
         @Override
         protected InputStream getConfigData(File dataDir) throws IOException {
-            String name = CONF_BASENAME + ".properties";
+            String name = EXPERIMENT_BASENAME.toLowerCase() + ".properties";
             File f = new File(dataDir, name);
             
             if(f.exists()) {
-                return new FileInputStream(f);
-                
+                return new FileInputStream(f);              
             }
             else {
                 return getClass().getResourceAsStream(name);
@@ -110,9 +166,9 @@ public class RhythmExperiment extends JPanel {
         }
 
         @Override
-        protected TrialLogger<RhythmBlock, RhythmTrial> initTrialLogger(File dataDir) {
+        protected RhythmTrialLogger initTrialLogger(File dataDir) {
             try {
-                return new RhythmTrialLogger(getSession(), dataDir, CONF_BASENAME);
+                return new RhythmTrialLogger(getSession(), dataDir);
             }
             catch (IOException ex) {
                 logError(ex, "Error setting up logger", ex);
@@ -131,7 +187,7 @@ public class RhythmExperiment extends JPanel {
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Rhythm Experiment");
         try {
             
-            final SimpleSetupScreen setup = new SimpleSetupScreen(CONF_BASENAME);
+            final SimpleSetupScreen setup = new SimpleSetupScreen(EXPERIMENT_BASENAME.toLowerCase());
 
             // TODO: Clean up extending setup screen. Add something similar to what's
             // in the python experiments.
@@ -165,7 +221,7 @@ public class RhythmExperiment extends JPanel {
             RFrame.setMidiDeviceID(midiDevID);
             
             RFrame f = new RFrame(setup);
-            f.setTitle("Rhythm Experiment");
+            f.setTitle(String.format("Rhythm Experiment - Build %s", RhythmExperiment.getBuildVersion()));
             f.pack();
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             f.setLocationRelativeTo(null);
