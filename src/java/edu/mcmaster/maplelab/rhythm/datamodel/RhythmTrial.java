@@ -11,6 +11,7 @@
 */
 package edu.mcmaster.maplelab.rhythm.datamodel;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -46,7 +47,8 @@ public class RhythmTrial extends Trial<Response> {
      * Set the trial start time stamp.
      */
     public void setTimeStamp(Date stamp) {
-    	_timeStamp = String.format("%1$ty%1$tm%1$td%1$tH%1$tM%1$tS", stamp);
+    	SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy; hh:mm:ss a");
+    	_timeStamp = sdf.format(stamp);
     }
     
     /**

@@ -56,6 +56,9 @@ public class StimulusResponseScreen extends BasicStep {
         accuracyCorrectText, 
         accuracyIncorrectText, 
         resultsFormatText, 
+        firstDelayText,
+        trialDelayText,
+        warmupDelayText,
     }
     
     private final RhythmSession _session;
@@ -331,9 +334,28 @@ public class StimulusResponseScreen extends BasicStep {
         
         public void run() {
             try {
-                SwingUtilities.invokeAndWait(new Runnable() {
+            	SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
                         setEnabled(false);
+                        // Give user some time until next trial begins, setting an
+                        // appropriate message
+                    	if (_isWarmup) {
+                    		_statusText.setText(_session.getString(ConfigKeys.warmupDelayText, null));
+                    	}
+                    	else if (_completed == 0) {
+                    		_statusText.setText(_session.getString(ConfigKeys.firstDelayText, null));
+                    	}
+                    	else {
+                    		_statusText.setText(_session.getString(ConfigKeys.trialDelayText, null));
+                    	}
+                    }
+                });
+            	
+            	// actual delay until next trial
+            	Thread.sleep(_session.getTrialDelay());
+                
+                SwingUtilities.invokeAndWait(new Runnable() {
+                    public void run() {
                         _statusText.setText(_session.getString(_trial.isWithTap() ? 
                             ConfigKeys.withTapText : ConfigKeys.withoutTapText, null));
                         
@@ -343,7 +365,8 @@ public class StimulusResponseScreen extends BasicStep {
                         }
                     }
                 });
-                // Give user time to prepare.
+                
+                // Give user time to prepare for playback.
                 Thread.sleep(_session.getPreStimulusSilence());
             }
             catch (InterruptedException ex) {

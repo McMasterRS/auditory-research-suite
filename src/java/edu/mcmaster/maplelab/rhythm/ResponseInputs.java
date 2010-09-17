@@ -19,7 +19,7 @@ import java.util.*;
 
 import javax.swing.*;
 
-import edu.mcmaster.maplelab.rhythm.datamodel.ConfidenceRatingEnum;
+import edu.mcmaster.maplelab.rhythm.datamodel.ConfidenceLevel;
 import edu.mcmaster.maplelab.rhythm.datamodel.Response;
 
 /**
@@ -161,11 +161,11 @@ public class ResponseInputs extends JPanel {
     private List<JRadioButton> getConfidenceButtons() {
         _confGroup = new ButtonGroup();
         if(_confButtons == null)  {
-            ConfidenceRatingEnum[] ratings = ConfidenceRatingEnum.values();
+            ConfidenceLevel[] ratings = ConfidenceLevel.values();
             _confButtons = new ArrayList<JRadioButton>(ratings.length);
-            for(ConfidenceRatingEnum c : ratings) {
+            for(ConfidenceLevel c : ratings) {
                 JRadioButton b = new JRadioButton(c.toString());
-                b.putClientProperty(ConfidenceRatingEnum.class, c);
+                b.putClientProperty(ConfidenceLevel.class, c);
                 _confGroup.add(b);
                 _confButtons.add(b);
             }
@@ -222,10 +222,10 @@ public class ResponseInputs extends JPanel {
     /**
      * Get the selected confidence rating.
      */
-    private ConfidenceRatingEnum getConfRating() {
+    private ConfidenceLevel getConfRating() {
         for(JRadioButton b : _confButtons) {
             if(b.isSelected()) {
-                return (ConfidenceRatingEnum) b.getClientProperty(ConfidenceRatingEnum.class);
+                return (ConfidenceLevel) b.getClientProperty(ConfidenceLevel.class);
             }
         }
         

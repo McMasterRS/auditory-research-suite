@@ -21,14 +21,14 @@ package edu.mcmaster.maplelab.rhythm.datamodel;
  */
 public class Response {
     private final boolean _isProbeToneAccurate;
-    private final ConfidenceRatingEnum _conf;
+    private final ConfidenceLevel _conf;
 
-    public Response(boolean isProbeToneAccurate, ConfidenceRatingEnum conf) {
+    public Response(boolean isProbeToneAccurate, ConfidenceLevel conf) {
         _isProbeToneAccurate = isProbeToneAccurate;
         _conf = conf;
     }
     
-    public ConfidenceRatingEnum getConfidence() {
+    public ConfidenceLevel getConfidence() {
         return _conf;
     }
     

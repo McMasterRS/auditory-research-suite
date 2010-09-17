@@ -62,6 +62,8 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
      */
     public RhythmSession(Properties props) {
         super(props);
+        
+        ConfidenceLevel.initialize(this);
     }
     
     @Override

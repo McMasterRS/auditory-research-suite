@@ -42,6 +42,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         subExperimentID,
         numBlocks,
         numWarmupTrials,
+        trialDelay,
         debug,
         demo,
         defaultFontSize,
@@ -156,6 +157,13 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      */
     public String getSubExperimentID() {
         return getString(ConfigKeys.subExperimentID, "-1");
+    }    
+    
+    /**
+     * Get the delay between trials.
+     */
+    public int getTrialDelay() {
+        return getInteger(ConfigKeys.trialDelay, 0);
     }    
     
     /**
