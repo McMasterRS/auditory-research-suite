@@ -63,6 +63,7 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
     public RhythmSession(Properties props) {
         super(props);
         
+        setNumBlocks(getBaseIOIs().size() * 2); // each IOI, w/ and w/o tapping
         ConfidenceLevel.initialize(this);
     }
     
@@ -229,12 +230,17 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
          
          List<Integer> baseIOIs = getBaseIOIs();
          
-         int i = 1;
          for (Integer ioi : baseIOIs) {
-             retval.add(new RhythmBlock(this, i++, true, ioi)); 
-             retval.add(new RhythmBlock(this, i++, false, ioi)); 
-        }
+        	 // just set generic id - we will renumber
+             retval.add(new RhythmBlock(this, 0, true, ioi)); 
+             retval.add(new RhythmBlock(this, 0, false, ioi)); 
+         }
          
+         // Shuffle and renumber blocks
+         Collections.shuffle(retval);
+         for (int i = 0; i < retval.size(); i++) {
+        	 retval.get(i).setNum(i+1);
+         }
          
          return retval;
      }

@@ -41,6 +41,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         experimentID, 
         subExperimentID,
         numBlocks,
+        blockSetRepetitions,
         numWarmupTrials,
         trialDelay,
         debug,
@@ -62,6 +63,13 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      * @uml.property  name="applet"
      */
     private Applet _applet = null;    
+    /** 
+     * Value indicating the current repetition number.
+     * A 'repetition' is a full set of experiment blocks.
+     * See getBlockSetRepetitions().
+     */
+    private int _repetition = 1;
+    
     
     /**
      * Default ctor.
@@ -75,6 +83,33 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
             String key = (String) e.nextElement();
             setProperty(key, props.getProperty(key));
         }
+    }
+    
+    /**
+     * Increment the repetition counter.
+     * A 'repetition' is a full set of experiment blocks.
+     * See getBlockSetRepetitions().
+     */
+    public void incrementRepetition() {
+    	++_repetition;
+    }
+    
+    /**
+     * Get the current repetition count.
+     * A 'repetition' is a full set of experiment blocks.
+     * See getBlockSetRepetitions().
+     */
+    public int getCurrentRepetition() {
+    	return _repetition;
+    }
+    
+    /**
+     * Convenience method to determine if the session
+     * has more repetitions.
+     * A 'repetition' is a full set of experiment blocks.
+     */
+    public boolean hasMoreRepetitions() {
+    	return getCurrentRepetition() <= getBlockSetRepetitions();
     }
     
     /**
@@ -167,11 +202,26 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
     }    
     
     /**
+     * Get the number of times a set of blocks (the full
+     * range of the experiment) should be repeated.
+     */
+    public int getBlockSetRepetitions() {
+    	return getInteger(ConfigKeys.blockSetRepetitions, 1);
+    }
+    
+    /**
      * Get NumBlocks property
      * @return Value for NumBlocks
      */
     public int getNumBlocks() {
         return getInteger(ConfigKeys.numBlocks, 7);
+    }
+    
+    /**
+     * Set the number of blocks, when determined.
+     */
+    protected void setNumBlocks(int numBlocks) {
+    	setProperty(ConfigKeys.numBlocks, Integer.valueOf(numBlocks));
     }
     
      /**
@@ -379,7 +429,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         if(val instanceof String) {
             retval = new ArrayList<Integer>();
             Scanner s = new Scanner((String)val);
-            s.useDelimiter("[, \t]");
+            s.useDelimiter("[\\s\\[\\(\\]\\),]+");
             while(s.hasNextInt()) {
                 retval.add(s.nextInt());
             }
@@ -410,9 +460,12 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         if(val instanceof String) {
             retval = new ArrayList<Float>();
             Scanner s = new Scanner((String)val);
-            s.useDelimiter("[, \t]");
+            // Finds one or more: whitespace OR open bracket OR open paren OR 
+            //        close bracket OR close paren OR comma
+            // as delimiter
+            s.useDelimiter("[\\s\\[\\(\\]\\),]+");
             while(s.hasNextFloat()) {
-                retval.add(s.nextFloat());
+            	retval.add(s.nextFloat());
             }
         }
         else if(val instanceof Float[]) {

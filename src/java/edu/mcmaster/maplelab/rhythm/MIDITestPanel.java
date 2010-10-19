@@ -240,6 +240,7 @@ public class MIDITestPanel extends JPanel {
             setEnabled(false);
             
             int dev = getCurrentDeviceID();
+            _tapRecorder.setMIDIInputID(-1);
             
             // determine notice for selected device
             String message = null;
@@ -252,7 +253,7 @@ public class MIDITestPanel extends JPanel {
             }
             else {
             	_tapRecorder.setMIDIInputID(dev);
-            	message = "Start tapping via the selected device, or use the computer keyboard";
+                message = "Start tapping via the selected device, or use the computer keyboard";
             }
             
             // begin recording

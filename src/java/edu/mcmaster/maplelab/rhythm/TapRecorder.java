@@ -23,6 +23,7 @@ import javax.sound.midi.*;
 import javax.sound.midi.MidiDevice.Info;
 
 import edu.mcmaster.maplelab.common.LogContext;
+import edu.mcmaster.maplelab.common.sound.MidiInterpreter;
 import edu.mcmaster.maplelab.common.sound.ToneGenerator;
 
 
@@ -34,9 +35,8 @@ import edu.mcmaster.maplelab.common.sound.ToneGenerator;
  * @since Apr 10, 2007
  */
 public class TapRecorder implements AWTEventListener, Receiver {
-    private static final int MIDI_NOTE = 72;
-    private static final int OPCODE_MASK = 0xf0;
-    private static final int CHANNEL_MASK = 0x0f;
+    private static final int ARTIFICIAL_MIDI_NOTE = 72;
+    
     private Sequencer _sequencer;
     private Sequence _sequence;
     private Track _track;
@@ -45,7 +45,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
     private MidiDevice _midiInput;
     private boolean _allowCompKeyInput;
     private Boolean _lastKeyDown = null;
-    private boolean _userInputOn;
+    private boolean _userInputOn = true;
     
     /** Items for suppression window implementation. */
     private Long _lastOnTick = null;
@@ -78,6 +78,13 @@ public class TapRecorder implements AWTEventListener, Receiver {
      * @param midiDevID MIDI device ID/index, or -1 to disable MIDI system recording.
      */
     public void setMIDIInputID(int midiDevID) {
+    	// the previous input device must be closed, or
+    	// it will continue to transmit midi signals to
+    	// this TapRecorder
+    	if (_midiDevID != midiDevID && _midiInput != null) {
+    		_midiInput.close();
+    		_midiInput = null;
+    	}
         _midiDevID = midiDevID;
     }
     
@@ -108,8 +115,6 @@ public class TapRecorder implements AWTEventListener, Receiver {
                 MidiDevice device = MidiSystem.getMidiDevice(devices[_midiDevID]);
                 
                 if (_midiInput != device) {
-                	if (_midiInput != null) _midiInput.close();
-                	
                 	_midiInput = device;
                 	
                 	if (_midiInput != null) {
@@ -180,58 +185,16 @@ public class TapRecorder implements AWTEventListener, Receiver {
     private MidiEvent convertNoteOffFormat(MidiEvent event) {
     	MidiEvent retval = event;
     	MidiMessage curr = event.getMessage();
-		if (getOpcode(curr) == ShortMessage.NOTE_ON && getVelocity(curr) == 0) {
+		if (MidiInterpreter.getOpcode(curr) == ShortMessage.NOTE_ON && MidiInterpreter.getVelocity(curr) == 0) {
 			ShortMessage sm = new ShortMessage();
 			try {
-				sm.setMessage(ShortMessage.NOTE_OFF, getChannel(curr), getKey(curr), getVelocity(curr));
+				sm.setMessage(ShortMessage.NOTE_OFF, MidiInterpreter.getChannel(curr), 
+						MidiInterpreter.getKey(curr), MidiInterpreter.getVelocity(curr));
 				retval = new MidiEvent(sm, event.getTick());
 			}
 			catch (InvalidMidiDataException e) {} // don't convert
 		}
 		return retval;
-    }
-    
-    // TODO: refactor the following static methods elsewhere?
-    /**
-     * Indicate if the given event is a note on event.
-     */
-    public static boolean isNoteOnEvent(MidiEvent event) {
-    	MidiMessage m = event.getMessage();
-    	return !(TapRecorder.getOpcode(m) != ShortMessage.NOTE_ON || 
-    			TapRecorder.getVelocity(m) == 0);
-    }
-    
-    /**
-     * Indicate if the given event is a note off event.
-     */
-    public static boolean isNoteOffEvent(MidiEvent event) {
-    	MidiMessage m = event.getMessage();
-    	return (TapRecorder.getOpcode(m) == ShortMessage.NOTE_ON && 
-    			TapRecorder.getVelocity(m) == 0) || TapRecorder.getOpcode(m) == ShortMessage.NOTE_OFF;
-    }
-    
-    public static int getChannel(MidiMessage m) {
-    	return m.getStatus() & CHANNEL_MASK;
-    }
-    
-    public static int getOpcode(MidiMessage m) {
-    	return m.getStatus() & OPCODE_MASK;
-    }
-    
-    /**
-     * Get the key property from the given message.  Returns null
-     * if not present.
-     */
-    public static Integer getKey(MidiMessage message) {
-    	return message.getLength() > 1 ? Integer.valueOf(message.getMessage()[1]) : null;
-    }
-    
-    /**
-     * Get the velocity property from the given message.  Returns null
-     * if not present.
-     */
-    public static Integer getVelocity(MidiMessage message) {
-    	return message.getLength() > 2 ? Integer.valueOf(message.getMessage()[2]) : null;
     }
     
     private void recordEvent(MidiEvent event) {
@@ -249,7 +212,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
         
         // certain repeat note-on events are suppressed, and the
         // corresponding note-off events no longer make sense
-        if (isNoteOnEvent(event)) {
+        if (MidiInterpreter.isNoteOnEvent(event)) {
         	// only record a note-on event if we are not in the 
         	// suppression window
         	if (window > _suppressionWindow) {
@@ -260,13 +223,13 @@ public class TapRecorder implements AWTEventListener, Receiver {
         		_skippedOnEvents.add(event);
         	}
         }      
-        else if (isNoteOffEvent(event) && _skippedOnEvents.size() > 0) {
+        else if (MidiInterpreter.isNoteOffEvent(event) && _skippedOnEvents.size() > 0) {
         	MidiMessage eventM = event.getMessage();
         	HashSet<MidiEvent> toRemove = new HashSet<MidiEvent>();
         	for (MidiEvent me : _skippedOnEvents) {
         		MidiMessage skippedM = me.getMessage();
-        		if (getChannel(eventM) == getChannel(skippedM) &&
-            			getKey(eventM) == getKey(skippedM)) {
+        		if (MidiInterpreter.getChannel(eventM) == MidiInterpreter.getChannel(skippedM) &&
+            			MidiInterpreter.getKey(eventM) == MidiInterpreter.getKey(skippedM)) {
             		toRemove.add(me);
     			}
         	}
@@ -299,8 +262,8 @@ public class TapRecorder implements AWTEventListener, Receiver {
     		
     		try {
                 MidiEvent event = down ? 
-                    ToneGenerator.createNoteOnEvent(MIDI_NOTE, -1) :
-                        ToneGenerator.createNoteOffEvent(MIDI_NOTE, -1);
+                    ToneGenerator.createNoteOnEvent(ARTIFICIAL_MIDI_NOTE, -1) :
+                        ToneGenerator.createNoteOffEvent(ARTIFICIAL_MIDI_NOTE, -1);
                 recordEvent(event);
             }
             catch (InvalidMidiDataException ex) {

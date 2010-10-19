@@ -71,12 +71,20 @@ public abstract class ExperimentFrame
             }
         });
         
+        // Run the exception handler on the EDT, which we might 
+        // already be on (probably are)
+        Runnable exceptHandlerSetup = new Runnable() {
+            public void run() {
+                Thread.currentThread().setUncaughtExceptionHandler(exHandler);
+            }
+        };
         try {
-            EventQueue.invokeAndWait(new Runnable() {
-                public void run() {
-                    Thread.currentThread().setUncaughtExceptionHandler(exHandler);
-                }
-            });
+        	if(EventQueue.isDispatchThread()) {
+        		exceptHandlerSetup.run();
+        	}
+        	else {
+        		EventQueue.invokeAndWait(exceptHandlerSetup);
+        	}
         }
         catch (Throwable ex) {
             // Shouldn't happen...

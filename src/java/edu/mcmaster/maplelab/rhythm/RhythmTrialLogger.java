@@ -19,6 +19,7 @@ import javax.sound.midi.*;
 import javax.sound.midi.MidiDevice.Info;
 
 import edu.mcmaster.maplelab.common.datamodel.FileTrialLogger;
+import edu.mcmaster.maplelab.common.sound.MidiInterpreter;
 import edu.mcmaster.maplelab.rhythm.datamodel.*;
 
 /**
@@ -40,6 +41,8 @@ public class RhythmTrialLogger extends
     	subject, 
         session, 
         trial_num,
+        repetition_num,
+        trial_in_repetition,
         block_num, 
         trial_in_block,
         time_stamp, 
@@ -77,7 +80,6 @@ public class RhythmTrialLogger extends
     	}
     }
 
-    private int _trialCount;
     /** Delegate for recording tapping data. */
     private final TapLogger _tapLogger;
 
@@ -100,9 +102,10 @@ public class RhythmTrialLogger extends
     @Override
     protected EnumMap<? extends Enum<?>, String> marshalToMap(
         RhythmBlock block, RhythmTrial trial, int responseNum, MidiEvent event) {
+    	
+    	RhythmSession session = getSession();
 
-        RhythmSession session = getSession();
-
+    	
         EnumMap<Keys, String> fields = new EnumMap<Keys, String>(Keys.class);
 
         fields.put(Keys.exp_id, session.getExperimentID());
@@ -112,18 +115,23 @@ public class RhythmTrialLogger extends
         fields.put(Keys.ra_id, session.getRAID());
         fields.put(Keys.subject, String.valueOf(session.getSubject()));
         fields.put(Keys.session, String.valueOf(session.getSession()));
-        fields.put(Keys.trial_num, String.valueOf(_trialCount));
+        
+        // Calculate trial numbers
+        int trial_in_rep = (block.getNum()-1)*block.getNumTrials() + trial.getNum();
+        int overall_trial = (session.getCurrentRepetition()-1)*session.getNumBlocks()*block.getNumTrials() + trial_in_rep;
+    	fields.put(Keys.trial_num, String.valueOf(overall_trial));
+        fields.put(Keys.repetition_num, String.valueOf(session.getCurrentRepetition()));
+        fields.put(Keys.trial_in_repetition, String.valueOf(trial_in_rep));
         fields.put(Keys.block_num, String.valueOf(block.getNum()));
         fields.put(Keys.trial_in_block, String.valueOf(trial.getNum()));
         fields.put(Keys.time_stamp, trial.getTimeStamp());
         fields.put(Keys.baseIOI, String.valueOf(trial.getBaseIOI()));
         fields.put(Keys.offsetDegree, String.valueOf(trial.getOffsetDegree()));
         fields.put(Keys.withTap, String.valueOf(trial.isWithTap()));
+        
         Response response = trial.getResponse();
-        fields.put(Keys.confidence, String.valueOf(response.getConfidence()
-            .ordinal()));
-        fields.put(Keys.accurate, String.valueOf(response
-            .getProbeToneAccurate()));
+        fields.put(Keys.confidence, String.valueOf(response.getConfidence().ordinal()));
+        fields.put(Keys.accurate, String.valueOf(response.getProbeToneAccurate()));
         fields.put(Keys.data_type, DataType.response.name());
 
         return fields;
@@ -230,7 +238,6 @@ public class RhythmTrialLogger extends
     
     @Override
     public void submit(RhythmBlock block, RhythmTrial trial) throws IOException {
-    	++_trialCount;
         super.submit(block, trial);
         _tapLogger.submit(block, trial);
     }
@@ -260,6 +267,8 @@ public class RhythmTrialLogger extends
             midi_dev_version,
             midi_dev_vendor,
             trial_num,
+            repetition_num,
+            trial_in_repetition,
             block_num, 
             trial_in_block, 
             time_stamp,
@@ -285,7 +294,6 @@ public class RhythmTrialLogger extends
 
         private TapType _type;
         private int _tick;
-        private int _trialCount = 0;
 
         public TapLogger(RhythmSession session, File workingDirectory) throws IOException {
             super(session, workingDirectory);
@@ -331,7 +339,13 @@ public class RhythmTrialLogger extends
             fields.put(TapKeys.midi_dev_name, info.getName());
             fields.put(TapKeys.midi_dev_version, info.getVersion());
             fields.put(TapKeys.midi_dev_vendor, info.getVendor());
-            fields.put(TapKeys.trial_num, String.valueOf(_trialCount));
+         
+            // Calculate trial numbers
+            int trial_in_rep = (block.getNum()-1)*block.getNumTrials() + trial.getNum();
+            int overall_trial = (session.getCurrentRepetition()-1)*session.getNumBlocks()*block.getNumTrials() + trial_in_rep;
+        	fields.put(TapKeys.trial_num, String.valueOf(overall_trial));
+            fields.put(TapKeys.repetition_num, String.valueOf(session.getCurrentRepetition()));
+            fields.put(TapKeys.trial_in_repetition, String.valueOf(trial_in_rep));
             fields.put(TapKeys.block_num, String.valueOf(block.getNum()));
             fields.put(TapKeys.trial_in_block, String.valueOf(trial.getNum()));
             fields.put(TapKeys.time_stamp, trial.getTimeStamp());
@@ -339,13 +353,13 @@ public class RhythmTrialLogger extends
             fields.put(TapKeys.offsetDegree, String.valueOf(trial.getOffsetDegree()));
             
             MidiMessage m = event.getMessage();
-            OpType ot = TapRecorder.getOpcode(m) == ShortMessage.NOTE_ON ? 
+            OpType ot = MidiInterpreter.getOpcode(m) == ShortMessage.NOTE_ON ? 
             		OpType.note_on : OpType.note_off;
             
             fields.put(TapKeys.opcode, ot.name());
-            fields.put(TapKeys.channel, String.valueOf(TapRecorder.getChannel(m)));
-            fields.put(TapKeys.key, String.valueOf(TapRecorder.getKey(m)));
-            fields.put(TapKeys.velocity, String.valueOf(TapRecorder.getVelocity(m)));
+            fields.put(TapKeys.channel, String.valueOf(MidiInterpreter.getChannel(m)));
+            fields.put(TapKeys.key, String.valueOf(MidiInterpreter.getKey(m)));
+            fields.put(TapKeys.velocity, String.valueOf(MidiInterpreter.getVelocity(m)));
             fields.put(TapKeys.type, _type.toString());
 
             String beat = _type != TapType.participant ? String.valueOf(_tick) : "-";
@@ -370,8 +384,7 @@ public class RhythmTrialLogger extends
         public void submit(RhythmBlock block, RhythmTrial trial) throws IOException {
             Sequence recording = trial.getRecording();
             if (recording == null) return;
-            ++_trialCount;
-
+            
             writeMidiFile(recording, block, trial);
             writeTextFile(recording, block, trial);
         }
@@ -408,8 +421,8 @@ public class RhythmTrialLogger extends
                         // method, just because it's conceptually clean
                         MidiEvent currEvent = track.get(j);
                         
-                        if (!TapRecorder.isNoteOnEvent(currEvent) && 
-                        		(!getSession().recordNoteOffEvents() || !TapRecorder.isNoteOffEvent(currEvent))) {
+                        if (!MidiInterpreter.isNoteOnEvent(currEvent) && 
+                        		(!getSession().recordNoteOffEvents() || !MidiInterpreter.isNoteOffEvent(currEvent))) {
                         	continue;
                     	}
                         

@@ -27,7 +27,9 @@ import javax.swing.*;
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.gui.*;
+import edu.mcmaster.maplelab.common.sound.MidiInterpreter;
 import edu.mcmaster.maplelab.common.sound.Note;
+import edu.mcmaster.maplelab.common.sound.Pitch;
 import edu.mcmaster.maplelab.common.sound.ToneGenerator;
 import edu.mcmaster.maplelab.rhythm.datamodel.*;
 
@@ -64,7 +66,8 @@ public class StimulusResponseScreen extends BasicStep {
     private final RhythmSession _session;
     private ResponseInputs _response;
     private List<RhythmBlock> _blocks;
-    private int _blockIndex;
+    private int _blockIndex = 0;
+    private int _repIndex = 0;
     private final boolean _isWarmup;
     private final JLabel _statusText;
     private TapRecorder _tapRecorder;
@@ -236,8 +239,6 @@ public class StimulusResponseScreen extends BasicStep {
     
     /**
      * Increment to the next block
-     * 
-     * @return true if there's another block, false if no more blocks.
      */
     private void incBlock() {
         _blockIndex++;
@@ -246,6 +247,13 @@ public class StimulusResponseScreen extends BasicStep {
         if(more) {
             RhythmBlock block = currBlock();
             LogContext.getLogger().fine("* New block: " + block);
+        }
+        else if (!_isWarmup) {
+        	_session.incrementRepetition();
+        	if (_session.hasMoreRepetitions()) {
+	    		_blockIndex = 0;
+	        	_blocks = _session.generateBlocks();
+        	}
         }
     }
     
@@ -513,11 +521,17 @@ public class StimulusResponseScreen extends BasicStep {
 
         public void send(MidiMessage midimessage, long l) {
             if (midimessage instanceof ShortMessage) {
-                if (((ShortMessage)midimessage).getCommand() == ShortMessage.NOTE_ON) {
-                    LogContext.getLogger().fine(String.format("%8d -> tap", l));
+            	ShortMessage sm = (ShortMessage) midimessage;
+            	int key = MidiInterpreter.getKey(sm);
+            	Pitch pitch = new Pitch(key);
+            	int vel = MidiInterpreter.getVelocity(sm);
+            	String format = "%8d -> %s, midi note %s, velocity %s, %s";
+                if (sm.getCommand() == ShortMessage.NOTE_ON) {
+                	LogContext.getLogger().fine(String.format(format, l, "tap", key, vel, pitch));
+                    
                 }
-                else if (((ShortMessage)midimessage).getCommand() == ShortMessage.NOTE_OFF) {
-                	LogContext.getLogger().fine(String.format("%8d -> release", l));
+                else if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+                	LogContext.getLogger().fine(String.format(format, l, "release", key, vel, pitch));
                 }
             }
         }

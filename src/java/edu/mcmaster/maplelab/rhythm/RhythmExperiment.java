@@ -180,53 +180,60 @@ public class RhythmExperiment extends JPanel {
     
     
     /**
-     * Test code.
      * @param args ignored
      */
     public static void main(String[] args) {
-        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Rhythm Experiment");
-        try {
-            
-            final SimpleSetupScreen setup = new SimpleSetupScreen(EXPERIMENT_BASENAME.toLowerCase());
+    	System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Rhythm Experiment");
+    	try {
+    		// GUI initialization must be done in the EDT
+    		EventQueue.invokeAndWait(new Runnable() {
 
-            // TODO: Clean up extending setup screen. Add something similar to what's
-            // in the python experiments.
-            int midiDevID = setup.prefs().getInt(RhythmSession.ConfigKeys.midiDevID.name(), 0);
-            
-            setup.addLabel("<html><p align=right>Tap Source (MIDI <br>Device #):");
-            final JFormattedTextField midiDev = new JFormattedTextField();
-            midiDev.setValue(new Integer(midiDevID));
-            setup.addField(midiDev);            
-            
+    			@Override
+    			public void run() {
 
-            // Kludge to provide simple MIDI testing utility.
-            JButton midiTest = new JButton("List and Test Devices");
-            midiTest.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    Component source = (Component) e.getSource();
-                    JDialog dialog = MIDITestPanel.createDialog(source);
-                    dialog.setVisible(true);
-                }
-            });
-            
-            setup.addLabel("MIDI System:");
-            JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            p.add(midiTest);
-            setup.addField(p);
-            setup.display();
-            
-            // TODO: Yuck. Refactor.
-            midiDevID = Integer.parseInt(midiDev.getText());
-            setup.prefs().putInt(RhythmSession.ConfigKeys.midiDevID.name(), midiDevID);
-            RFrame.setMidiDeviceID(midiDevID);
-            
-            RFrame f = new RFrame(setup);
-            f.setTitle(String.format("Rhythm Experiment - Build %s", RhythmExperiment.getBuildVersion()));
-            f.pack();
-            f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            f.setLocationRelativeTo(null);
-            f.setVisible(true);
-        }
+    				final SimpleSetupScreen setup = new SimpleSetupScreen(EXPERIMENT_BASENAME.toLowerCase());
+
+    				// TODO: Clean up extending setup screen. Add something similar to what's
+    				// in the python experiments.
+    				int midiDevID = setup.prefs().getInt(RhythmSession.ConfigKeys.midiDevID.name(), 0);
+
+    				setup.addLabel("<html><p align=right>Tap Source (MIDI <br>Device #):");
+    				final JFormattedTextField midiDev = new JFormattedTextField();
+    				midiDev.setValue(new Integer(midiDevID));
+    				setup.addField(midiDev);            
+
+
+    				// Kludge to provide simple MIDI testing utility.
+    				JButton midiTest = new JButton("List and Test Devices");
+    				midiTest.addActionListener(new ActionListener() {
+    					public void actionPerformed(ActionEvent e) {
+    						Component source = (Component) e.getSource();
+    						JDialog dialog = MIDITestPanel.createDialog(source);
+    						dialog.setVisible(true);
+    					}
+    				});
+
+    				setup.addLabel("MIDI System:");
+    				JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    				p.add(midiTest);
+    				setup.addField(p);
+    				setup.display();
+
+    				// TODO: Yuck. Refactor.
+    				midiDevID = Integer.parseInt(midiDev.getText());
+    				setup.prefs().putInt(RhythmSession.ConfigKeys.midiDevID.name(), midiDevID);
+    				RFrame.setMidiDeviceID(midiDevID);
+
+    				RFrame f = new RFrame(setup);
+    				f.setTitle(String.format("Rhythm Experiment - Build %s", RhythmExperiment.getBuildVersion()));
+    				f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    				f.setLocationRelativeTo(null);
+    				f.pack();
+    				f.setVisible(true);
+    			}
+    		});
+    		LogContext.getLogger().finer("Experiment GUI launched");
+    	}
         catch (Exception ex) {
             ex.printStackTrace();
             LogContext.getLogger().log(Level.SEVERE, "Unrecoverable error", ex);
