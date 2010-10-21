@@ -122,7 +122,9 @@ class Experiment(object):
             sequence=sample(sequence, enforcedMaxStimuli) # select only 15 trials
         for i in (sequence):
             self.steps.append(aBlock.getTrial(i))
-               
+   
+   
+       
 class DialogMessage(object):
     """
     The class encapsulates the step of showing a simple message to the user, and
@@ -134,6 +136,36 @@ class DialogMessage(object):
         
     def show(self, parent):
         import wx
-        dlg = wx.MessageDialog(parent, self.message, self.title, style=wx.OK|wx.STAY_ON_TOP)
+        newFont = wx.SystemSettings_GetFont(wx.SYS_DEFAULT_GUI_FONT)
+
+        newFont.SetPointSize(25)
+        
+        dlg = wx.Dialog(parent, title=self.title, style=wx.DEFAULT_DIALOG_STYLE|wx.STAY_ON_TOP)
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        dlg.SetSizer(sizer)
+        
+        
+        message = wx.StaticText(dlg, label=self.message)
+        message.SetFont(newFont)
+        sizer.Add(message, 1, wx.EXPAND|wx.ALL, 10)
+        
+        ok = wx.Button(dlg, wx.ID_OK, "OK")
+        ok.SetDefault()
+        
+        sizer.Add(ok, 0, wx.ALIGN_CENTER|wx.ALL, 10)
+        
+        dlg.Fit()
+        
+        size = dlg.GetSize()
+        size.IncBy(100, 100)
+        dlg.SetSize(size)
+
+        dlg.Centre();
+        
+        ##wx.Font(50, wx.DEFAULT, wx.NORMAL, wx.NORMAL))
+        
         dlg.ShowModal()        
+        dlg.Destroy()
+        
         
