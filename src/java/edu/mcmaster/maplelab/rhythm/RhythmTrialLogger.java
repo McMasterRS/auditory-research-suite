@@ -50,7 +50,8 @@ public class RhythmTrialLogger extends
         offsetDegree, 
         withTap, 
         confidence, 
-        accurate,
+        subjResponse,
+        responseCorrect,
         data_type
     }
     
@@ -108,6 +109,7 @@ public class RhythmTrialLogger extends
     	
         EnumMap<Keys, String> fields = new EnumMap<Keys, String>(Keys.class);
 
+        // Meta information
         fields.put(Keys.exp_id, session.getExperimentID());
         fields.put(Keys.sub_exp_id, session.getSubExperimentID());
         fields.put(Keys.exp_build, RhythmExperiment.getBuildVersion());
@@ -116,7 +118,7 @@ public class RhythmTrialLogger extends
         fields.put(Keys.subject, String.valueOf(session.getSubject()));
         fields.put(Keys.session, String.valueOf(session.getSession()));
         
-        // Calculate trial numbers
+        // Calculate trial numbers and parameters
         int trial_in_rep = (block.getNum()-1)*block.getNumTrials() + trial.getNum();
         int overall_trial = (session.getCurrentRepetition()-1)*session.getNumBlocks()*block.getNumTrials() + trial_in_rep;
     	fields.put(Keys.trial_num, String.valueOf(overall_trial));
@@ -129,9 +131,11 @@ public class RhythmTrialLogger extends
         fields.put(Keys.offsetDegree, String.valueOf(trial.getOffsetDegree()));
         fields.put(Keys.withTap, String.valueOf(trial.isWithTap()));
         
+        // Output subject response information
         Response response = trial.getResponse();
         fields.put(Keys.confidence, String.valueOf(response.getConfidence().ordinal()));
-        fields.put(Keys.accurate, String.valueOf(response.getProbeToneAccurate()));
+        fields.put(Keys.subjResponse, String.valueOf(response.getProbeToneAccurate()));
+        fields.put(Keys.responseCorrect, String.valueOf(trial.isResponseCorrect()));
         fields.put(Keys.data_type, DataType.response.name());
 
         return fields;
