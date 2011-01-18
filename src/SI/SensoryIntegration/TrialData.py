@@ -47,7 +47,7 @@ class Trial(object):
     """
     
     
-    def __init__(self, dataFile, aspectRatio, sndFile, 
+    def __init__(self, dataFile, experimentType, aspectRatio, sndFile, 
                   sndSilence, sndDelay, pitch, vis, aud, 
                   pointLimit=None, pitchVisualCode=None, window=None, vidFile=None):
                       
@@ -57,6 +57,7 @@ class Trial(object):
             raise ValueError("All stimulus sources (animation, sound, video) are set to None for " + pitch + vis + aud)
         
         self.dataFile = dataFile
+        self.experimentType = experimentType
         self.sndFile = sndFile
         self.aspectRatio = aspectRatio
         self.sndSilence = sndSilence
@@ -80,7 +81,9 @@ class Trial(object):
         self.sndOffset = 0       
         self.sndPlayed = False       
         self.lengthResponse = None
-        self.agreementResponse = None         
+        self.agreementResponse = None     
+        self.orderResponse = None
+        self.confResponse = None    
         self.totalDuration = 0
         self.audio = None
 
@@ -155,21 +158,38 @@ class Trial(object):
         
         
         displayType=self.getDisplayType()
-        return [
-            self.pitch,
-            self.aud,
-            self.pitchVisualValue,
-            self.vis,
-            self.sndDelay,
-            self.lengthResponse,
-            self.agreementResponse,
-            self.dataFile,
-            self.sndFile,
-            self.sndSilence,
-            self.pointLimit,
-            self.vidFile,
-            displayType
-        ]        
+        if self.experimentType == 'SI':
+            return [
+                self.pitch,
+                self.aud,
+                self.pitchVisualValue,
+                self.vis,
+                self.sndDelay,
+                self.lengthResponse,
+                self.agreementResponse,
+                self.dataFile,
+                self.sndFile,
+                self.sndSilence,
+                self.pointLimit,
+                self.vidFile,
+                displayType
+            ]        
+        else:
+            return [
+                self.pitch,
+                self.aud,
+                self.pitchVisualValue,
+                self.vis,
+                self.sndDelay,
+                self.orderResponse,
+                self.confResponse,
+                self.dataFile,
+                self.sndFile,
+                self.sndSilence,
+                self.pointLimit,
+                self.vidFile,
+                displayType
+            ]
      
     def getDisplayType(self): 
         audio="<NONE>"
@@ -206,24 +226,44 @@ class Trial(object):
         """ 
         Get the list of strings naming the values returned by the values() method.
         """
-        return [
-            #'trialNumber',
-            #'metaBlock',
-            #'block',
-            'pitch',
-            'aud',
-            'pitchVisual',
-            'vis',
-            'delay',
-            'duration',
-            'agreement',
-            'audFile',
-            'visFile',
-            'sndSilence',
-            'numPoints',
-            'vidFile',
-            'displayType',
-        ]        
+        if self.experimentType == 'SI':
+            return [
+                #'trialNumber',
+                #'metaBlock',
+                #'block',
+                'pitch',
+                'aud',
+                'pitchVisual',
+                'vis',
+                'delay',
+                'duration',
+                'agreement',
+                'audFile',
+                'visFile',
+                'sndSilence',
+                'numPoints',
+                'vidFile',
+                'displayType',
+            ]   
+        else:
+            return [
+                #'trialNumber',
+                #'metaBlock',
+                #'block',
+                'pitch',
+                'aud',
+                'pitchVisual',
+                'vis',
+                'delay',
+                'dotFirst',
+                'confidence',
+                'audFile',
+                'visFile',
+                'sndSilence',
+                'numPoints',
+                'vidFile',
+                'displayType',
+            ] 
             
         
     def _parse(self, filename):
@@ -364,12 +404,19 @@ class Trial(object):
         else:
             return None
         
-    def recordResponse(self, length, agreement):
+    def recordSIResponse(self, length, agreement):
         # XXX hack to reset sound played flag. Need to move audio playback 
         # and management outside of Trial class
         self.sndPlayed = False
         self.lengthResponse = length
         self.agreementResponse = agreement
+        
+    def recordTOJResponse(self, dotIsFirst, confLevel):
+        # XXX hack to reset sound played flag. Need to move audio playback 
+        # and management outside of Trial class
+        self.sndPlayed = False
+        self.orderResponse = dotIsFirst
+        self.confResponse = confLevel
         
     def __str__(self):
         retval = ""
@@ -432,7 +479,7 @@ def setupTrialData(session):
         wav = os.path.join(session.workingDir, row[1])
         silence = float(row[2])
         delay = float(row[3])
-        retval.append(Trial(data, session.aspectRatio, wav, silence, delay, None, None, None))
+        retval.append(Trial(data, session.experimentType, session.aspectRatio, wav, silence, delay, None, None, None))
         
     f.close()
     return retval
@@ -619,6 +666,7 @@ def generateTrial (pitch, vis, aud, delay, session, numPoints=None, pitchVisualC
 #    print ("Treating as video = " + str(asVideo) + ", visFile=" + str(visFile) + ", audFile=" + str(audFile) + ", vidFile=" + vidFile)
     
     retTrial = Trial(visFile,
+                     session.experimentType,
                      session.aspectRatio,
                      audFile,
                      introSilence,

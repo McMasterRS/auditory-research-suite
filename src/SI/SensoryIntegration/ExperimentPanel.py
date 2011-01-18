@@ -80,7 +80,7 @@ class ExperimentFrame(wx.Frame):
         self.logger = logger
         self.stepGenerator = None
         
-        self.SetTitle("Sensory Integration Experiment")
+        self.SetTitle(session.windowTitle)
         
         self.exp = ExperimentPanel(self, session, self._onResponseRecorded)
 

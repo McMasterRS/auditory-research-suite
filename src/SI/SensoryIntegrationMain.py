@@ -133,9 +133,11 @@ app = wx.PySimpleApp()
 # 90) Sample for autism  project
 # Define the global environment
 
-session = SISession(version = __version__.split()[1])
+session = SISession(name='SensoryIntegration', version = __version__.split()[1]) # may need to change name depending on type
 session = session.load()
 
+session.windowTitle = 'Sensory Integration Experiment'
+session.experimentType='SI'     # SI or TOJ are the choices - determines response values and corresponding output data
 session.experimentVersion=90       # to be appended to file name
 session.experimentSubversion=1  # for use in verifying which experiment is running
 session.blockNumber=99          # assume starting witih warmup block
@@ -143,7 +145,7 @@ session.metaBlockNumber=1      # default for now, should be handled more elegant
 ##trialList = None       # Populated below
 ##blockSequence = None   # ditto
 session.shuffleTrials = True   # switch to control randomizing trials
-session. shuffleBlocks = True   # switch to control randomizing blocks
+session.shuffleBlocks = True   # switch to control randomizing blocks
 
 
 # Show setup GUI

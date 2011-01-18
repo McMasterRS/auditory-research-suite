@@ -191,6 +191,7 @@ class DemoGUIControls(wx.Panel):
         
         trial = TrialData.Trial(
                     visFile,
+                    self.session.experimentType,
                     self.session.aspectRatio,
                     audFile,
                     introSilence,
