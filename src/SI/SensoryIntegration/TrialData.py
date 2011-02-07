@@ -19,6 +19,7 @@ import csv
 import os
 from random import *
 import wx
+import string
 
 from AudioClip import *
 
@@ -112,7 +113,7 @@ class Trial(object):
         self.minPosFrame = -1
         minPos = 1e100
         for i, f in enumerate(self.frames):
-            pos = f.coords[0][1]
+            pos = f.dots[0].location[1]
             if pos < minPos:
                 minPos = pos
                 self.minPosFrame = i
@@ -273,39 +274,147 @@ class Trial(object):
         reader = csv.reader(f, dialect="excel-tab")
     
         # The first row is the file header
-        headerVals = reader.next()
-    
+        # headerVals = reader.next()
+        # will be caught below . . .
+        
+        # WARNING: Property values are a new addition to the data file;
+        # luminance was a valid data column before properties existed,
+        # so the absence of the property indicator does not mean there
+        # is no luminance data.
+        colorData = False
+        sizeData = False
+        lumData = False
+        hadLumPrefKey = False
         for row in reader:
-            if len(row) < 3: continue
-            vals = []
-            for v in row:
+            if len(row) < 1: continue
+            
+            # handle boolean properties
+            propPair = string.split(row[0], "=")
+            propName = string.strip(propPair[0])
+            propStr = string.strip(propPair[len(propPair)-1])
+            propVal = False
+            if string.find(propStr, "t") > -1 or string.find(propStr, "T") > -1:
+                propVal = True
+            
+            if string.find(propName, "colorData") > -1: 
+                colorData = propVal
+                continue
+            elif string.find(propName, "sizeData") > -1: 
+                sizeData = propVal
+                continue
+            elif string.find(propName, "luminanceData") > -1: 
+                lumData = propVal
+                hadLumPrefKey = True
+                continue
+            
+            # have to have at least one time and one x,y location
+            if len(row) < 3: continue 
+            try:
+                time = float(row[0])
+            except ValueError:
+                # have to have a valid time
+                continue
+            
+            dots = []
+            # initialize items that may repeat in the row
+            location = None
+            color = None
+            size = None
+            first = None
+            blankCount = 0
+            for i in range(1, len(row)):
+                val = row[i]
+                # if we have the first part of a pair, look for the second part
+                if first is not None:
+                    try:
+                        location = (first, float(val))
+                        first = None
+                        continue
+                    except ValueError:
+                        # not having the second part of a pair means the row
+                        # is improperly formatted, so we'll skip it
+                        break 
+                
+                # if we're starting another pair, cache and reset any existing info
                 try:
-                    vals.append(float(v))
+                    first = float(val)
+                    blankCount = 0
+                    if location is not None:
+                        dots.append(Dot(location, color, size))
+                        location = None
+                        color = None
+                        size = None
                 except ValueError:
+                    valStr = str(val)
+                    
+                    # color value
+                    if string.find(valStr, "(") > -1:
+                        if colorData is False: continue
+                        
+                        items = string.split(valStr, ",")
+                        if len(items) == 3:
+                            chars = "(), "
+                            color = (string.atoi(string.strip(items[0], chars)), 
+                                     string.atoi(string.strip(items[1], chars)), 
+                                     string.atoi(string.strip(items[2], chars)))
+                    # size value
+                    elif string.find(valStr, "size") > -1:
+                        if sizeData is False: continue
+                        
+                        size = string.atof(string.strip(valStr, "size "))
+                    # purposely blank table cell
+                    elif string.find(valStr, "-") > -1:
+                        
+                        # cache and reset any existing info
+                        if location is not None:
+                            dots.append(Dot(location, color, size))
+                            location = None
+                            color = None
+                            size = None
+                        
+                        blankCount = blankCount + 1
+                        
+                        if colorData is True and sizeData is True and blankCount == 4:
+                            dots.append(Dot(None, None, None))
+                            blankCount = 0
+                        elif (colorData is True or sizeData is True) and blankCount == 3:
+                            dots.append(Dot(None, None, None))
+                            blankCount = 0
+                        elif colorData is False and sizeData is False and blankCount == 2:
+                            dots.append(Dot(None, None, None))
+                            blankCount = 0
+                    # double tab
+                    elif len(valStr) < 1:
+                        continue
                     # Getting here means we got to the pit/vis markers at the end
-                    break
-            if len(vals) == 0: continue
+                    else: break
+            
+            # we may still have one last item to cache
+            if location is not None:
+                dots.append(Dot(location, color, size))
+                location = None
+                color = None
+                size = None
             
             
-            lum = 1
             # This is a hack to support reading old animation files as well
             # as new ones that have had a luminance specifier tacked onto the
             # end of the line.
-            if len(row) % 2 == 0:
+            lum = 1
+            if lumData or (hadLumPrefKey is False and len(row) % 2 == 0):
                 try:
                     lum = float(row[-1])
                 except ValueError:
                     pass
                 
-            frame = Frame(vals[0], vals[1:], lum)
-            
-            self.frames.append(frame)
+            self.frames.append(Frame(time, dots, lum))
 
         f.close()
         self.index = 1
         
         if len(self.frames) < 1:
             raise IOError("No data values parsed in '" + filename + "'")
+        
         
     def _interpolate(self, t, f1, f2):
         alpha = (t - f1.t)/(f2.t - f1.t)
@@ -318,24 +427,71 @@ class Trial(object):
 #        else:
 #            alpha = 1
             
-        coords = []
+        num = min(len(f1.dots), len(f2.dots))
         
-        num = min(len(f1.coords), len(f2.coords))
-
         # Limit points if requested
         if(self.pointLimit is not None):
             num = min(num, self.pointLimit)
 
+        newDots = []
         for i in range(num):
-            v00 = f1.coords[i][0]
-            v01 = f1.coords[i][1]
-            v10 = f2.coords[i][0]
-            v11 = f2.coords[i][1]
-            coords.append(v00 + alpha * (v10 - v00))
-            coords.append(v01 + alpha * (v11 - v01))
+            newLoc = None
+            newColor = None
+            newSizeRatio = None
+            dot1 = f1.dots[i]
+            dot2 = f2.dots[i]
+            
+            # if neither dot is a dummy/empty dot
+            if dot1.location is not None and dot2.location is not None:
+                v00 = dot1.location[0]
+                v01 = dot1.location[1]
+                v10 = dot2.location[0]
+                v11 = dot2.location[1]
+                newLoc = ((v00 + alpha * (v10 - v00)), (v01 + alpha * (v11 - v01)))
+                
+                # calculate color
+                if dot1.color is not None and dot2.color is not None:
+                    c00 = dot1.color[0]
+                    c01 = dot1.color[1]
+                    c02 = dot1.color[2]
+                    c10 = dot2.color[0]
+                    c11 = dot2.color[1]
+                    c12 = dot2.color[2]
+                    newColor = (int(c00 + alpha * (c10 - c00)), 
+                                int(c01 + alpha * (c11 - c01)), 
+                                int(c02 + alpha * (c12 - c02)))
+                elif dot1.color is not None and alpha < 0.5:
+                    newColor = dot1.color
+                elif dot2.color is not None and alpha >= 0.5:
+                    newColor = dot2.color
+                
+                # calculate size
+                if dot1.sizeRatio is not None and dot2.sizeRatio is not None:
+                    s0 = dot1.sizeRatio
+                    s1 = dot2.sizeRatio
+                    newSizeRatio = s0 + alpha * (s1 - s0)
+                elif dot1.sizeRatio is not None and alpha < 0.5:
+                    newSizeRatio = dot1.sizeRatio
+                elif dot2.sizeRatio is not None and alpha >= 0.5:
+                    newSizeRatio = dot2.sizeRatio
+            
+            # if only one location is valid, only that dot is valid
+            elif dot1.location is not None and alpha < 0.5:
+                newLoc = dot1.location
+                newColor = dot1.color
+                newSizeRatio = dot1.sizeRatio
+            elif dot2.location is not None and alpha >= 0.5:
+                newLoc = dot2.location
+                newColor = dot2.color
+                newSizeRatio = dot2.sizeRatio
+            
+            # add the interpolated dot
+            if newLoc is not None:
+                newDots.append(Dot(newLoc, newColor, newSizeRatio))
+            
         
         lum = f1.luminance + alpha * (f2.luminance - f1.luminance) 
-        return Frame(t, coords, lum)
+        return Frame(t, newDots, lum)
 
     def chkSnd(self, t):
         # Might be "None" if load error.
@@ -395,14 +551,9 @@ class Trial(object):
                 return None
 
         # Now that we have fount the two frames on either side of the current time
-        # create a new frame that interpolates the values between the data points.
-        f = self._interpolate(t, self.frames[self.index-1], self.frames[self.index])
+        # create a new frame (or None) that interpolates the values between the data points.
+        return self._interpolate(t, self.frames[self.index-1], self.frames[self.index])
 
-        # If interpolation worked return data, otherwise None
-        if f is not None:
-            return (f.coords, f.luminance, t)
-        else:
-            return None
         
     def recordSIResponse(self, length, agreement):
         # XXX hack to reset sound played flag. Need to move audio playback 
@@ -433,17 +584,27 @@ class Trial(object):
         
         return  retval
         
+class Dot(object):
+    """Represents a single animation "dot" or point placement, color, and size"""
+    def __init__(self, location, color=None, sizeRatio=1.0):        
+        object.__init__(self)
+        self.location = location
+        self.color = color
+        self.sizeRatio = sizeRatio
+
+    def __str__(self):
+        return str(self.location) + '\t' + str(self.color) + "\t" + str(self.sizeRatio)
+    
 class Frame(object):
     """Represents a single animation "frame" or placement of all points"""
-    def __init__(self, t, coords, luminance=1.0):        
+    def __init__(self, t, dots, luminance=1.0):        
         object.__init__(self)
         self.t = t
         self.luminance = luminance
-        
-        self.coords = [(coords[i], coords[i+1]) for i in range(0, len(coords), 2) ]
+        self.dots = dots #[(coords[i], coords[i+1]) for i in range(0, len(coords), 2) ]
 
     def __str__(self):
-        return str(self.t) + '\t' + str(self.coords)
+        return str(self.t) + '\t' + str(self.dots)
         
 
 def setupTrialData(session):        
