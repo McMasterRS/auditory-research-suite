@@ -86,7 +86,9 @@ class SensoryIntegrationAnimator(object):
                     self.finishedCallback()
                 return
             else:
-                self.renderer.frame = self.trial.getFrameState(elapsedTime)
+                frame = self.trial.getFrameState(elapsedTime)
+                self.renderer.frame = frame
+            
                 self.renderer.screenSize = self.size
                 self.renderer.aspectRatio = self.aspectRatio
                 self.renderer.connectTheDots = self.connectTheDots
@@ -131,7 +133,7 @@ class Renderer(object):
         glLoadIdentity()
 
         self._scale()
-        lum = self.frame.luminance
+        lum = self.frame[1]
         # print self.frame[2], lum
 
         glColor(lum, lum, lum)
@@ -140,30 +142,16 @@ class Renderer(object):
         # Joint connectors
         if self.connectTheDots:
             glBegin(GL_LINE_STRIP)
-            for dot in self.frame.dots:
-                glVertex(dot.location[0], dot.location[1], 0)
+            for pt in self.frame[0]:
+                glVertex(pt[0], pt[1], 0)
             glEnd()
         
         # Joint positions
-        for dot in self.frame.dots:
+        for pt in self.frame[0]:
             glPushMatrix()
-            
-            # location
-            glTranslate(dot.location[0], dot.location[1], 0)
-            
-            # size
-            scale = 1.0
-            if (dot.sizeRatio is not None):
-                scale = dot.sizeRatio
-            glScale(scale*1/self.aspectRatio, scale, scale);
-            
-            # color
-            if (dot.color is not None):
-                glColor(lum*dot.color[0], lum*dot.color[1], lum*dot.color[2])
-                
-            # draw objects
-            glCallList(self.diskList)       
-                 
+            glTranslate(pt[0], pt[1], 0)
+            glScale(1/self.aspectRatio, 1, 1);
+            glCallList(self.diskList)            
             glPopMatrix()
             
         
