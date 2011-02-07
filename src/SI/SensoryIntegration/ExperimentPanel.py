@@ -69,6 +69,7 @@ class ExperimentPanel(wx.Panel):
     def _onTrialEnd(self):
         print "--->trial ended", self.response.trial.prettyValues()
         self.response.show()
+        self.response.SetFocus()
         
 class ExperimentFrame(wx.Frame):
     def __init__(self, session, logger, **kwds):
