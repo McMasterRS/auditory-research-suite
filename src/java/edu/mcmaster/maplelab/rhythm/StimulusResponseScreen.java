@@ -67,7 +67,6 @@ public class StimulusResponseScreen extends BasicStep {
     private ResponseInputs _response;
     private List<RhythmBlock> _blocks;
     private int _blockIndex = 0;
-    private int _repIndex = 0;
     private final boolean _isWarmup;
     private final JLabel _statusText;
     private TapRecorder _tapRecorder;
@@ -120,7 +119,7 @@ public class StimulusResponseScreen extends BasicStep {
         
         try {
             if(!isWarmup) {
-                _tapRecorder = new TapRecorder(_session.allowComputerKeyInput(), _session.getSuppressionWindow());
+                _tapRecorder = new TapRecorder(_session);
                 _tapRecorder.setMIDIInputID(session.getMIDIInputDeviceID());
                 // We have to add a key listener to make sure this gets
                 // registered to receive events.
@@ -138,7 +137,7 @@ public class StimulusResponseScreen extends BasicStep {
                 getContentPanel().add(_tapTarget, BorderLayout.CENTER);
                 
                 if(_session.isDebug()) {
-                    _tapRecorder.setReceiver(new DebugTapForwarder());
+                    _tapRecorder.setLogReceiver(new DebugTapForwarder());
                 }
             }
         }
@@ -166,7 +165,7 @@ public class StimulusResponseScreen extends BasicStep {
      * @param isWarmup if this is a warmup run.
      */
     private void initialize(boolean isWarmup) {
-        if(isWarmup) {
+        if (isWarmup) {
             _blocks = new ArrayList<RhythmBlock>(1);
             _blocks.add(_session.generateWarmup());
         }
@@ -206,7 +205,7 @@ public class StimulusResponseScreen extends BasicStep {
     	getPrevNextButtons().setEnabled(false);
     	
     	recordResponse();
-        if(!isDone()) {
+        if (!isDone()) {
             doNextTrial();
         }
         else {      
@@ -241,10 +240,9 @@ public class StimulusResponseScreen extends BasicStep {
      * Increment to the next block
      */
     private void incBlock() {
-        _blockIndex++;
-        boolean more = _blockIndex < _blocks.size();        
+        _blockIndex++;       
         
-        if(more) {
+        if (_blockIndex < _blocks.size()) {
             RhythmBlock block = currBlock();
             LogContext.getLogger().fine("* New block: " + block);
         }
@@ -288,7 +286,7 @@ public class StimulusResponseScreen extends BasicStep {
         LogContext.getLogger().fine(
             String.format("---> response: %s" , t.getResponse()));
         
-        if(!_isWarmup) {
+        if (!_isWarmup) {
             try {
                 _session.getTrialLogger().submit(block, t);
             }
@@ -298,7 +296,7 @@ public class StimulusResponseScreen extends BasicStep {
         }
         
         block.incTrial();
-        if(block.isDone()) {
+        if (block.isDone()) {
             incBlock();
         }        
         
@@ -334,11 +332,9 @@ public class StimulusResponseScreen extends BasicStep {
     private class PrepareRunnable implements Runnable {
         private final RhythmTrial _trial;
 
-
         public PrepareRunnable(RhythmTrial trial) {
             _trial = trial;
         }
-       
         
         public void run() {
             try {
@@ -397,7 +393,7 @@ public class StimulusResponseScreen extends BasicStep {
             private static final int MIDI_TRACK_END = 47;
             public void meta(MetaMessage meta) {
                 // Check for end of track message.
-                if(meta.getType() == MIDI_TRACK_END) {
+                if (meta.getType() == MIDI_TRACK_END) {
                     playbackEnded();
                 }
             }
@@ -417,7 +413,7 @@ public class StimulusResponseScreen extends BasicStep {
                 List<Note> seq = _trial.generateSequence(_session);
                 _playbackStart = System.currentTimeMillis();
                 LogContext.getLogger().fine("Playback started @ " + _playbackStart);
-                _currSequence = tg.play(seq, false);
+                _currSequence = tg.play(seq, _session.getPlaybackGain(), false);
                 if (_tapRecorder != null) {
                 	// this is not intuitive, but we still want the 
                 	// tap recorder to handle computer taps

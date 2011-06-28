@@ -16,6 +16,9 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
 
+import edu.mcmaster.maplelab.common.util.MathUtils;
+import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession.ConfigKeys;
+
 /**
  * Context data for the experiment session.
  * @version     $Revision$
@@ -48,7 +51,8 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         demo,
         defaultFontSize,
         buildVersion,
-        buildDate
+        buildDate,
+        playbackGain
     }
 
     /**
@@ -251,6 +255,13 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
       */
      public void setDemo(boolean state) {
          setProperty(ConfigKeys.demo, state);
+     }
+     
+     /**
+      * Get the playback gain as a percentage of maximum [0.0, 1.0]
+      */
+     public float getPlaybackGain() {
+    	 return getClampedFloat(ConfigKeys.playbackGain, 1.0f, 0.0f, 1.0f);
      }
      
      /**
@@ -499,6 +510,11 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
             retval = ((Float)val).floatValue();
         }
         return retval;
+    }
+    
+    public final float getClampedFloat(Enum<?> key, float def, float upper, float lower) {
+    	Float retval = getFloat(key, def);
+    	return MathUtils.clamp(retval, upper, lower);
     }
     
     /**

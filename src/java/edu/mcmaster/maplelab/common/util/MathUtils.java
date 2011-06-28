@@ -34,4 +34,16 @@ public class MathUtils {
         // Textbook formula is |Ax_1 + By_1 - C|/sqrt(A^2+B^2) for line defined by Ax + By = C
         return Math.abs(A * p.x + B * p.y - C)/Math.sqrt(A*A +B*B);
     }
+    
+    /**
+     * Clamps the given number to fall within (or equal to) the two given bounds.
+     * The double value of the given numbers are used for comparisons to allow type 
+     * flexibility.
+     */
+    public static float clamp(float value, float bound1, float bound2) {
+    	float upper = Math.max(bound1, bound2);
+    	float lower = Math.min(bound1, bound2);
+    	float retval = Math.max(value, lower);
+    	return Math.min(retval, upper);
+    }
 }

@@ -22,8 +22,6 @@ import java.util.List;
 import javax.sound.midi.*;
 import javax.swing.*;
 import javax.swing.JSpinner.DefaultEditor;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
@@ -154,7 +152,7 @@ public class MIDITestPanel extends JPanel {
         public void actionPerformed(ActionEvent e) {
             List<Note> tune = tune(150);
             try {
-                ToneGenerator.getInstance().play(tune, true);
+                ToneGenerator.getInstance().play(tune, 1.0f, true);
             }
             catch (MidiUnavailableException e1) {
                 print(e1);
@@ -189,12 +187,12 @@ public class MIDITestPanel extends JPanel {
             for (int i = 0; i < deviceInfo.length; i++) {
                 try {
                     MidiDevice device = MidiSystem.getMidiDevice(deviceInfo[i]);
-                    boolean allowsInput = (device.getMaxTransmitters() != 0);
-                    boolean allowsOutput = (device.getMaxReceivers() != 0);
+                    boolean hasT = (device.getMaxTransmitters() != 0);
+                    boolean hasR = (device.getMaxReceivers() != 0);
                     printf("%d %s %s %s, %s, %s, %s", 
                         i,
-                        (allowsInput ? "TRANS" : "     "),
-                        (allowsOutput ? "RECIEVE" : "       "),
+                        (hasT ? "TRANS" : "     "),
+                        (hasR ? "RECIEVE" : "       "),
                         deviceInfo[i].getName(),
                         deviceInfo[i].getVendor(),
                         deviceInfo[i].getVersion(),
@@ -229,7 +227,7 @@ public class MIDITestPanel extends JPanel {
             super("Test Tap Recording");
             try {
                 _tapRecorder = new TapRecorder(true, 0);
-                _tapRecorder.setReceiver(new ConsoleReceiver());
+                _tapRecorder.setLogReceiver(new ConsoleReceiver());
             }
             catch (MidiUnavailableException e) {
                 print(e);
@@ -259,7 +257,7 @@ public class MIDITestPanel extends JPanel {
             // begin recording
             try {
                 ToneGenerator.getInstance().getSequencer().addMetaEventListener(_endListener);
-                _currSequence = ToneGenerator.getInstance().play(tune(1000), false);
+                _currSequence = ToneGenerator.getInstance().play(tune(1000), 1.0f, false);
                 _tapRecorder.start(_currSequence);
             }
             catch (Exception ex) {

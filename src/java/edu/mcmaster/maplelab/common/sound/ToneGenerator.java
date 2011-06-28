@@ -26,7 +26,8 @@ import edu.mcmaster.maplelab.common.LogContext;
  * @since   Apr 17, 2006
  */
 public class ToneGenerator {
-    private static final int MIDI_TRACK_VOLUME_CMD = 127;
+	private static final int GENERATOR_CHANNEL = 0;
+    private static final int MIDI_MAX_VOLUME = 127;
     private static final int MIDI_NOTE_VELOCITY_CMD = 64;
     private static final int PITCH_BEND_MAX = 16383;
     private static final int PITCH_BEND_NONE = 8192;
@@ -36,7 +37,7 @@ public class ToneGenerator {
     private static final short MIDI_BANK_LSB_FLUTE = 74;
 
     
-    /** Number of pitch bend units per cent. Although not garaunteed, the 
+    /** Number of pitch bend units per cent. Although not guaranteed, the 
      * General midi spec states that a full pitch bend should be +/- two 
      * semitones. This has been verified with an external tuner. */
     private static final float PITCH_BEND_PER_CENTS = (PITCH_BEND_MAX - PITCH_BEND_NONE)/200f;
@@ -100,15 +101,15 @@ public class ToneGenerator {
      * 
      * @param note note to play
      */
-    public void play(Note note) {
+    public void play(Note note, float volumePct) {
         List<Note> singleNote = Collections.singletonList(note);
-        play(singleNote);
+        play(singleNote, volumePct);
     }
     
     /**
      * Create the default sequence configuration.
      */
-    public static Sequence defaultSequence() throws InvalidMidiDataException {
+    private static Sequence defaultSequence() throws InvalidMidiDataException {
         return new Sequence(Sequence.PPQ, TICKS_PER_QNOTE); 
     }
     
@@ -118,23 +119,23 @@ public class ToneGenerator {
      * 
      * @param notes notes to play.
      */
-    public void play(List<Note> notes) {
-        play(notes, true);
+    public void play(List<Note> notes, float volumePct) {
+        play(notes, volumePct, true);
     }
     
     /**
      * Play a series of notes on the default sequencer. Blocks until
-     * sequence playback finishes.
+     * sequence playback finishes, if indicated.
      * 
      * @param notes notes to play.
      */
-    public Sequence play(List<Note> notes, boolean block) {
+    public Sequence play(List<Note> notes, float volumePct, boolean block) {
         Sequence retval = null;
         try {
             _lastDetunes.clear();
             retval = defaultSequence();
             Track track = retval.createTrack();
-            prepareTrack(track, _midiBankLSB, _midiBankMSB);
+            prepareTrack(track, volumePct, _midiBankLSB, _midiBankMSB);
             
             int cumulativeDuration = 0;
             for (Note n : notes) {
@@ -162,7 +163,7 @@ public class ToneGenerator {
             setTempo(_sequencer, TEMPO_BEATS_PER_MINUTE);
          
             long milli = retval.getMicrosecondLength()/1000;
-            _sequencer.start();
+            _sequencer.startRecording();
             
             if(block) {
                 synchronized (_latch) {
@@ -211,7 +212,7 @@ public class ToneGenerator {
      */
     public static MidiEvent createNoteOnEvent(int note, long ticks) throws InvalidMidiDataException {
         ShortMessage msg = new ShortMessage();
-        msg.setMessage(ShortMessage.NOTE_ON, 0, note, MIDI_NOTE_VELOCITY_CMD);
+        msg.setMessage(ShortMessage.NOTE_ON, GENERATOR_CHANNEL, note, MIDI_NOTE_VELOCITY_CMD);
         return new MidiEvent(msg, ticks);
     }
 
@@ -222,7 +223,7 @@ public class ToneGenerator {
      */
     public static MidiEvent createNoteOffEvent(int note, long ticks) throws InvalidMidiDataException {
         ShortMessage msg = new ShortMessage();
-        msg.setMessage(ShortMessage.NOTE_OFF, 0, note, 0);
+        msg.setMessage(ShortMessage.NOTE_OFF, GENERATOR_CHANNEL, note, 0);
         
         return new MidiEvent(msg, ticks);        
     }
@@ -242,10 +243,10 @@ public class ToneGenerator {
         }
         
         _lastDetunes.put(track, detuneCents);
-        
+
         ShortMessage msg = new ShortMessage();
         int amount = (int)(PITCH_BEND_NONE + PITCH_BEND_PER_CENTS * detuneCents);
-        msg.setMessage(ShortMessage.PITCH_BEND, 0, amount % 128, amount / 128);
+        msg.setMessage(ShortMessage.PITCH_BEND, GENERATOR_CHANNEL, amount % 128, amount / 128);
         
         return new MidiEvent(msg, ticks);
     }
@@ -255,14 +256,28 @@ public class ToneGenerator {
      * 
      * @param track track to populate with setup events.
      */
-    public static void prepareTrack(Track track, short midiBankLSB, short midiBankMSB) throws InvalidMidiDataException {
-        ShortMessage msg = new ShortMessage();
-        msg.setMessage(ShortMessage.CONTROL_CHANGE, 0, MIDI_VOLUME_CMD, MIDI_TRACK_VOLUME_CMD);
-        track.add(new MidiEvent(msg, 0));
+    public static void prepareTrack(Track track, float volumePct, 
+    		short midiBankLSB, short midiBankMSB) throws InvalidMidiDataException {
+    	
+    	for (MidiEvent me : initializationEvents(volumePct, midiBankLSB, midiBankMSB)) {
+    		track.add(me);
+    	}
+    }
+    
+    public static MidiEvent[] initializationEvents(float volumePct, short midiBankLSB, 
+    		short midiBankMSB) throws InvalidMidiDataException {
+    	
+    	MidiEvent[] retval = new MidiEvent[2];
+    	ShortMessage msg = new ShortMessage();
+        msg.setMessage(ShortMessage.CONTROL_CHANGE, 0, MIDI_VOLUME_CMD, 
+        		(int) (volumePct*MIDI_MAX_VOLUME));
+        retval[0] = new MidiEvent(msg, 0);
         
         msg = new ShortMessage();
         msg.setMessage(ShortMessage.PROGRAM_CHANGE, 0, midiBankLSB, midiBankMSB);
-        track.add(new MidiEvent(msg, 0));
+        retval[1] = new MidiEvent(msg, 0);
+        
+        return retval;
     }
     
     private class SequenceLatch implements MetaEventListener {
@@ -313,7 +328,7 @@ public class ToneGenerator {
                 new Note(new Pitch(NotesEnum.C, 4), 2000),
             };
             
-            tg.play(Arrays.asList(notes));
+            tg.play(Arrays.asList(notes), 1.0f);
         }
         catch(Exception ex) {
             ex.printStackTrace();

@@ -16,6 +16,7 @@ import java.util.*;
 
 import edu.mcmaster.maplelab.common.datamodel.Session;
 import edu.mcmaster.maplelab.common.sound.Pitch;
+import edu.mcmaster.maplelab.common.util.MathUtils;
 import edu.mcmaster.maplelab.rhythm.RhythmExperiment;
 import edu.mcmaster.maplelab.rhythm.RhythmTrialLogger;
 import edu.mcmaster.maplelab.rhythm.RhythmTrialLogger.FileType;
@@ -53,8 +54,25 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
         computerKeyInput,
         recordNoteOff,
         suppressionWindow,
-        allowFeedback
+        allowFeedback,
+        subjectTapSound,
+        subjectTapVelocity,
+        subjectTapNote,
+        subjectTapGain,
+        subjectTapGM
     }
+    /**
+     * subjectTapSound=false
+# Value to override the subject's tap velocity,
+# or -1 to use the actual tap velocity
+subjectTapVelocity=-1
+# Note for subject tap sounds
+subjectTapNote=E4
+# Gain level for subject tap sounds
+subjectTapGain=0
+# General midi bank number for subject tap sounds
+subjectTapGM=115
+     */
     
     /**
      * Default ctor.
@@ -101,6 +119,8 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
     /**
      * Flag to indicate that tones will be played in the
      * background during tap testing on the test panel.
+     * 
+     * XXX: not currently used - see RhythmExperiment.main for options for use
      */
     public boolean playTapTestSound() {
     	return getBoolean(ConfigKeys.tapTestSound, false);
@@ -111,6 +131,43 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
      */
     public boolean allowComputerKeyInput() {
     	return getBoolean(ConfigKeys.computerKeyInput, true);
+    }
+    
+    /**
+     * Flag to indicate if feedback sounds for subject taps should be played.
+     */
+    public boolean playSubjectTaps() {
+    	return getBoolean(ConfigKeys.subjectTapSound, false);
+    }
+    
+    /**
+     * Fractional gain [0.0, 1.0] for subject tap feedback notes.
+     */
+    public float subjectTapGain() {
+    	return getClampedFloat(ConfigKeys.subjectTapGain, 1.0f, 0.0f, 1.0f);
+    }
+    
+    /**
+     * Velocity at which to play notes for subject tap feedback.
+     * -1 indicates that the actual velocity should be used.
+     */
+    public int subjectTapVelocity() {
+    	return getInteger(ConfigKeys.subjectTapVelocity, -1);
+    }
+    
+    /**
+     * General midi bank to play for subject tap feedback.
+     */
+    public int subjectTapGM() {
+    	return getInteger(ConfigKeys.subjectTapGM, 1);
+    }
+    
+    /**
+     * Note to play for subject tap feedback.
+     */
+    public int subjectTapNote() {
+    	String pitch = getString(ConfigKeys.subjectTapNote, "C5");
+        return Pitch.fromString(pitch).toMidiNoteNumber();
     }
     
     /**

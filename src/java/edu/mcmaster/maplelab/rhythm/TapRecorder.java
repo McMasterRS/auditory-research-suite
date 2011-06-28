@@ -25,6 +25,7 @@ import javax.sound.midi.MidiDevice.Info;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.sound.MidiInterpreter;
 import edu.mcmaster.maplelab.common.sound.ToneGenerator;
+import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession;
 
 
 /**
@@ -37,10 +38,11 @@ import edu.mcmaster.maplelab.common.sound.ToneGenerator;
 public class TapRecorder implements AWTEventListener, Receiver {
     private static final int ARTIFICIAL_MIDI_NOTE = 72;
     
+    private static Receiver _feedbackReceiver;
+    private RhythmSession _session = null;
     private Sequencer _sequencer;
-    private Sequence _sequence;
     private Track _track;
-    private Receiver _receiver;
+    private Receiver _logReceiver;
     private int _midiDevID = -1;
     private MidiDevice _midiInput;
     private boolean _allowCompKeyInput;
@@ -51,6 +53,11 @@ public class TapRecorder implements AWTEventListener, Receiver {
     private Long _lastOnTick = null;
     private HashSet<MidiEvent> _skippedOnEvents = new HashSet<MidiEvent>();
     private long _suppressionWindow = 0;
+    
+    public TapRecorder(RhythmSession session) throws MidiUnavailableException {
+    	this(session.allowComputerKeyInput(), session.getSuppressionWindow());
+    	_session = session;
+    }
 
     public TapRecorder(boolean allowComputerKeyInput, long suppressionWindow) throws MidiUnavailableException {
         _sequencer = ToneGenerator.getInstance().getSequencer();
@@ -68,8 +75,8 @@ public class TapRecorder implements AWTEventListener, Receiver {
     /**
      * Set object to echo recording events to.
      */
-    public void setReceiver(Receiver receiver) {
-        _receiver = receiver;
+    public void setLogReceiver(Receiver receiver) {
+        _logReceiver = receiver;
     }
 
     /**
@@ -88,31 +95,39 @@ public class TapRecorder implements AWTEventListener, Receiver {
         _midiDevID = midiDevID;
     }
     
+    /**
+     * Start recording by adding a track to the given sequence for recording and
+     * connecting this Receiver to the selected input device. Also initializes 
+     * resources for playing user feedback, if required.
+     */
     public void start(Sequence sequence) {
         if (_allowCompKeyInput && _userInputOn) {
         	Toolkit.getDefaultToolkit().addAWTEventListener(this, AWTEvent.KEY_EVENT_MASK);
         }
-        _sequence = sequence;
         
-        _track = _sequence.createTrack();
+        _track = _sequencer.getSequence().createTrack();
         
         // Send a program change just so we have our own unique sound.
         try {
-            ToneGenerator.prepareTrack(_track, (short)1, (short)0);
+        	float volumePct = _session != null ? _session.getPlaybackGain() : 1.0f;
+            ToneGenerator.prepareTrack(_track, volumePct, (short)1, (short)0);
         }
         catch (InvalidMidiDataException e) {
         }
         _sequencer.recordEnable(_track, -1);
         
-        if(_midiDevID >= 0 && _userInputOn) {
+        Info info = null;
+        if (_midiDevID >= 0 && _userInputOn) {
             try {
                 Info[] devices = MidiSystem.getMidiDeviceInfo();
-                if(_midiDevID >= devices.length) {
+                if (_midiDevID >= devices.length) {
                     throw new ArrayIndexOutOfBoundsException(String.format(
-                        "MIDI device index %d is outside bounds of devices list (length = %d)", _midiDevID, devices.length));
+                        "MIDI device index %d is outside bounds of devices list (length = %d)", 
+                        _midiDevID, devices.length));
                 }
                 
-                MidiDevice device = MidiSystem.getMidiDevice(devices[_midiDevID]);
+                info = devices[_midiDevID];
+                MidiDevice device = MidiSystem.getMidiDevice(info);
                 
                 if (_midiInput != device) {
                 	_midiInput = device;
@@ -120,7 +135,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
                 	if (_midiInput != null) {
                 		_midiInput.open();
                         // test == 0 only because -1 indicates unlimited:
-                        if(_midiInput.getMaxTransmitters() == 0) {
+                        if (_midiInput.getMaxTransmitters() == 0) {
                             throw new MidiUnavailableException(String.format(
                                 "Specified device with ID/index=%d (%s) doesn't support transmitting.", 
                                 _midiDevID, _midiInput.getDeviceInfo().getName()));
@@ -132,15 +147,38 @@ public class TapRecorder implements AWTEventListener, Receiver {
             }
             catch(Exception ex) {
                 LogContext.getLogger().log(Level.SEVERE, "Couldn't initialize MIDI recording device", ex);
-                if(_midiInput != null) {
+                if (_midiInput != null) {
                     _midiInput.close();
                     _midiInput = null;
                 }
             }
-
+        }
+		
+        // prepare to play user tap sounds
+        if (_session == null || _session.playSubjectTaps()) {
+        	try {
+            	// XXX: This allocates resources on every call
+    			_feedbackReceiver = MidiSystem.getReceiver();
+    			if (_session != null) {
+        			MidiEvent[] prep = ToneGenerator.initializationEvents(_session.subjectTapGain(), 
+        					(short) _session.subjectTapGM(), (short) 0);
+        			for (MidiEvent me : prep) {
+        				_feedbackReceiver.send(me.getMessage(), me.getTick());
+        			}
+    			}
+    		} 
+            catch (Exception e) {
+            	LogContext.getLogger().log(Level.SEVERE, "Couldn't initialize MIDI feedback device", e);
+                if (_feedbackReceiver != null) {
+                	_feedbackReceiver.close();
+                	_feedbackReceiver = null;
+                }
+    		}
         }
         
-        _sequencer.startRecording();
+        if (!_sequencer.isRecording()) _sequencer.startRecording();
+        if (info != null) LogContext.getLogger().info("Recording with: " + info.getName() + 
+        		", " + info.getDescription());
     }
     
     /**
@@ -171,42 +209,60 @@ public class TapRecorder implements AWTEventListener, Receiver {
     	}
     }
     
+    /**
+     * Stop recording, clear cached items, deallocate resources.
+     */
     public void stop() {
         Toolkit.getDefaultToolkit().removeAWTEventListener(this);
+        if (_feedbackReceiver != null) _feedbackReceiver.close();
         _sequencer.stopRecording();        
         _sequencer.recordDisable(_track);
         _track = null;
-        _sequence = null;
         _lastOnTick = null;
         _skippedOnEvents.clear(); // in case stop preceded a corresponding note-off
         _lastKeyDown = null;
     }
     
-    private MidiEvent convertNoteOffFormat(MidiEvent event) {
+    /**
+     * If the given midi event is the shortcut note-off format (note-on w/ velocity=0),
+     * convert it to a standard note-off event. Also set the note and velocity according
+     * to those specified in the properties.
+     */
+    private MidiEvent convertEvent(MidiEvent event) {
     	MidiEvent retval = event;
     	MidiMessage curr = event.getMessage();
-		if (MidiInterpreter.getOpcode(curr) == ShortMessage.NOTE_ON && MidiInterpreter.getVelocity(curr) == 0) {
-			ShortMessage sm = new ShortMessage();
-			try {
-				sm.setMessage(ShortMessage.NOTE_OFF, MidiInterpreter.getChannel(curr), 
-						MidiInterpreter.getKey(curr), MidiInterpreter.getVelocity(curr));
-				retval = new MidiEvent(sm, event.getTick());
-			}
-			catch (InvalidMidiDataException e) {} // don't convert
+    	
+    	int currOp = MidiInterpreter.getOpcode(curr);
+    	int newOp = currOp == ShortMessage.NOTE_ON && MidiInterpreter.getVelocity(curr) == 0 ? 
+    			ShortMessage.NOTE_OFF : currOp;
+    	int key = MidiInterpreter.getKey(curr);
+    	int vel = MidiInterpreter.getVelocity(curr);
+    	if (_session != null && _session.playSubjectTaps()) {
+    		key = _session.subjectTapNote();
+    		int val = _session.subjectTapVelocity();
+    		if (val > -1) vel = val;
+    	}
+    	ShortMessage sm = new ShortMessage();
+		try {
+			sm.setMessage(newOp, MidiInterpreter.getChannel(curr), key, vel);
+			retval = new MidiEvent(sm, event.getTick());
 		}
+		catch (InvalidMidiDataException e) {} // don't convert
+		
 		return retval;
     }
     
+    /**
+     * Record the given midi event after adjusting ticks and filtering
+     * for events within the suppression window. Also hands-off the event
+     * to play user feedback sounds, if required.
+     */
     private void recordEvent(MidiEvent event) {
-        if (_track == null || !_sequencer.isRecording()) return;
+    	if (_track == null || !_sequencer.isRecording()) return;
         
+        event = convertEvent(event);
         long ticks = _sequencer.getTickPosition();
-
-        if(ticks == 0) {
-            ticks = ToneGenerator.toTicks(System.currentTimeMillis());
-        }
         event.setTick(ticks);
-        event = convertNoteOffFormat(event);
         
         long window = _lastOnTick != null ? ticks - _lastOnTick : Long.MAX_VALUE;
         
@@ -216,7 +272,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
         	// only record a note-on event if we are not in the 
         	// suppression window
         	if (window > _suppressionWindow) {
-        		_track.add(event);
+        		finalizeEvent(event);
         		_lastOnTick = ticks;
         	}
         	else {
@@ -241,20 +297,39 @@ public class TapRecorder implements AWTEventListener, Receiver {
         	}
         	else {
         		// if we didn't remove anything from the cache, this note-off is valid
-        		_track.add(event);
+        		finalizeEvent(event);
         	}
         }
         else {
         	// note-off event w/ no skipped note-on events
-        	_track.add(event);
+        	finalizeEvent(event);
         }
         
         // always send the event to the receiver (either debug or console)
-        if(_receiver != null) {
-            _receiver.send(event.getMessage(), event.getTick());
+        if(_logReceiver != null) {
+            _logReceiver.send(event.getMessage(), event.getTick());
         }
     }
     
+    /**
+     * Handle recording (to track) and feedback (playing) of the filtered event.
+     */
+    private void finalizeEvent(MidiEvent event) {
+    	_track.add(event);
+    	if (_feedbackReceiver != null) {
+    		try {
+    			_feedbackReceiver.send(event.getMessage(), System.currentTimeMillis()*1000);
+    		}
+    		catch (IllegalStateException ise) {
+    			// result of timing issue between end-of-track and subject tap
+    			LogContext.getLogger().fine("Subject tap sound cancelled because receiver closed.");
+    		}
+    	}
+    }
+    
+    /**
+     * Record a key up or down event as a midi event.
+     */
     private void recordEvent(boolean down) {
     	// prevent hold-down key events
     	if (_lastKeyDown == null || down != _lastKeyDown.booleanValue()) {
