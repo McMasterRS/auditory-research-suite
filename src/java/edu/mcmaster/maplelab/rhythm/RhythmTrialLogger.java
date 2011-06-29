@@ -105,7 +105,6 @@ public class RhythmTrialLogger extends
         RhythmBlock block, RhythmTrial trial, int responseNum, MidiEvent event) {
     	
     	RhythmSession session = getSession();
-
     	
         EnumMap<Keys, String> fields = new EnumMap<Keys, String>(Keys.class);
 
@@ -278,6 +277,7 @@ public class RhythmTrialLogger extends
             time_stamp,
             baseIOI, 
             offsetDegree,
+            withTap,
             opcode,
             channel,
             key,
@@ -355,6 +355,7 @@ public class RhythmTrialLogger extends
             fields.put(TapKeys.time_stamp, trial.getTimeStamp());
             fields.put(TapKeys.baseIOI, String.valueOf(trial.getBaseIOI()));
             fields.put(TapKeys.offsetDegree, String.valueOf(trial.getOffsetDegree()));
+            fields.put(TapKeys.withTap, String.valueOf(trial.isWithTap()));
             
             MidiMessage m = event.getMessage();
             OpType ot = MidiInterpreter.getOpcode(m) == ShortMessage.NOTE_ON ? 

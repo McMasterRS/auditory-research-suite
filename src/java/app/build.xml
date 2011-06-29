@@ -5,6 +5,7 @@
 	<target name="all" depends="rhythm" />
 	
 	<property name="jarbundler.jar" value="../lib/jarbundler-1.9.jar"/>
+	<property name="xerces.jar" value="../lib/xercesImpl.jar"/>
 	
 	<condition property="launch4j.dir" value="${basedir}/../lib/launch4j-osx">
 		<os family="mac"/>
@@ -13,7 +14,7 @@
 	<!-- Build the Rhythm Experiment application -->
 	<target name="rhythm" description="Create application bundle for rhythm experiment">
 	    <taskdef name="jarbundler"
-	             classpath="${jarbundler.jar}" 
+	             classpath="${jarbundler.jar}:${xerces.jar}" 
 	             classname="net.sourceforge.jarbundler.JarBundler"/>
 
 	    <jarbundler dir="${basedir}" verbose="true" showPlist="true"
@@ -26,7 +27,7 @@
 	                icon="../resources/McMaster.icns"
 	                jvmversion="1.6*"
 	                version="0.6"
-	                infostring="MapleLab Rhythm Experiment, Copyright &#xa9; 2010"
+	                infostring="MapleLab Rhythm Experiment, Copyright &#xa9; 2011"
 	                bundleid="edu.mcmaster.maplelab.rhythm.RhythmExperiment" 
 					>
     	
