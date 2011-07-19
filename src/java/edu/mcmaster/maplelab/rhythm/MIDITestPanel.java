@@ -75,6 +75,8 @@ public class MIDITestPanel extends JPanel {
         p.add(new JButton(new TestTapRecord()));
         p.add(new JLabel("Device:"));
         _midiDevID = new JSpinner(new SpinnerNumberModel(-1, -1, 15, 1));
+        //TODO: set a custom Document object for the underlying text field
+        // and limit inputs to valid integer-relevant characters?
         p.add(_midiDevID);
         top.add(p);
         

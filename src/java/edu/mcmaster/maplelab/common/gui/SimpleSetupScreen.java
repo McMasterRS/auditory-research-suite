@@ -33,7 +33,7 @@ import edu.mcmaster.maplelab.common.datamodel.Session;
  * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since   Dec 4, 2006
  */
-public class SimpleSetupScreen extends JPanel  {
+public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPanel  {
     enum ConfigKeys {
         isFullScreen,
         isDemoMode
@@ -106,6 +106,8 @@ public class SimpleSetupScreen extends JPanel  {
         _labelGBC.weighty = 0;
         _fieldGBC.weighty = 0;
         
+        addExperimentFields();
+        
         String home = System.getProperty("user.home");
         if(home == null) {
             home = ".";
@@ -123,7 +125,7 @@ public class SimpleSetupScreen extends JPanel  {
      * 
      * @param label label for control
      */
-    public void addLabel(String label) {
+    protected void addLabel(String label) {
         add(new JLabel(label), _labelGBC);
     }
     
@@ -134,12 +136,28 @@ public class SimpleSetupScreen extends JPanel  {
      * 
      * @param field field to add.
      */
-    public void addField(JComponent field)  {
+    protected void addField(JComponent field)  {
         add(field, _fieldGBC);
     }
     
+    /**
+     * Add any experiment-specific fields using calls to 
+     * {@link #addLabel(String)} and {@link #addField(JComponent)}.
+     */
+    protected abstract void addExperimentFields();
     
-    public void applySettings(Session<?,?,?> session) {
+    /**
+     * Apply the settings from the setup screen to the given session.
+     */
+    public void applySettings(E session) {
+    	applyGeneralSettings(session);
+    	applyExperimentSettings(session);
+    }
+    
+    /**
+     * Apply the general settings applicable to all experiments.
+     */
+    private void applyGeneralSettings(E session) {
         session.setRAID(_raID.getText());
         session.setSession(Integer.parseInt(_session.getText()));
         session.setSubject(Integer.parseInt(_subject.getText()));
@@ -149,40 +167,19 @@ public class SimpleSetupScreen extends JPanel  {
         }
     }
     
-
+    /**
+     * Apply any experiment-specific settings from experiment-specific fields.
+     */
+    protected abstract void applyExperimentSettings(E session);
+    
+    /**
+     * Indicate if the user has elected to run the experiment in
+     * full screen mode.
+     */
     public boolean isFullScreen() {
         return _fullScreen.isSelected();
     }
 
-    public void setRAID(String val) {
-        _raID.setValue(val);
-    }
-    
-    public void setSubjectID(int val) {
-        _subject.setValue(val);
-    }
-
-    
-    public void setSessionID(int val) {
-        _session.setValue(val);
-    }
-
-    public void setDataDir(File file) {
-        _dataDir.setFile(file);
-    }
-    
-    
-
-    /**
-     * Get the preferences node.
-     */
-    public Preferences prefs() {
-        Preferences prefs = Preferences.userNodeForPackage(getClass());
-        // Create a new node.
-        prefs = prefs.node(_prefsPrefix + ".setup");
-        return prefs; 
-    }
-    
     /**
      * @return
      * @uml.property  name="dataDir"
@@ -190,8 +187,21 @@ public class SimpleSetupScreen extends JPanel  {
     public File getDataDir() {
         return _dataDir.getFile();
     }
+
+    /**
+     * Get the preferences node.
+     */
+    private Preferences prefs() {
+        Preferences prefs = Preferences.userNodeForPackage(getClass());
+        // Create a new node.
+        prefs = prefs.node(_prefsPrefix + ".setup");
+        return prefs; 
+    }
     
-    void save() {
+    /**
+     * Save the current settings.
+     */
+    private void save() {
         Preferences prefs = prefs();
         prefs.put(Session.ConfigKeys.raid.name(), _raID.getText());
         prefs.put(Session.ConfigKeys.subject.name(), _subject.getText());
@@ -201,6 +211,8 @@ public class SimpleSetupScreen extends JPanel  {
         if(_demoMode != null) {
             prefs.putBoolean(ConfigKeys.isDemoMode.name(), _demoMode.isSelected());
         }
+        
+        putExperimentPrefs(prefs);
 
         try {
             prefs.flush();
@@ -211,6 +223,20 @@ public class SimpleSetupScreen extends JPanel  {
         }
     }
     
+    /**
+     * Put any experiment-specific settings into the given preferences node.
+     */
+    protected abstract void putExperimentPrefs(Preferences prefs);
+    
+    /**
+     * Load any experiment-specific settings from the given preferences node
+     * into experiment-specific fields.
+     */
+    protected abstract void loadExperimentPrefs(Preferences prefs);
+    
+    /**
+     * Restore the last saved settings.
+     */
     private void restore() {
         Preferences prefs = prefs();
         _raID.setText(prefs.get(Session.ConfigKeys.raid.name(), "1"));
@@ -244,6 +270,8 @@ public class SimpleSetupScreen extends JPanel  {
             boolean isDemoMode = prefs.getBoolean(ConfigKeys.isDemoMode.name(), false);
             _demoMode.setSelected(isDemoMode);
         }
+        
+        loadExperimentPrefs(prefs);
     }
 
     /**

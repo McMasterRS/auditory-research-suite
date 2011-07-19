@@ -50,7 +50,7 @@ public abstract class ExperimentFrame
      * This is the default constructor
      * @param setup 
      */
-    public ExperimentFrame(SimpleSetupScreen setup) {
+    public ExperimentFrame(SimpleSetupScreen<T> setup) {
         super("KubovyLabExperiment", selectScreenConfiguration());
         _isFullScreen = setup.isFullScreen();
 

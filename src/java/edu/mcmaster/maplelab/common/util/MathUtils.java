@@ -37,8 +37,6 @@ public class MathUtils {
     
     /**
      * Clamps the given number to fall within (or equal to) the two given bounds.
-     * The double value of the given numbers are used for comparisons to allow type 
-     * flexibility.
      */
     public static float clamp(float value, float bound1, float bound2) {
     	float upper = Math.max(bound1, bound2);

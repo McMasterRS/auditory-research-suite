@@ -12,8 +12,6 @@
 package edu.mcmaster.maplelab.rhythm;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -96,7 +94,7 @@ public class RhythmExperiment extends JPanel {
     /**
      * Initialize build information.
      */
-    private void initializeBuildInfo(File dataDir) throws IOException {
+    protected void initializeBuildInfo(File dataDir) throws IOException {
     	String name = EXPERIMENT_BASENAME.toLowerCase() + ".version.properties";
         File f = new File(dataDir, name);
         InputStream is = null;
@@ -120,63 +118,6 @@ public class RhythmExperiment extends JPanel {
         
         loadBuildInfo(props);
     }
-
-    private static class RFrame extends ExperimentFrame<RhythmSession, RhythmBlock, RhythmTrial, RhythmTrialLogger> {
-    	// hackish way to store this value before creating session
-    	private static int _midiID;
-    	
-    	public static void setMidiDeviceID(int id) {
-    		_midiID = id;
-    	}
-       
-        public RFrame(SimpleSetupScreen setup) {
-            super(setup); 
-        }
-
-        @Override
-        protected Container createContent(RhythmSession session) {
-        	RhythmExperiment re = new RhythmExperiment(session);
-        	try {
-				re.initializeBuildInfo(session.getDataDir());
-			} 
-            catch (IOException e) {
-				LogContext.getLogger().log(Level.SEVERE, "Could not load build information.", e);
-			}
-        	return re;
-        }
-
-        @Override
-        protected RhythmSession createSession(Properties props) {
-            RhythmSession retval = new RhythmSession(props);
-            retval.setMIDIInputDeviceID(_midiID);
-            return retval;
-        }
-
-        @Override
-        protected InputStream getConfigData(File dataDir) throws IOException {
-            String name = EXPERIMENT_BASENAME.toLowerCase() + ".properties";
-            File f = new File(dataDir, name);
-            
-            if(f.exists()) {
-                return new FileInputStream(f);              
-            }
-            else {
-                return getClass().getResourceAsStream(name);
-            }
-        }
-
-        @Override
-        protected RhythmTrialLogger initTrialLogger(File dataDir) {
-            try {
-                return new RhythmTrialLogger(getSession(), dataDir);
-            }
-            catch (IOException ex) {
-                logError(ex, "Error setting up logger", ex);
-                return null;
-            }  
-        }
-        
-    };
     
     
     /**
@@ -191,40 +132,10 @@ public class RhythmExperiment extends JPanel {
     			@Override
     			public void run() {
 
-    				final SimpleSetupScreen setup = new SimpleSetupScreen(EXPERIMENT_BASENAME.toLowerCase());
-
-    				// TODO: Clean up extending setup screen. Add something similar to what's
-    				// in the python experiments.
-    				int midiDevID = setup.prefs().getInt(RhythmSession.ConfigKeys.midiDevID.name(), 0);
-
-    				setup.addLabel("<html><p align=right>Tap Source (MIDI <br>Device #):");
-    				final JFormattedTextField midiDev = new JFormattedTextField();
-    				midiDev.setValue(new Integer(midiDevID));
-    				setup.addField(midiDev);            
-
-
-    				// Kludge to provide simple MIDI testing utility.
-    				JButton midiTest = new JButton("List and Test Devices");
-    				midiTest.addActionListener(new ActionListener() {
-    					public void actionPerformed(ActionEvent e) {
-    						Component source = (Component) e.getSource();
-    						JDialog dialog = MIDITestPanel.createDialog(source);
-    						dialog.setVisible(true);
-    					}
-    				});
-
-    				setup.addLabel("MIDI System:");
-    				JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    				p.add(midiTest);
-    				setup.addField(p);
+    				final RhythmSetupScreen setup = new RhythmSetupScreen();
     				setup.display();
 
-    				// TODO: Yuck. Refactor.
-    				midiDevID = Integer.parseInt(midiDev.getText());
-    				setup.prefs().putInt(RhythmSession.ConfigKeys.midiDevID.name(), midiDevID);
-    				RFrame.setMidiDeviceID(midiDevID);
-
-    				RFrame f = new RFrame(setup);
+    				RhythmFrame f = new RhythmFrame(setup);
     				f.setTitle(String.format("Rhythm Experiment - Build %s", RhythmExperiment.getBuildVersion()));
     				f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     				f.setLocationRelativeTo(null);
