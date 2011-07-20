@@ -32,7 +32,7 @@ public class AnimatorPanel extends JPanel {
     /** 
      * Default ctor.
      */
-    public AnimatorPanel() {
+    public AnimatorPanel(Animator animator) {
         super(new BorderLayout());
         setBorder(UIManager.getDefaults().getBorder("ProgressBar.border"));
 
@@ -40,7 +40,7 @@ public class AnimatorPanel extends JPanel {
 
         _canvas = new GLJPanel(caps);
         _canvas.setName("glCanvas");
-        _animator = new Animator();
+        _animator = animator;
         _canvas.addGLEventListener(_animator);
         
         add(_canvas, BorderLayout.CENTER);
@@ -115,5 +115,23 @@ public class AnimatorPanel extends JPanel {
     public void print(Graphics g) {
         _canvas.display();
         super.print(g);
+    }
+    
+    public static void main(String[] args) {
+        try {
+            JFrame f = new JFrame(AnimatorPanel.class.getName());
+            f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            
+            Animator ani = new Animator(); // replace w/ local version
+            final AnimatorPanel view = new AnimatorPanel(ani);
+            
+            f.getContentPane().add(view, BorderLayout.CENTER);
+            
+            f.pack();
+            f.setVisible(true);
+        }
+        catch (Throwable ex) {
+            ex.printStackTrace();
+        }
     }
 }
