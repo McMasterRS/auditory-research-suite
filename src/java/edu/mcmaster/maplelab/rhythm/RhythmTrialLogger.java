@@ -19,6 +19,7 @@ import javax.sound.midi.*;
 import javax.sound.midi.MidiDevice.Info;
 
 import edu.mcmaster.maplelab.common.datamodel.FileTrialLogger;
+import edu.mcmaster.maplelab.common.datamodel.Response;
 import edu.mcmaster.maplelab.common.sound.MidiInterpreter;
 import edu.mcmaster.maplelab.rhythm.datamodel.*;
 
@@ -133,7 +134,8 @@ public class RhythmTrialLogger extends
         // Output subject response information
         Response response = trial.getResponse();
         fields.put(Keys.confidence, String.valueOf(response.getConfidence().ordinal()));
-        fields.put(Keys.subjResponse, String.valueOf(response.getProbeToneAccurate()));
+        fields.put(Keys.subjResponse, String.valueOf(
+        		RhythmResponseParameters.isProbeToneAccurate(response)));
         fields.put(Keys.responseCorrect, String.valueOf(trial.isResponseCorrect()));
         fields.put(Keys.data_type, DataType.response.name());
 

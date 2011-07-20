@@ -10,7 +10,7 @@
  * $Id$
  */
 
-package edu.mcmaster.maplelab.rhythm;
+package edu.mcmaster.maplelab.common.gui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -19,57 +19,47 @@ import java.util.*;
 
 import javax.swing.*;
 
-import edu.mcmaster.maplelab.rhythm.datamodel.ConfidenceLevel;
-import edu.mcmaster.maplelab.rhythm.datamodel.Response;
+import edu.mcmaster.maplelab.common.datamodel.Answer;
+import edu.mcmaster.maplelab.common.datamodel.ConfidenceLevel;
+import edu.mcmaster.maplelab.common.datamodel.Response;
+import edu.mcmaster.maplelab.common.datamodel.ResponseParameters;
 
 /**
- * @version  $Revision$
+ * Component that pairs a binary question (yes/no, true/false, chicken/egg, etc) with
+ * a range of confidence values for user input.
+ *
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  Nov 9, 2006
  */
 public class ResponseInputs extends JPanel {
-
     private static final long serialVersionUID = 1L;
-    /**
-     * @uml.property  name="top"
-     */
-    private JPanel top = null;
-    /**
-     * @uml.property  name="yes"
-     */
-    private JRadioButton yes = null;
-    /**
-     * @uml.property  name="no"
-     */
-    private JRadioButton no = null;
-    /**
-     * @uml.property  name="bottom"
-     */
-    private JPanel bottom = null;
-    private List<JRadioButton> _confButtons = null;  //  @jve:decl-index=0:
+    
+    /** Response interpreter. */
+    private final ResponseParameters<?> _responseParams;
+    
+    /** Top panel. */
+    private JPanel _top = null;
+    /** Bottom panel. */
+    private JPanel _bottom = null;
+    /** Confidence buttons and group. */
+    private List<JRadioButton> _confButtons = null;
     private ButtonGroup _confGroup;
-    private ButtonGroup _timingGroup;  //  @jve:decl-index=0:
+    /** Answer buttons and group. */
+    private List<JRadioButton> _answerButtons = null;
+    private ButtonGroup _answerGroup;
     
     /**
-     * This is the default constructor
+     * Default constructor sets the question asked and labels for the two
+     * possible choices as indicated.
      */
-    public ResponseInputs() {
+    public ResponseInputs(ResponseParameters<?> interpreter) {
         super();
-        initialize();
-    }
-
-    /**
-     * This method initializes this
-     * 
-     * @return void
-     */
-    private void initialize() {
-        this.setSize(300, 200);
-        this.setLayout(new BorderLayout(0, 0));
-        this.add(getTop(), BorderLayout.NORTH);
-        this.add(getBottom(), BorderLayout.CENTER);
+        _responseParams = interpreter;
         
-        getBottom().add(getConfidencePanel());
+        setSize(300, 200);
+        setLayout(new BorderLayout(0, 0));
+        add(getTop(), BorderLayout.NORTH);
+        add(getBottom(), BorderLayout.CENTER);
     }
     
     /**
@@ -95,44 +85,31 @@ public class ResponseInputs extends JPanel {
      * @uml.property  name="top"
      */
     private JPanel getTop() {
-        if (top == null) {
-            top = new JPanel();
-            top.setLayout(new FlowLayout(FlowLayout.LEFT));
-            top.setBorder(BorderFactory.createTitledBorder("Accurate timing"));
-            top.add(getYes(), null);
-            top.add(getNo(), null);
-            
-            _timingGroup = new ButtonGroup();
-            _timingGroup.add(getYes());
-            _timingGroup.add(getNo());
+        if (_top == null) {
+            _top = new JPanel();
+            _top.setLayout(new FlowLayout(FlowLayout.LEFT));
+            _top.setBorder(BorderFactory.createTitledBorder(_responseParams.getQuestion()));
+            for (JRadioButton b : getAnswerButtons()) {
+                _top.add(b);
+            }
         }
-        return top;
+        return _top;
     }
-
-    /**
-     * This method initializes yes	
-     * @return  javax.swing.JRadioButton
-     * @uml.property  name="yes"
-     */
-    private JRadioButton getYes() {
-        if (yes == null) {
-            yes = new JRadioButton();
-            yes.setText("Yes");
+    
+    private List<JRadioButton> getAnswerButtons() {
+        _answerGroup = new ButtonGroup();
+        if (_answerButtons == null)  {
+            Answer[] answerVals = _responseParams.getAnswers();
+            _answerButtons = new ArrayList<JRadioButton>(answerVals.length);
+            for (Answer a : answerVals) {
+                JRadioButton b = new JRadioButton(a.toString());
+                b.putClientProperty(Answer.class, a);
+                _answerGroup.add(b);
+                _answerButtons.add(b);
+            }
         }
-        return yes;
-    }
-
-    /**
-     * This method initializes no	
-     * @return  javax.swing.JRadioButton
-     * @uml.property  name="no"
-     */
-    private JRadioButton getNo() {
-        if (no == null) {
-            no = new JRadioButton();
-            no.setText("No");
-        }
-        return no;
+        
+        return _answerButtons;
     }
 
     /**
@@ -141,11 +118,12 @@ public class ResponseInputs extends JPanel {
      * @uml.property  name="bottom"
      */
     private JPanel getBottom() {
-        if (bottom == null) {
-            bottom = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            bottom.setBorder(BorderFactory.createTitledBorder("Confidence"));
+        if (_bottom == null) {
+            _bottom = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            _bottom.setBorder(BorderFactory.createTitledBorder("Confidence"));
+            _bottom.add(getConfidencePanel());
         }
-        return bottom;
+        return _bottom;
     }
     
     private JPanel getConfidencePanel() {
@@ -160,10 +138,10 @@ public class ResponseInputs extends JPanel {
     
     private List<JRadioButton> getConfidenceButtons() {
         _confGroup = new ButtonGroup();
-        if(_confButtons == null)  {
-            ConfidenceLevel[] ratings = ConfidenceLevel.values();
+        if (_confButtons == null)  {
+            ConfidenceLevel[] ratings = _responseParams.getConfidenceLevels();
             _confButtons = new ArrayList<JRadioButton>(ratings.length);
-            for(ConfidenceLevel c : ratings) {
+            for (ConfidenceLevel c : ratings) {
                 JRadioButton b = new JRadioButton(c.toString());
                 b.putClientProperty(ConfidenceLevel.class, c);
                 _confGroup.add(b);
@@ -178,14 +156,12 @@ public class ResponseInputs extends JPanel {
      * Clear current response selection.
      */
     public void reset() {
-        deselectAll(_timingGroup);
+        deselectAll(_answerGroup);
         deselectAll(_confGroup);
     }
     
     /**
      * Deselect all the radio buttons in the given group.
-     * 
-     * @param group
      */
     private void deselectAll(ButtonGroup group) {
 
@@ -211,21 +187,25 @@ public class ResponseInputs extends JPanel {
     }
     
     /**
-     * Is the "yes" option selected under accurate timing section.
-     * 
-     * @return
-     */
-    private boolean isAccurateSelected() {
-        return getYes().isSelected();
-    }
-    
-    /**
      * Get the selected confidence rating.
      */
     private ConfidenceLevel getConfRating() {
-        for(JRadioButton b : _confButtons) {
-            if(b.isSelected()) {
+        for (JRadioButton b : _confButtons) {
+            if (b.isSelected()) {
                 return (ConfidenceLevel) b.getClientProperty(ConfidenceLevel.class);
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get the selected answer.
+     */
+    private Answer getAnswerInput() {
+        for (JRadioButton b : _answerButtons) {
+            if (b.isSelected()) {
+                return (Answer) b.getClientProperty(Answer.class);
             }
         }
         
@@ -236,7 +216,7 @@ public class ResponseInputs extends JPanel {
      * Determine if both response options have been selected.
      */
     public boolean isResponseComplete() {
-        return _timingGroup.getSelection() != null && _confGroup.getSelection() != null;
+        return _answerGroup.getSelection() != null && _confGroup.getSelection() != null;
     }
     
     /**
@@ -245,16 +225,16 @@ public class ResponseInputs extends JPanel {
      * @return response data, or null if response not complete.
      */
     public Response getResponse() {
-        if(!isResponseComplete()) return null;
+        if (!isResponseComplete()) return null;
         
-        Response retval = new Response(isAccurateSelected(), getConfRating());
+        Response retval = new Response(getAnswerInput(), getConfRating());
         
         return retval;
     }
     
     private Enumeration[] buttonEnumeratorArray() {
         return new Enumeration[] {
-            _timingGroup.getElements(),
+            _answerGroup.getElements(),
             _confGroup.getElements()
         };
     }

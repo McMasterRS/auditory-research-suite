@@ -108,7 +108,7 @@ public class StimulusResponseScreen extends BasicStep {
         
         updateResultsText();
         
-        _response = new ResponseInputs();
+        _response = new ResponseInputs(new RhythmResponseParameters(_session));
         bottom.add(_response);
         
         _response.addActionListener(new ActionListener() {

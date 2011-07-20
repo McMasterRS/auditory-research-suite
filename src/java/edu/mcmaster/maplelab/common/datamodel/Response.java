@@ -10,7 +10,8 @@
 * $Id$
 */
 
-package edu.mcmaster.maplelab.rhythm.datamodel;
+package edu.mcmaster.maplelab.common.datamodel;
+
 
 
 /**
@@ -20,11 +21,11 @@ package edu.mcmaster.maplelab.rhythm.datamodel;
  * @since   Nov 8, 2006
  */
 public class Response {
-    private final boolean _isProbeToneAccurate;
+    private final Answer _answer;
     private final ConfidenceLevel _conf;
 
-    public Response(boolean isProbeToneAccurate, ConfidenceLevel conf) {
-        _isProbeToneAccurate = isProbeToneAccurate;
+    public Response(Answer answer, ConfidenceLevel conf) {
+        _answer = answer;
         _conf = conf;
     }
     
@@ -32,13 +33,13 @@ public class Response {
         return _conf;
     }
     
-    public boolean getProbeToneAccurate() {
-        return _isProbeToneAccurate;
+    public Answer getAnswer() {
+        return _answer;
     }
     
     @Override
     public String toString() {
-        return String.format("Response[accurate=%b,confidence=%s]", 
-            getProbeToneAccurate(), getConfidence());
+        return String.format("Response[answer=%s,confidence=%s]", 
+        		getAnswer(), getConfidence());
     }
 }

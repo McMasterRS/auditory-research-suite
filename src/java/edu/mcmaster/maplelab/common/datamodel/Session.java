@@ -17,7 +17,6 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import edu.mcmaster.maplelab.common.util.MathUtils;
-import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession.ConfigKeys;
 
 /**
  * Context data for the experiment session.

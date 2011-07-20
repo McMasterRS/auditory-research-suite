@@ -19,6 +19,7 @@ import java.util.List;
 import javax.sound.midi.Sequence;
 
 import edu.mcmaster.maplelab.common.LogContext;
+import edu.mcmaster.maplelab.common.datamodel.Response;
 import edu.mcmaster.maplelab.common.datamodel.Trial;
 import edu.mcmaster.maplelab.common.sound.Note;
 import edu.mcmaster.maplelab.common.sound.Pitch;
@@ -143,7 +144,7 @@ public class RhythmTrial extends Trial<Response> {
     public boolean isResponseCorrect() {
         Response response = getResponse();
         if(response != null) {
-            if(response.getProbeToneAccurate()) {
+            if (RhythmResponseParameters.isProbeToneAccurate(response)) {
                 return getOffsetDegree() == 0.0;
             }
             else {
@@ -153,7 +154,6 @@ public class RhythmTrial extends Trial<Response> {
         }
         return false;
     }    
-    
 
     /**
      * {@inheritDoc} 

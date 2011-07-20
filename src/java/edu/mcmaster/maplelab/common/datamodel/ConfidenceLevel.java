@@ -1,11 +1,12 @@
-package edu.mcmaster.maplelab.rhythm.datamodel;
+package edu.mcmaster.maplelab.common.datamodel;
 
 import java.util.ArrayList;
 import java.util.Collections;
 
+
 /**
  * This class is a dynamic replacement for the old, hard-coded ConfidenceRatingEnum.
- * The class must be initialized (initialize(RhythmSession session)) to populate
+ * The class must be initialized (initialize(Session session)) to populate
  * its values.
  * 
  * @author <a href="mailto:ben.guseman@mseedsoft.com">Ben Guseman</a>
@@ -20,49 +21,28 @@ public class ConfidenceLevel {
 		confidenceOrderHighToLow
 	}
 	
-	/** ConfidenceLevel values extracted from the session properties file. */
-	private static ArrayList<ConfidenceLevel> _levels = new ArrayList<ConfidenceLevel>();
-	/** Initialization indicator. */
-	private static boolean _initialized = false;
-	
 	/**
-	 * Initialize all the ConfidenceLevel values valid for this session.
+	 * Get all valid ConfidenceLevel values.
 	 */
-	public static void initialize(RhythmSession session) {
+	public static <S extends Session<?, ?, ?>> ConfidenceLevel[] values(S session) {
+		ArrayList<ConfidenceLevel> levels = new ArrayList<ConfidenceLevel>();
 		String keyFormat = Keys.confidence + ".%s";
 		String description = null;
 		for (int counter = Integer.valueOf(session.getString(Keys.confidenceMin, "0")); 
 				(description = session.getString(String.format(keyFormat, counter))) != null; 
 				counter++) {
 			
-			_levels.add(new ConfidenceLevel(counter, description));
+			levels.add(new ConfidenceLevel(counter, description));
 		}
 		
 		// Reverse the order, if required - this is a linear-time operation,
 		// but the number of confidence levels should realistically stay < 10
 		boolean reverse = Boolean.valueOf(
 				session.getString(Keys.confidenceOrderHighToLow, "true"));
-		if (reverse) Collections.reverse(_levels);
+		if (reverse && levels.size() > 1) Collections.reverse(levels);
 		
-		_initialized = true;
-	}
-	
-	/**
-	 * Get all valid ConfidenceLevel values after initialization.
-	 */
-	public static ConfidenceLevel[] values() {
-		if (!initialized()) return null;
-		
-		ConfidenceLevel[] retval = new ConfidenceLevel[_levels.size()];
-		return _levels.toArray(retval);
-	}
-	
-	/**
-	 * Indicate if the class has been initialized.  No values are
-	 * populated before initialization.
-	 */
-	public static boolean initialized() {
-		return _initialized;
+		ConfidenceLevel[] retval = new ConfidenceLevel[levels.size()];
+		return levels.toArray(retval);
 	}
 	
 	private final int _ordinal;

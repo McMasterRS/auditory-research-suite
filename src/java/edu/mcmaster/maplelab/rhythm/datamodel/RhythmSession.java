@@ -14,9 +14,10 @@ package edu.mcmaster.maplelab.rhythm.datamodel;
 import java.io.File;
 import java.util.*;
 
+import edu.mcmaster.maplelab.common.datamodel.ConfidenceLevel;
+import edu.mcmaster.maplelab.common.datamodel.ResponseParameters;
 import edu.mcmaster.maplelab.common.datamodel.Session;
 import edu.mcmaster.maplelab.common.sound.Pitch;
-import edu.mcmaster.maplelab.common.util.MathUtils;
 import edu.mcmaster.maplelab.rhythm.RhythmExperiment;
 import edu.mcmaster.maplelab.rhythm.RhythmTrialLogger;
 import edu.mcmaster.maplelab.rhythm.RhythmTrialLogger.FileType;
@@ -61,18 +62,6 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
         subjectTapGain,
         subjectTapGM
     }
-    /**
-     * subjectTapSound=false
-# Value to override the subject's tap velocity,
-# or -1 to use the actual tap velocity
-subjectTapVelocity=-1
-# Note for subject tap sounds
-subjectTapNote=E4
-# Gain level for subject tap sounds
-subjectTapGain=0
-# General midi bank number for subject tap sounds
-subjectTapGM=115
-     */
     
     /**
      * Default ctor.
@@ -82,7 +71,6 @@ subjectTapGM=115
         super(props);
         
         setNumBlocks(getBaseIOIs().size() * 2); // each IOI, w/ and w/o tapping
-        ConfidenceLevel.initialize(this);
     }
     
     @Override
@@ -321,5 +309,4 @@ subjectTapGM=115
          retval += toPropertiesStringWithEnum(EnumSet.allOf(ConfigKeys.class));
          return retval;
      }
-
 }
