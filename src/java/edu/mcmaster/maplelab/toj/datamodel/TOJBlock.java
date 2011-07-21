@@ -2,12 +2,12 @@ package edu.mcmaster.maplelab.toj.datamodel;
 
 import java.util.List;
 
-import edu.mcmaster.maplelab.common.datamodel.Block;
+import edu.mcmaster.maplelab.common.datamodel.AVBlock;
 
-public class TOJBlock extends Block<TOJSession, TOJTrial> {
+public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 
-	protected TOJBlock(TOJSession session, int blockNum) {
-		super(session, blockNum);
+	protected TOJBlock(TOJSession session, int blockNum, AVBlockType type) {
+		super(session, blockNum, type);
 		// TODO Auto-generated constructor stub
 	}
 

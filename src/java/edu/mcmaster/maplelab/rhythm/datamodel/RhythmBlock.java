@@ -36,7 +36,7 @@ public class RhythmBlock extends Block<RhythmSession, RhythmTrial> {
             _trials.add(t);
         }
         
-        Collections.shuffle(_trials);
+        if (session.randomizeTrials()) Collections.shuffle(_trials);
         
         assignTrialNumbers();
     }

@@ -282,7 +282,7 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
          }
          
          // Shuffle and renumber blocks
-         Collections.shuffle(retval);
+         if (randomizeBlocks()) Collections.shuffle(retval);
          for (int i = 0; i < retval.size(); i++) {
         	 retval.get(i).setNum(i+1);
          }

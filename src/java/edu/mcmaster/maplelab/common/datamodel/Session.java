@@ -45,6 +45,8 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         numBlocks,
         blockSetRepetitions,
         numWarmupTrials,
+        randomizeBlocks,
+        randomizeTrials,
         trialDelay,
         debug,
         demo,
@@ -233,6 +235,20 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      */
      public int getNumWarmupTrials() {
          return getInteger(ConfigKeys.numWarmupTrials, 1);
+     }
+     
+     /**
+      * Indicate if trials should be randomized within each block.
+      */
+     public boolean randomizeTrials() {
+    	 return getBoolean(ConfigKeys.randomizeTrials, true);
+     }
+     
+     /**
+      * Indicate if blocks should be randomized within each repetition.
+      */
+     public boolean randomizeBlocks() {
+    	 return getBoolean(ConfigKeys.randomizeBlocks, true);
      }
  
     /**

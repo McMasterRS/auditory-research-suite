@@ -53,7 +53,7 @@ public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 		session.setScreenWidth(Integer.parseInt(_screenWidth.getText()));
 		session.setScreenHeight(Integer.parseInt(_screenHeight.getText()));
 		session.setDataFileName(_dataFileName.getText());
-		session.includeVisualStimuli(_includeVideoStimuli.isSelected());
+		session.setIncludeVisualStimuli(_includeVideoStimuli.isSelected());
 	}
 
 	@Override
