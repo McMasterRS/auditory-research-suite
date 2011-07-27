@@ -10,8 +10,13 @@ import java.util.List;
 import javax.media.opengl.*;
 import javax.swing.*;
 import javax.vecmath.Vector3d;
+import java.awt.geom.Point2D;
+
 
 import edu.mcmaster.maplelab.common.LogContext;
+import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
+import edu.mcmaster.maplelab.common.sound.NotesEnum;
+import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
 
 public class AnimatorPanel extends JPanel {
 	private final GLJPanel _canvas;
@@ -49,6 +54,7 @@ public class AnimatorPanel extends JPanel {
         	// Without this call we get a canvas width or height == 0 error.
             _canvas.setSize(getPreferredSize());
         }
+        
     }
     
     /**
@@ -120,7 +126,16 @@ public class AnimatorPanel extends JPanel {
             JFrame f = new JFrame(AnimatorPanel.class.getName());
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             
-            Animator ani = new Animator(1, true); // replace w/ local version
+            // instantiate TOJTrial class
+//            TOJTrial trial = new TOJTrial(new File("Users/Catherine/Workspace/Maple/auditory-research-suite/datafiles/examples/vis/el.txt"), 
+//            								NotesEnum.C, true, DurationEnum.LONG, DurationEnum.NORMAL, 1, 5, 0.6f, new Point2D.Float(1,1));
+            TOJTrial trial = new TOJTrial(new AnimationSequence(), 
+					NotesEnum.C, true, DurationEnum.LONG, DurationEnum.NORMAL, 1, 5, 0.4f);
+    		
+            Animator ani;
+            ani = new Animator(1, true); // connect the dots
+            ani.setTrial(trial);
+            
             final AnimatorPanel view = new AnimatorPanel(ani);
             
             f.getContentPane().add(view, BorderLayout.CENTER);

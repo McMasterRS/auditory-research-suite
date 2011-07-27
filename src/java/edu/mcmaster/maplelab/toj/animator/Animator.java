@@ -1,7 +1,11 @@
 package edu.mcmaster.maplelab.toj.animator;
 
 import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.sql.Time;
+import java.util.List;
+
 import static javax.media.opengl.GL.*;
 
 import javax.media.opengl.*;
@@ -13,7 +17,9 @@ import javax.media.opengl.glu.GLUquadric;
 
 import com.sun.opengl.impl.GLUquadricImpl;
 
+import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
 import edu.mcmaster.maplelab.common.gui.ExperimentFrame;
+import edu.mcmaster.maplelab.common.sound.NotesEnum;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
 
 public class Animator implements GLEventListener {
@@ -24,7 +30,6 @@ public class Animator implements GLEventListener {
 	ExperimentFrame _frame;
 	Float _diskSize;
 	Boolean _connectTheDots;
-	// trial  - what does this map to?
 	TOJTrial _trial;
 	Renderer _renderer;
 	
@@ -33,21 +38,22 @@ public class Animator implements GLEventListener {
 	// canvas ?
 	GLAutoDrawable _canvas;
 	
+	private int _currentFrame;
+	
 	// constructor
 	public Animator(float diskSize, Boolean connectTheDots) {
 		_frame = null;
 		_diskSize = diskSize;
 		_connectTheDots = connectTheDots;
-		
-		_trial = null; // ?
-		
+				
 		_aspectRatio = 1;
-		// renderer = Renderer(self.diskSize)
 		_renderer = new Renderer(_diskSize);
+		_currentFrame = 0;
 	}
 
 	void setTrial(TOJTrial trial) {
 		_trial = trial;
+		_currentFrame = 0;
 	}
 	
 	@Override
@@ -67,8 +73,8 @@ public class Animator implements GLEventListener {
         gl.glEnable(GL_DEPTH_TEST);                            //Enables Depth Testing
         gl.glDepthFunc(GL_LEQUAL);                             //The Type Of Depth Test To Do
         //gl.glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  // Really Nice Perspective Calculations
-        
 		
+    			
 //		gl.glClearColor(0, 0, 0, 1); // glblack
 //		gl.glMatrixMode(GL_MODELVIEW);
 //		gl.glLoadIdentity();
@@ -81,44 +87,158 @@ public class Animator implements GLEventListener {
 	
 	@Override
 	public void display(GLAutoDrawable d) {
+		final boolean showFriends = false;
+		
 		GL gl = d.getGL();
 		
-		
 		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);       //Clear The Screen And The Depth Buffer
+		gl.glMatrixMode(GL_MODELVIEW);                               // Make sure we're in the correct matrix mode
         gl.glLoadIdentity();                                         //Reset The View
-        gl.glTranslatef(-1.5f,0.0f,-8.0f);						// Move Left 1.5 Units And Into The Screen 8(not 6.0 like VC.. not sure why)
-        gl.glBegin(GL_TRIANGLES);								// Drawing Using Triangles
-        gl.glColor3f(1.0f,0.0f,0.0f);						// Set The Color To Red
-        gl.glVertex3f( 0.0f, 1.0f, 0.0f);					// Top
-        gl.glColor3f(0.0f,1.0f,0.0f);						// Set The Color To Green
-        gl.glVertex3f(-1.0f,-1.0f, 0.0f);					// Bottom Left
-        gl.glColor3f(0.0f,0.0f,1.0f);						// Set The Color To Blue
-        gl.glVertex3f( 1.0f,-1.0f, 0.0f);					// Bottom Right
-        gl.glEnd();											// Finished Drawing The Triangle
-        gl.glTranslatef(3.0f,0.0f,0.0f);						// Move Right 3 Units
-        gl.glColor3f(0.5f,0.5f,1.0f);							// Set The Color To Blue One Time Only
-        gl.glBegin(GL_QUADS);									// Draw A Quad
-        gl.glVertex3f(-1.0f, 1.0f, 0.0f);					// Top Left
-        gl.glVertex3f( 1.0f, 1.0f, 0.0f);					// Top Right
-        gl.glVertex3f( 1.0f,-1.0f, 0.0f);					// Bottom Right
-        gl.glVertex3f(-1.0f,-1.0f, 0.0f);					// Bottom Left
-        gl.glEnd();							
-       
-	
-	//	gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        if(showFriends) {
+	        gl.glTranslatef(-1.5f,0.0f,-8.0f);						// Move Left 1.5 Units And Into The Screen 8(not 6.0 like VC.. not sure why)
+	        gl.glBegin(GL_TRIANGLES);								// Drawing Using Triangles
+	        gl.glColor3f(1.0f,0.0f,0.0f);						// Set The Color To Red
+	        gl.glVertex3f( 0.0f, 1.0f, 0.0f);					// Top
+	        gl.glColor3f(0.0f,1.0f,0.0f);						// Set The Color To Green
+	        gl.glVertex3f(-1.0f,-1.0f, 0.0f);					// Bottom Left
+	        gl.glColor3f(0.0f,0.0f,1.0f);						// Set The Color To Blue
+	        gl.glVertex3f( 1.0f,-1.0f, 0.0f);					// Bottom Right
+	        gl.glEnd();											// Finished Drawing The Triangle
+	        gl.glTranslatef(3.0f,0.0f,0.0f);						// Move Right 3 Units
+	        gl.glColor3f(0.5f,0.5f,1.0f);							// Set The Color To Blue One Time Only
+	        gl.glBegin(GL_QUADS);									// Draw A Quad
+	        gl.glVertex3f(-1.0f, 1.0f, 0.0f);					// Top Left
+	        gl.glVertex3f( 1.0f, 1.0f, 0.0f);					// Top Right
+	        gl.glVertex3f( 1.0f,-1.0f, 0.0f);					// Bottom Right
+	        gl.glVertex3f(-1.0f,-1.0f, 0.0f);					// Bottom Left
+	        gl.glEnd();							
+        }        
+        
+        if(_trial != null) {
+        	
+        	//gl.glTranslatef(-4.35f,-3.26f,-8.0f);					
+        	gl.glTranslatef(-6.6f,-4.5f,-8.0f);						// translate to (roughly) origin (fix later)
+
+        	// test AnimationParser method
+        	File file = new File("/Users/Catherine/Workspace/Maple/auditory-research-suite/datafiles/examples/vis/es_.txt");
+        	
+        	AnimationParser parser = new AnimationParser();
+        	try {
+        		AnimationSequence animation = parser.parseFile(file);
+        		
+        		_currentFrame = 45;
+        		AnimationFrame currFrame = animation.getFrame(_currentFrame);
+    	        // draw white circle
+    	        GLU glu = new GLU();
+    	        GLUquadric circle = glu.gluNewQuadric();
+    	        glu.gluQuadricDrawStyle(circle, GLU.GLU_FILL);
+    	        glu.gluQuadricNormals(circle, GLU.GLU_FLAT);
+    	        glu.gluQuadricOrientation(circle, GLU.GLU_OUTSIDE);
+    	        gl.glColor3f(1f, 1f, 1f);
+    	       
+    	        //List<Point2D> points = currFrame.getJointLocations();
+    	        
+    	        for(Point2D p : currFrame._pointList) {
+    		        gl.glPushMatrix();
+    		        // Draw sphere (possible styles: FILL, LINE, POINT).
+    		        gl.glTranslated(p.getX(),p.getY(), 0.0);						
+    		        
+    		        //final float radius = 1.378f;
+    		        
+    		        float radius = _trial.getDiskRadius();
+    		       // System.out.printf("disk radius = %f\n", radius);
+    		       // float radius = _diskSize;
+    		       //gl.glTranslatef(_trial._diskLocation.x, _trial._diskLocation.y, 0);
+    		        
+    		        final int slices = 32;
+    		        final int stacks = 32;
+    		        glu.gluSphere(circle, radius, slices, stacks); // draw sphere
+    		        gl.glPopMatrix();
+    		      
+    		    }		        
+    	        glu.gluDeleteQuadric(circle);
+
+    	        
+    	        // draw connecting lines
+    	        if (_connectTheDots) {
+    	        	gl.glBegin(GL_LINE_STRIP);
+    	        	//gl.glLineWidth(2f); 		// has no effect?
+    	        	for (Point2D p: currFrame._pointList) {
+    	        		gl.glVertex2d(p.getX(), p.getY());
+    	        	} 
+    	 	        gl.glEnd();
+    	        }
+    	       
+        	} catch (FileNotFoundException ex) {
+        		ex.printStackTrace();
+        	}
+   
+ /*       	
+ 	       // AnimationSequence animation = _trial.getAnimation();
+	        AnimationFrame currFrame = animation.getFrame(_currentFrame);
+	        // draw white circle
+	        GLU glu = new GLU();
+	        GLUquadric circle = glu.gluNewQuadric();
+	        glu.gluQuadricDrawStyle(circle, GLU.GLU_FILL);
+	        glu.gluQuadricNormals(circle, GLU.GLU_FLAT);
+	        glu.gluQuadricOrientation(circle, GLU.GLU_OUTSIDE);
+	        gl.glColor3f(1f, 1f, 1f);
+	       
+	        List<Point2D> points = currFrame.getJointLocations();
+	        // System.out.printf("Length of list 'points' = %d\n", points.size());
+	        
+	        for(Point2D p : points) {
+		        gl.glPushMatrix();
+		        // Draw sphere (possible styles: FILL, LINE, POINT).
+		        gl.glTranslated(p.getX(),p.getY(), 0.0);						
+		        
+		        //final float radius = 1.378f;
+		        
+		        float radius = _trial.getDiskRadius();
+		       // System.out.printf("disk radius = %f\n", radius);
+		       // float radius = _diskSize;
+		       //gl.glTranslatef(_trial._diskLocation.x, _trial._diskLocation.y, 0);
+		        
+		        final int slices = 32;
+		        final int stacks = 32;
+		        glu.gluSphere(circle, radius, slices, stacks); // draw sphere
+		        gl.glPopMatrix();
+		      
+		    }		        
+	        glu.gluDeleteQuadric(circle);
+
+	        
+	        // draw connecting lines
+	        if (_connectTheDots) {
+	        	gl.glBegin(GL_LINE_STRIP);
+	        	//gl.glLineWidth(2f); 		// has no effect?
+	        	for (Point2D p: points) {
+	        		gl.glVertex2d(p.getX(), p.getY());
+	        	} 
+	 	        gl.glEnd();
+	        }
+	       
+	        
+		      
+		//	gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			
 		
-		if (_trial != null) {
-//			elapsedTime = time.time() - self.startTime;
-//			if self.trial.isDone(elapsedTime) {
-//				self.canvas.AnimatesStop();
-//				if (self.finishedCallback != null)
-//					self.finishedCallback();
-//				return;
-//			}
-//			else {
-//				// TBC...
-//			}
-		}
+	//        if (_trial != null) {
+	//			elapsedTime = time.time() - self.startTime;
+	//			if self.trial.isDone(elapsedTime) {
+	//				self.canvas.AnimatesStop();
+	//				if (self.finishedCallback != null)
+	//					self.finishedCallback();
+	//				return;
+	//			}
+	//			else {
+	//				// TBC...
+	//			}
+	//		}
+	        
+	        */
+        }
 	}
 	
 	@Override
@@ -140,7 +260,9 @@ public class Animator implements GLEventListener {
         gl.glViewport(0, 0, width, height);                       // Reset The Current Viewport And Perspective Transformation
         gl.glMatrixMode(GL_PROJECTION);                           // Select The Projection Matrix
         gl.glLoadIdentity();                                      // Reset The Projection Matrix
-        glu.gluPerspective(45.0f, width / height, 0.1f, 100.0f);  // Calculate The Aspect Ratio Of The Window
+     // glu.gluPerspective(45.0f, width / height, 0.1f, 100.0f);  // Calculate The Aspect Ratio Of The Window
+        glu.gluPerspective(45.0f, 1.3, 0.1f, 100.0f);  			// Calculate The Aspect Ratio Of The Window
+
         gl.glMatrixMode(GL_MODELVIEW);                            // Select The Modelview Matrix
         gl.glLoadIdentity();   
         
