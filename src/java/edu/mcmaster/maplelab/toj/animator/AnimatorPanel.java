@@ -1,4 +1,4 @@
-package edu.mcmaster.maplelab.common.gui;
+package edu.mcmaster.maplelab.toj.animator;
 
 import javax.swing.JPanel;
 
@@ -10,8 +10,6 @@ import java.util.List;
 import javax.media.opengl.*;
 import javax.swing.*;
 import javax.vecmath.Vector3d;
-
-import com.sun.opengl.util.Animator;
 
 import edu.mcmaster.maplelab.common.LogContext;
 
@@ -122,7 +120,7 @@ public class AnimatorPanel extends JPanel {
             JFrame f = new JFrame(AnimatorPanel.class.getName());
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             
-            Animator ani = new Animator(); // replace w/ local version
+            Animator ani = new Animator(1, true); // replace w/ local version
             final AnimatorPanel view = new AnimatorPanel(ani);
             
             f.getContentPane().add(view, BorderLayout.CENTER);

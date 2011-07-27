@@ -144,4 +144,9 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
         
         return retval;
     }
+
+	public TOJBlock generateWarmup() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

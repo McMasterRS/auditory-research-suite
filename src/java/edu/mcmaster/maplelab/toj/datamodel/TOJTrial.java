@@ -1,6 +1,7 @@
 package edu.mcmaster.maplelab.toj.datamodel;
 
 import java.io.File;
+import java.util.Date;
 
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
 import edu.mcmaster.maplelab.common.datamodel.Response;

@@ -241,7 +241,7 @@ public class TOJStimulusResponseScreen extends BasicStep {
 
         TOJTrial currTrial = currTrial();
         if(currTrial == null) return;
-        currTrial.setTimeStamp(new Date());
+ //       currTrial.setTimeStamp(new Date());
         
         LogContext.getLogger().fine(
             String.format("-> %s: %s", currBlock, currTrial));
@@ -294,17 +294,17 @@ public class TOJStimulusResponseScreen extends BasicStep {
     }    
     
     private void updateResultsText() {
-    	if (_session.allowResponseFeedback()) {
-    		int percent = _completed == 0 ? 100 :
-                (int)Math.round(_correct/(float)_completed*100);
-            
-            _results.setText(String.format(
-                _session.getString(ConfigKeys.resultsFormatText, "??"),
-                _correct, _completed, percent));
-    	}
-    	else {
-    		_results.setText("");
-    	}
+//    	if (_session.allowResponseFeedback()) {
+//    		int percent = _completed == 0 ? 100 :
+//                (int)Math.round(_correct/(float)_completed*100);
+//            
+//            _results.setText(String.format(
+//                _session.getString(ConfigKeys.resultsFormatText, "??"),
+//                _correct, _completed, percent));
+//    	}
+//    	else {
+//    		_results.setText("");
+//    	}
     }
     
     /** Task to update screen and prepare user for running trial. */
@@ -337,15 +337,15 @@ public class TOJStimulusResponseScreen extends BasicStep {
             	// actual delay until next trial
             	Thread.sleep(_session.getTrialDelay());
                 
-                SwingUtilities.invokeAndWait(new Runnable() {
-                    public void run() {
-                        _statusText.setText(_session.getString(_trial.isWithTap() ? 
-                            ConfigKeys.withTapText : ConfigKeys.withoutTapText, null));
-                    }
-                });
+//                SwingUtilities.invokeAndWait(new Runnable() {
+//                    public void run() {
+//                        _statusText.setText(_session.getString(_trial.isWithTap() ? 
+//                            ConfigKeys.withTapText : ConfigKeys.withoutTapText, null));
+//                    }
+//                });
                 
                 // Give user time to prepare for playback.
-                Thread.sleep(_session.getPreStimulusSilence());
+//                Thread.sleep(_session.getPreStimulusSilence());
             }
             catch (InterruptedException ex) {
                 // Ignore
@@ -414,37 +414,37 @@ public class TOJStimulusResponseScreen extends BasicStep {
         public void run() {
         	_completed++;
             
-            final boolean wasCorrect = _currTrial.isResponseCorrect();
-
-            if(wasCorrect) {
-                _correct++;
-            }
-            
-            try {
-                SwingUtilities.invokeAndWait(new Runnable() {
-                    public void run() {
-                    	if (_session.allowResponseFeedback()) {
-                    		_statusText.setText(_session.getString(wasCorrect ?
-                                    ConfigKeys.accuracyCorrectText : ConfigKeys.accuracyIncorrectText, null)); 
-                    	}
-                    	else {
-                    		_statusText.setText("");
-                    	}
-                    	updateResultsText();
-                    }
-                });
-                
-                // Give user time to read results, if necessary.
-                if (_session.allowResponseFeedback()) {
-                	Thread.sleep(_session.getPreStimulusSilence());
-                }
-            }
-            catch (InterruptedException ex) {
-                // ignore
-            }
-            catch (InvocationTargetException ex) {
-                LogContext.getLogger().log(Level.SEVERE, "Status update error", ex);       
-            }  
+//            final boolean wasCorrect = _currTrial.isResponseCorrect();
+//
+//            if(wasCorrect) {
+//                _correct++;
+//            }
+//            
+//            try {
+//                SwingUtilities.invokeAndWait(new Runnable() {
+//                    public void run() {
+//                    	if (_session.allowResponseFeedback()) {
+//                    		_statusText.setText(_session.getString(wasCorrect ?
+//                                    ConfigKeys.accuracyCorrectText : ConfigKeys.accuracyIncorrectText, null)); 
+//                    	}
+//                    	else {
+//                    		_statusText.setText("");
+//                    	}
+//                    	updateResultsText();
+//                    }
+//                });
+//                
+//                // Give user time to read results, if necessary.
+//                if (_session.allowResponseFeedback()) {
+//                	Thread.sleep(_session.getPreStimulusSilence());
+//                }
+//            }
+//            catch (InterruptedException ex) {
+//                // ignore
+//            }
+//            catch (InvocationTargetException ex) {
+//                LogContext.getLogger().log(Level.SEVERE, "Status update error", ex);       
+//            }  
         }
     }
 }
