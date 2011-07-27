@@ -59,22 +59,53 @@ public class Animator implements GLEventListener {
 		_canvas = canvas;
 		
 		GL gl = canvas.getGL();
+
+     
+        gl.glShadeModel(GL_SMOOTH);                            //Enables Smooth Color Shading
+        gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);               //This Will Clear The Background Color To Black
+        gl.glClearDepth(1.0);                                  //Enables Clearing Of The Depth Buffer
+        gl.glEnable(GL_DEPTH_TEST);                            //Enables Depth Testing
+        gl.glDepthFunc(GL_LEQUAL);                             //The Type Of Depth Test To Do
+        //gl.glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  // Really Nice Perspective Calculations
+        
 		
-		gl.glClearColor(0, 0, 0, 1); // glblack
-		gl.glMatrixMode(GL_MODELVIEW);
-		gl.glLoadIdentity();
-		
-		gl.glEnable(GL_BLEND);
-		gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		gl.glEnable(GL_LINE_SMOOTH);
+//		gl.glClearColor(0, 0, 0, 1); // glblack
+//		gl.glMatrixMode(GL_MODELVIEW);
+//		gl.glLoadIdentity();
+//		
+//		gl.glEnable(GL_BLEND);
+//		gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//		gl.glEnable(GL_LINE_SMOOTH);
 	}
 
 	
 	@Override
 	public void display(GLAutoDrawable d) {
 		GL gl = d.getGL();
+		
+		
+		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);       //Clear The Screen And The Depth Buffer
+        gl.glLoadIdentity();                                         //Reset The View
+        gl.glTranslatef(-1.5f,0.0f,-8.0f);						// Move Left 1.5 Units And Into The Screen 8(not 6.0 like VC.. not sure why)
+        gl.glBegin(GL_TRIANGLES);								// Drawing Using Triangles
+        gl.glColor3f(1.0f,0.0f,0.0f);						// Set The Color To Red
+        gl.glVertex3f( 0.0f, 1.0f, 0.0f);					// Top
+        gl.glColor3f(0.0f,1.0f,0.0f);						// Set The Color To Green
+        gl.glVertex3f(-1.0f,-1.0f, 0.0f);					// Bottom Left
+        gl.glColor3f(0.0f,0.0f,1.0f);						// Set The Color To Blue
+        gl.glVertex3f( 1.0f,-1.0f, 0.0f);					// Bottom Right
+        gl.glEnd();											// Finished Drawing The Triangle
+        gl.glTranslatef(3.0f,0.0f,0.0f);						// Move Right 3 Units
+        gl.glColor3f(0.5f,0.5f,1.0f);							// Set The Color To Blue One Time Only
+        gl.glBegin(GL_QUADS);									// Draw A Quad
+        gl.glVertex3f(-1.0f, 1.0f, 0.0f);					// Top Left
+        gl.glVertex3f( 1.0f, 1.0f, 0.0f);					// Top Right
+        gl.glVertex3f( 1.0f,-1.0f, 0.0f);					// Bottom Right
+        gl.glVertex3f(-1.0f,-1.0f, 0.0f);					// Bottom Left
+        gl.glEnd();							
+       
 	
-		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//	gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		if (_trial != null) {
 //			elapsedTime = time.time() - self.startTime;
@@ -99,15 +130,28 @@ public class Animator implements GLEventListener {
 
 
 	@Override
-	public void reshape(GLAutoDrawable canvas, int left, int right, int bottom,
-			int top) {
+	public void reshape(GLAutoDrawable canvas, int x, int y, int width,
+			int height) {
 		GL gl = canvas.getGL();
+		GLU glu = new GLU();
 		
-		
-		gl.glMatrixMode(GL_PROJECTION); // missing library
-//		gl.glOrtho2D(0, width, 0, height);
-		gl.glMatrixMode(GL_MODELVIEW);	
-		
+        System.out.println("Width : "+width+" Height: "+height);
+        if(height==0)height=1;
+        gl.glViewport(0, 0, width, height);                       // Reset The Current Viewport And Perspective Transformation
+        gl.glMatrixMode(GL_PROJECTION);                           // Select The Projection Matrix
+        gl.glLoadIdentity();                                      // Reset The Projection Matrix
+        glu.gluPerspective(45.0f, width / height, 0.1f, 100.0f);  // Calculate The Aspect Ratio Of The Window
+        gl.glMatrixMode(GL_MODELVIEW);                            // Select The Modelview Matrix
+        gl.glLoadIdentity();   
+        
+//	
+//		GL gl = canvas.getGL();
+//		
+//		
+//		gl.glMatrixMode(GL_PROJECTION); // missing library
+////		gl.glOrtho2D(0, width, 0, height);
+//		gl.glMatrixMode(GL_MODELVIEW);	
+//		
 	}
 	
 	// where to put this?

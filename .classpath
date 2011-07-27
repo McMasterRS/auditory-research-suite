@@ -4,6 +4,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="src/java/lib/jogl/jogl.jar">
 		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/auditory-research-suite/src/java/lib/jogl/jogl-1.1.1a-docs.zip!/jogl-1.1.1-docs"/>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="auditory-research-suite/src/java/lib/jogl"/>
 		</attributes>
 	</classpathentry>
