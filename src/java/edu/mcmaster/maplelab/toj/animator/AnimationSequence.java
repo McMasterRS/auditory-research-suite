@@ -1,28 +1,27 @@
 package edu.mcmaster.maplelab.toj.animator;
-import java.awt.geom.Point2D;
-import java.util.*;
+import java.util.List;
 
 /**
  * This class creates a sequence of frames to be animated
- * @author Catherine
+ * @author Catherine Elder <cje@datamininglab.com>
  *
  */
 public class AnimationSequence {
 // ArrayList of animation frames
-	ArrayList<AnimationFrame> _aniFrames;
+	private List<AnimationFrame> _aniFrames;
 	
-	public AnimationSequence() {
-		System.out.println("AnimationSequence constructor called");
-	
-	}
-	
-	public void display(AnimationSequence aniSequence) {
-			
+	public AnimationSequence(List<AnimationFrame> aniFrames) {
+		_aniFrames = aniFrames;	
 	}
 
-	public AnimationFrame getFrame(int currentFrame) { // get first frame
+	public AnimationFrame getFrame(int currentFrame) { 
+		if(currentFrame < 0 || currentFrame >= getNumFrames()) {
+			throw new IllegalArgumentException(String.format("Frame number must be between 0 and %d.", getNumFrames()));
+		}
 		return _aniFrames.get(currentFrame);
-		
-		//return new AnimationFrame(0);
+	}
+
+	public int getNumFrames() {
+		return _aniFrames.size();
 	}
 }

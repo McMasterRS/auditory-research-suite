@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
+ * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
+ */
 package edu.mcmaster.maplelab.toj;
 
 import java.io.File;
@@ -10,7 +17,11 @@ import edu.mcmaster.maplelab.common.datamodel.FileTrialLogger;
 import edu.mcmaster.maplelab.toj.datamodel.TOJBlock;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
-
+/**
+ * 
+ * @author Catherine Elder <cje@datamininglab.com>
+ *
+ */
 public class TOJTrialLogger extends FileTrialLogger<TOJSession, TOJBlock, TOJTrial> {
 
 	public TOJTrialLogger(TOJSession session, File workingDirectory,

@@ -6,10 +6,15 @@ import java.awt.*;
 import java.io.File;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.media.opengl.*;
 import javax.swing.*;
 import javax.vecmath.Vector3d;
+
+import com.sun.opengl.util.Animator;
+
 import java.awt.geom.Point2D;
 
 
@@ -20,7 +25,7 @@ import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
 
 public class AnimatorPanel extends JPanel {
 	private final GLJPanel _canvas;
-	private final Animator _animator;
+	private final AnimationRenderer _animator;
     
     static {
         // Put JOGL version information into system properties to 
@@ -35,7 +40,7 @@ public class AnimatorPanel extends JPanel {
     /** 
      * Default ctor.
      */
-    public AnimatorPanel(Animator animator) {
+    public AnimatorPanel(AnimationRenderer animator) {
         super(new BorderLayout());
         setBorder(UIManager.getDefaults().getBorder("ProgressBar.border"));
 
@@ -46,6 +51,10 @@ public class AnimatorPanel extends JPanel {
         _animator = animator;
         _canvas.addGLEventListener(_animator);
         
+ 		Animator trigger = new Animator(_canvas);
+ 		trigger.setPrintExceptions(true);
+ 		trigger.start();
+ 		
         add(_canvas, BorderLayout.CENTER);
         setPreferredSize(new Dimension(640, 480));
         
@@ -125,26 +134,68 @@ public class AnimatorPanel extends JPanel {
         try {
             JFrame f = new JFrame(AnimatorPanel.class.getName());
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            
-            // instantiate TOJTrial class
-//            TOJTrial trial = new TOJTrial(new File("Users/Catherine/Workspace/Maple/auditory-research-suite/datafiles/examples/vis/el.txt"), 
-//            								NotesEnum.C, true, DurationEnum.LONG, DurationEnum.NORMAL, 1, 5, 0.6f, new Point2D.Float(1,1));
-            TOJTrial trial = new TOJTrial(new AnimationSequence(), 
-					NotesEnum.C, true, DurationEnum.LONG, DurationEnum.NORMAL, 1, 5, 0.4f);
-    		
-            Animator ani;
-            ani = new Animator(1, true); // connect the dots
-            ani.setTrial(trial);
+             AnimationRenderer ani = new AnimationRenderer(true); // connect the dots
+             
             
             final AnimatorPanel view = new AnimatorPanel(ani);
-            
+
             f.getContentPane().add(view, BorderLayout.CENTER);
-            
             f.pack();
             f.setVisible(true);
+            
+            
+            
+    		File file = new File("/Users/Catherine/Workspace/Maple/auditory-research-suite/datafiles/examples/vis/es_.txt");
+    		
+    		AnimationParser parser = new AnimationParser();
+
+			AnimationSequence animation = parser.parseFile(file);
+			
+            TOJTrial trial = new TOJTrial(animation, 
+					NotesEnum.C, true, DurationEnum.LONG, DurationEnum.NORMAL, 1, 5, 0.4f);
+
+            ani.setTrial(trial);
+            ani.setCurrentFrame(0);
+            
+            
+            
         }
         catch (Throwable ex) {
             ex.printStackTrace();
         }
+        
+        
+        
+//        
+//        
+//		
+//		//Timer timer = new Timer();
+//		ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+//		
+//		long delay = (long)0.1;
+//		long cumulativeDelay = 0;
+//		
+//		myRunnable newRunnable = new myRunnable();
+//		//Thread thread = new Thread(newRunnable);
+//		
+//		int i;
+//		//int timeoutTime = 11;
+//		boolean firstPass;
+//		
+//		do {
+//			for (i = 0; i < ((animation._aniFrames).size()); i++) {
+//				System.out.println("loop entered");
+//				AnimationFrame currFrame = animation.getFrame(i);
+//				_currentFrame = currFrame;
+//				//timer.schedule(displayFrame(gl, currFrame), 1000);
+//				cumulativeDelay += delay;
+//				scheduler.schedule(newRunnable, cumulativeDelay, TimeUnit.SECONDS);
+//			}
+//			firstPass = false;
+//		} while ((firstPass = true));
+//		System.out.printf("number of frames to be animated = %d\n", i);
+//
+//
+		
     }
 }
