@@ -49,7 +49,7 @@ public class AnimationParser {
 				}
 				AnimationFrame animFrame = new AnimationFrame(time, pointList);	// new frame
 
-				System.out.printf("length of pointList = %d\n", pointList.size()); // print number of points in frame
+			//	System.out.printf("length of pointList = %d\n", pointList.size()); // print number of points in frame
 				frameList.add(animFrame);							// add frame to frameList
 
 			}

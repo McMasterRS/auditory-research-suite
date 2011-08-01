@@ -9,6 +9,7 @@ import java.util.List;
 public class AnimationSequence {
 // ArrayList of animation frames
 	private List<AnimationFrame> _aniFrames;
+	private long _totalAnimationTime;
 	
 	public AnimationSequence(List<AnimationFrame> aniFrames) {
 		_aniFrames = aniFrames;	
@@ -24,4 +25,16 @@ public class AnimationSequence {
 	public int getNumFrames() {
 		return _aniFrames.size();
 	}
+
+	/**
+	 * @return the totalAnimationTime
+	 */
+	public long getTotalAnimationTime() {
+		int numFrames = _aniFrames.size();
+		AnimationFrame lastFrame = _aniFrames.get(numFrames - 1);
+		
+		return (long)lastFrame.getTime();
+	}
+
+
 }

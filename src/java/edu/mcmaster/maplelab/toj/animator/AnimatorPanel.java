@@ -63,7 +63,6 @@ public class AnimatorPanel extends JPanel {
         	// Without this call we get a canvas width or height == 0 error.
             _canvas.setSize(getPreferredSize());
         }
-        
     }
     
     /**
@@ -134,8 +133,7 @@ public class AnimatorPanel extends JPanel {
         try {
             JFrame f = new JFrame(AnimatorPanel.class.getName());
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-             AnimationRenderer ani = new AnimationRenderer(true); // connect the dots
-             
+            AnimationRenderer ani = new AnimationRenderer(true); // connect the dots
             
             final AnimatorPanel view = new AnimatorPanel(ani);
 
@@ -144,19 +142,21 @@ public class AnimatorPanel extends JPanel {
             f.setVisible(true);
             
             
-            
     		File file = new File("/Users/Catherine/Workspace/Maple/auditory-research-suite/datafiles/examples/vis/es_.txt");
     		
     		AnimationParser parser = new AnimationParser();
 
 			AnimationSequence animation = parser.parseFile(file);
+			System.out.printf("total animation time for this seq = %f\n", (float)animation.getTotalAnimationTime());
 			
             TOJTrial trial = new TOJTrial(animation, 
-					NotesEnum.C, true, DurationEnum.LONG, DurationEnum.NORMAL, 1, 5, 0.4f);
+					NotesEnum.C, true, DurationEnum.LONG, DurationEnum.NORMAL, 1, 5, 0.3f);
 
+    		long currentTime = System.currentTimeMillis();
             ani.setTrial(trial);
             ani.setCurrentFrame(0);
-            
+    		ani.setStartTime(currentTime); 
+
             
             
         }

@@ -11,7 +11,7 @@ public class AnimationFrame {
 	private final double _time;
 
 	public AnimationFrame(double time, List<Point2D> pointList) {
-		this._time = time;
+		this._time = 1000*time;					// time to animate the frame (in milliseconds)
 		_pointList = pointList;
 	}
 

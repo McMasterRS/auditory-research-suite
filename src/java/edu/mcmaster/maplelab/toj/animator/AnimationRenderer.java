@@ -11,7 +11,6 @@ import static javax.media.opengl.GL.GL_SMOOTH;
 
 import java.awt.geom.Point2D;
 import java.util.List;
-import java.util.logging.Level;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
@@ -19,25 +18,21 @@ import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
 
-import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
 
 public class AnimationRenderer implements GLEventListener { 
-
 
 	// fields
 	private boolean _connectTheDots = true;
 	private TOJTrial _trial = null;
 
-	private float _aspectRatio = 1f;
-
-	private int _currentFrame = 0; // pass these into displayFrame
+	private int _currentFrame = 0;  
+	private long _startTime;
+	private boolean _animatedOnce = false; // set to true when 1 stroke is animated
 
 	// constructor
 	public AnimationRenderer(boolean connectTheDots) {
 		_connectTheDots = connectTheDots;
-
-		_aspectRatio = 1;
 	}
 
 	/** Set the current trial to animate. Doing so implies starting at the first frame. */
@@ -60,7 +55,6 @@ public class AnimationRenderer implements GLEventListener {
 
 	@Override
 	public void init(GLAutoDrawable canvas) {
-		// assuming [GLAutodrawable canvas] is the analog of [PTCommon.GLUtils.PT3DCanvas canvas]
 		System.out.println("init in Animator class called");
 
 		if (!(canvas instanceof GLAutoDrawable)) {
@@ -69,50 +63,73 @@ public class AnimationRenderer implements GLEventListener {
 
 		GL gl = canvas.getGL();
 
-
 		gl.glShadeModel(GL_SMOOTH);                            //Enables Smooth Color Shading
 		gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);               //This Will Clear The Background Color To Black
 		gl.glClearDepth(1.0);                                  //Enables Clearing Of The Depth Buffer
 		gl.glEnable(GL_DEPTH_TEST);                            //Enables Depth Testing
 		gl.glDepthFunc(GL_LEQUAL);                             //The Type Of Depth Test To Do
-
-		//  	gl.glTranslatef(-6.6f,-4.5f,-8.0f);						// translate to (roughly) origin (fix later)
-		//  	gl.glTranslatef(-6.6f,-4.5f,-8.0f);						// translate to (roughly) origin (fix later)
-
 	}
-
-
-
-	//new myRunnable class
-	//	private class myRunnable implements Runnable {
-	//		public void run() {
-	//			System.out.println("run from myRunnable class called");
-	//			displayFrame(_gl, _currentFrame);
-	//			System.out.printf("from run: number of pts in current frame = %d\n", _currentFrame._pointList.size());
-	//
-	//		}
-	//	}
 
 
 	@Override
 	public void display(GLAutoDrawable d) {
-System.currentTimeMillis();
+		
 		GL gl = d.getGL();
 		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);       //Clear The Screen And The Depth Buffer
 
-		if(_trial == null) {
+		if(_trial == null || _animatedOnce == true) {
 			return;
 		}
 
 		gl.glMatrixMode(GL_MODELVIEW);                               // Make sure we're in the correct matrix mode
 		gl.glLoadIdentity();                                         //Reset The View
-		gl.glTranslatef(-6.6f,-4.5f,-8.0f);						// TODO: translate to (roughly) origin (fix later)
-
+		gl.glTranslatef(-6.6f,-4.5f,-8.0f);						// TODO: translate to (roughly) origin
+		
+		int totalFrames = _trial.getAnimation().getNumFrames();
+		System.out.printf("total number of frames = %d\n", totalFrames);
+		System.out.printf("current frame = frame %d\n", _currentFrame);
 
 		AnimationFrame frame = _trial.getAnimation().getFrame(_currentFrame);
-		displayFrame(gl, frame); // test displayFrame method
-		_currentFrame = (_currentFrame + 1) % _trial.getAnimation().getNumFrames();
+		System.out.printf("current frame.getTime = %f\n", frame.getTime());
+		
+		//long currentTime = (System.currentTimeMillis() - _startTime) % _trial.getAnimation().getTotalAnimationTime(); // loop animation
+		long currentTime = (System.currentTimeMillis() - _startTime);			// animate only once
+
+		System.out.printf("current time = %f\n", (float)currentTime);
+
+		if (_currentFrame < totalFrames - 1) { // animate all frames but last frame. to loop animation: totalframes - 2
+			
+			AnimationFrame nextFrame = _trial.getAnimation().getFrame(_currentFrame + 1);
+			System.out.printf("next frame.getTime = %f\n", nextFrame.getTime());
+			
+			if (currentTime >= frame.getTime()) {
 				
+				if (currentTime < nextFrame.getTime()) {
+					System.out.print("Animating current frame\n");
+					displayFrame(gl, frame); 						
+				} else {
+					displayFrame(gl, nextFrame);
+					System.out.print("Animating next frame\n");
+					_currentFrame = _currentFrame + 1;
+				}
+			} 
+			else {
+				System.out.print("it's not time to animate this frame!\n"); // currentTime too low
+			}
+			
+			System.out.printf("\n");
+		}
+		else {		// TODO:  how long to animate last frame? default: 1 call to display
+			if (currentTime >= frame.getTime()) {
+				System.out.print("Animating last frame\n");
+				displayFrame(gl,frame);
+				
+				_animatedOnce = true;		// stop animating
+				
+//				System.out.print("resetting current frame to 0\n"); 	// reset currentFrame if repeating animation
+//				_currentFrame = 0;	
+			}
+		}		
 	} 
 
 	// display 1 frame
@@ -159,107 +176,9 @@ System.currentTimeMillis();
 	}
 
 
-
-
-
-	//	@Override
-	//	public void display(GLAutoDrawable d) {
-	//		final boolean showFriends = false;
-	//		
-	//		GL gl = d.getGL();
-	//		
-	//		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);       //Clear The Screen And The Depth Buffer
-	//		gl.glMatrixMode(GL_MODELVIEW);                               // Make sure we're in the correct matrix mode
-	//        gl.glLoadIdentity();                                         //Reset The View
-	//        
-	//        if(showFriends) {
-	//	        gl.glTranslatef(-1.5f,0.0f,-8.0f);						// Move Left 1.5 Units And Into The Screen 8
-	//	        gl.glBegin(GL_TRIANGLES);								// Drawing Using Triangles
-	//	        gl.glColor3f(1.0f,0.0f,0.0f);						// Set The Color To Red
-	//	        gl.glVertex3f( 0.0f, 1.0f, 0.0f);					// Top
-	//	        gl.glColor3f(0.0f,1.0f,0.0f);						// Set The Color To Green
-	//	        gl.glVertex3f(-1.0f,-1.0f, 0.0f);					// Bottom Left
-	//	        gl.glColor3f(0.0f,0.0f,1.0f);						// Set The Color To Blue
-	//	        gl.glVertex3f( 1.0f,-1.0f, 0.0f);					// Bottom Right
-	//	        gl.glEnd();											// Finished Drawing The Triangle
-	//	        gl.glTranslatef(3.0f,0.0f,0.0f);						// Move Right 3 Units
-	//	        gl.glColor3f(0.5f,0.5f,1.0f);							// Set The Color To Blue One Time Only
-	//	        gl.glBegin(GL_QUADS);									// Draw A Quad
-	//	        gl.glVertex3f(-1.0f, 1.0f, 0.0f);					// Top Left
-	//	        gl.glVertex3f( 1.0f, 1.0f, 0.0f);					// Top Right
-	//	        gl.glVertex3f( 1.0f,-1.0f, 0.0f);					// Bottom Right
-	//	        gl.glVertex3f(-1.0f,-1.0f, 0.0f);					// Bottom Left
-	//	        gl.glEnd();							
-	//        }        
-	//        
-	//        if(_trial != null) {
-	//        	
-	//        	//gl.glTranslatef(-4.35f,-3.26f,-8.0f);					
-	//        	gl.glTranslatef(-6.6f,-4.5f,-8.0f);						// translate to (roughly) origin (fix later)
-	//
-	//        	// test AnimationParser method
-	//        	File file = new File("/Users/Catherine/Workspace/Maple/auditory-research-suite/datafiles/examples/vis/es_.txt");
-	//        	
-	//        	AnimationParser parser = new AnimationParser();
-	//        	
-	//        	try {
-	//        		AnimationSequence animation = parser.parseFile(file);
-	//        		
-	//        		//for ()
-	//        		int currentFrame = 49;
-	//        		AnimationFrame currFrame = animation.getFrame(currentFrame);
-	//        				
-	//        				
-	//    	        // draw white circle
-	//    	        GLU glu = new GLU();
-	//    	        GLUquadric circle = glu.gluNewQuadric();
-	//    	        glu.gluQuadricDrawStyle(circle, GLU.GLU_FILL);
-	//    	        glu.gluQuadricNormals(circle, GLU.GLU_FLAT);
-	//    	        glu.gluQuadricOrientation(circle, GLU.GLU_OUTSIDE);
-	//    	        gl.glColor3f(1f, 1f, 1f);
-	//    	       
-	//    	        //List<Point2D> points = currFrame.getJointLocations();
-	//    	        
-	//    	        for(Point2D p : currFrame._pointList) {
-	//    		        gl.glPushMatrix();
-	//    		        // Draw sphere (possible styles: FILL, LINE, POINT).
-	//    		        gl.glTranslated(p.getX(),p.getY(), 0.0);						
-	//    		        
-	//    		        //final float radius = 1.378f;
-	//    		        
-	//    		        float radius = _trial.getDiskRadius();
-	//    		       // System.out.printf("disk radius = %f\n", radius);
-	//    		       // float radius = _diskSize;
-	//    		       //gl.glTranslatef(_trial._diskLocation.x, _trial._diskLocation.y, 0);
-	//    		        
-	//    		        final int slices = 32;
-	//    		        final int stacks = 32;
-	//    		        glu.gluSphere(circle, radius, slices, stacks); // draw sphere
-	//    		        gl.glPopMatrix(); 
-	//    		    }		        
-	//    	        glu.gluDeleteQuadric(circle);
-	//
-	//    	        // draw connecting lines
-	//    	        if (_connectTheDots) {
-	//    	        	gl.glBegin(GL_LINE_STRIP);
-	//    	        	//gl.glLineWidth(2f); 		// has no effect?
-	//    	        	for (Point2D p: currFrame._pointList) {
-	//    	        		gl.glVertex2d(p.getX(), p.getY());
-	//    	        	} 
-	//    	 	        gl.glEnd();
-	//    	        }
-	//    	       
-	//        	} catch (FileNotFoundException ex) {
-	//        		ex.printStackTrace();
-	//        	}
-	//        }
-	//	}
-
 	@Override
 	public void displayChanged(GLAutoDrawable arg0, boolean arg1, boolean arg2) {
 		// maps to method "resize" in python doc?
-
-
 	}
 
 
@@ -279,16 +198,20 @@ System.currentTimeMillis();
 
 		gl.glMatrixMode(GL_MODELVIEW);                            // Select The Modelview Matrix
 		gl.glLoadIdentity();   
-
-		//	
-		//		GL gl = canvas.getGL();
-		//		
-		//		
-		//		gl.glMatrixMode(GL_PROJECTION); // missing library
-		////		gl.glOrtho2D(0, width, 0, height);
-		//		gl.glMatrixMode(GL_MODELVIEW);	
-		//		
 	}
 
+	/**
+	 * @return the _startTime
+	 */
+	public long	getStartTime() {
+		return _startTime;
+	}
+
+	/**
+	 * @param _startTime the _startTime to set
+	 */
+	public void setStartTime(long _startTime) {
+		this._startTime = _startTime;
+	}
 }
 
