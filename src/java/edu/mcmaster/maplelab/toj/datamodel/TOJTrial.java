@@ -1,31 +1,31 @@
 package edu.mcmaster.maplelab.toj.datamodel;
 
-import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
 import edu.mcmaster.maplelab.common.datamodel.Response;
 import edu.mcmaster.maplelab.common.datamodel.Trial;
-import edu.mcmaster.maplelab.common.sound.NotesEnum;
+import edu.mcmaster.maplelab.common.sound.Playable;
 import edu.mcmaster.maplelab.toj.animator.AnimationSequence;
 
 public class TOJTrial extends Trial<Response> {
-	private final NotesEnum _pitch;
+	
+	private final Playable _audio;
 	private final boolean _isVideo;
 //	private final File _videoFile;
 //	private final File _audioFile;
 //	private final File _animationFile;
-	private final int _offset;
+	private final float _offset;
 	private final int _numPoints;
 	
 	private final float _diskRadius;
-	//public Point2D.Float _diskLocation;
 	private final AnimationSequence _animationSequence;
+
 	
-	public TOJTrial(AnimationSequence animationSequence, NotesEnum pitch, boolean isVideo, DurationEnum toneDuration, 
-			DurationEnum strikeDuration, int timingOffset, int animationPoints, float diskRadius) {
+	public TOJTrial(AnimationSequence animationSequence, boolean isVideo, Playable audio, Float timingOffset, int animationPoints, float diskRadius) {
+		
 		_animationSequence = animationSequence;
-		_pitch = pitch;
 		_isVideo = isVideo;
 		_offset = timingOffset;
 		_numPoints = animationPoints;
+		_audio = audio;
 		
 		_diskRadius = diskRadius;
 		
@@ -34,15 +34,13 @@ public class TOJTrial extends Trial<Response> {
 //		_audioFile = null;
 //		_animationFile = null;
 	}
-	
+
 	//getters
-	public NotesEnum getPitch() {
-		return _pitch;
-	}
+
 	public boolean isVideo() {
 		return _isVideo;
 	}
-	public int getOffset() {
+	public float getOffset() {
 		return _offset;
 	}
 	public int getNumPoints() {
@@ -50,13 +48,32 @@ public class TOJTrial extends Trial<Response> {
 	}
 	
 	public AnimationSequence getAnimation() {
-		return _animationSequence;
+		return getAnimationSequence();
 	}
 
+	
+	// return a useful string to test creation of TOJTrial
+	public void printDescription() {
+		System.out.printf("TOJTrial:	%d frames, isVideo: %b, " +
+				"Playable name: %s, timingOffset: %f, animationPoints: %d, diskRadius: %f\n",
+				getAnimationSequence().getNumFrames(), _isVideo, _audio.name(), _offset, _numPoints, _diskRadius);
+	}
+	
 	/**
 	 * Get the radius of the points to render for each joint.
 	 */
 	public float getDiskRadius() {
 		return _diskRadius;
+	}
+
+	/**
+	 * @return the _animationSequence
+	 */
+	public AnimationSequence getAnimationSequence() {
+		return _animationSequence;
+	}
+	
+	public Playable getPlayable() {
+		return _audio;
 	}
 }

@@ -21,6 +21,8 @@ import java.awt.geom.Point2D;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
 import edu.mcmaster.maplelab.common.sound.NotesEnum;
+import edu.mcmaster.maplelab.common.sound.Playable;
+import edu.mcmaster.maplelab.common.sound.SoundClip;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
 
 public class AnimatorPanel extends JPanel {
@@ -41,7 +43,9 @@ public class AnimatorPanel extends JPanel {
      * Default ctor.
      */
     public AnimatorPanel(AnimationRenderer animator) {
+
         super(new BorderLayout());
+
         setBorder(UIManager.getDefaults().getBorder("ProgressBar.border"));
 
         GLCapabilities caps = new GLCapabilities();
@@ -141,7 +145,6 @@ public class AnimatorPanel extends JPanel {
             f.pack();
             f.setVisible(true);
             
-            
     		File file = new File("/Users/Catherine/Workspace/Maple/auditory-research-suite/datafiles/examples/vis/es_.txt");
     		
     		AnimationParser parser = new AnimationParser();
@@ -149,53 +152,33 @@ public class AnimatorPanel extends JPanel {
 			AnimationSequence animation = parser.parseFile(file);
 			System.out.printf("total animation time for this seq = %f\n", (float)animation.getTotalAnimationTime());
 			
+			//String filename = NotesEnum.D.toString() + "_" +  DurationEnum.LONG.toString() + ".wav"; // path or file name?
+			String filename = NotesEnum.D.toString().toLowerCase() + "_" +  DurationEnum.LONG.toString().toLowerCase().substring(0,1) + ".wav";
+			System.out.printf("sound clip filename = %s\n", filename);
+
+			File dir = new File("/Users/Catherine/Workspace/Maple/auditory-research-suite/datafiles/examples/aud");
+
+			final Playable audio = SoundClip.findPlayable(filename, dir);
+			
+			Runnable r = new Runnable() {
+				@Override
+				public void run() {
+					audio.play();
+				}
+			} ;
+			
             TOJTrial trial = new TOJTrial(animation, 
-					NotesEnum.C, true, DurationEnum.LONG, DurationEnum.NORMAL, 1, 5, 0.3f);
+					true, audio, 1f, 5, 0.3f);
 
     		long currentTime = System.currentTimeMillis();
             ani.setTrial(trial);
             ani.setCurrentFrame(0);
+               
     		ani.setStartTime(currentTime); 
-
-            
-            
+    		SwingUtilities.invokeLater(r);
         }
         catch (Throwable ex) {
             ex.printStackTrace();
-        }
-        
-        
-        
-//        
-//        
-//		
-//		//Timer timer = new Timer();
-//		ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-//		
-//		long delay = (long)0.1;
-//		long cumulativeDelay = 0;
-//		
-//		myRunnable newRunnable = new myRunnable();
-//		//Thread thread = new Thread(newRunnable);
-//		
-//		int i;
-//		//int timeoutTime = 11;
-//		boolean firstPass;
-//		
-//		do {
-//			for (i = 0; i < ((animation._aniFrames).size()); i++) {
-//				System.out.println("loop entered");
-//				AnimationFrame currFrame = animation.getFrame(i);
-//				_currentFrame = currFrame;
-//				//timer.schedule(displayFrame(gl, currFrame), 1000);
-//				cumulativeDelay += delay;
-//				scheduler.schedule(newRunnable, cumulativeDelay, TimeUnit.SECONDS);
-//			}
-//			firstPass = false;
-//		} while ((firstPass = true));
-//		System.out.printf("number of frames to be animated = %d\n", i);
-//
-//
-		
+        }	
     }
 }

@@ -9,7 +9,7 @@ import java.util.List;
 public class AnimationSequence {
 // ArrayList of animation frames
 	private List<AnimationFrame> _aniFrames;
-	private long _totalAnimationTime;
+	//private long _totalAnimationTime;
 	
 	public AnimationSequence(List<AnimationFrame> aniFrames) {
 		_aniFrames = aniFrames;	
@@ -17,7 +17,7 @@ public class AnimationSequence {
 
 	public AnimationFrame getFrame(int currentFrame) { 
 		if(currentFrame < 0 || currentFrame >= getNumFrames()) {
-			throw new IllegalArgumentException(String.format("Frame number must be between 0 and %d.", getNumFrames()));
+			throw new IllegalArgumentException(String.format("Frame number must be between 0 and %d.\n", getNumFrames()));
 		}
 		return _aniFrames.get(currentFrame);
 	}

@@ -33,6 +33,8 @@ public class FileBrowseField extends JPanel {
     
     private final JTextField _fileName;
 
+	private JButton _button;
+
     public FileBrowseField(boolean directoriesOnly) {
         super(new GridBagLayout());
         
@@ -47,11 +49,11 @@ public class FileBrowseField extends JPanel {
         
         add(_fileName, gbc);
         
-        JButton b = new JButton("Browse...");
-        b.addActionListener(new ActionHandler());
+        _button = new JButton("Browse...");
+        _button.addActionListener(new ActionHandler());
         gbc.weightx = 0;
         gbc.gridx = 1;
-        add(b, gbc);
+        add(_button, gbc);
     }
     
     private class ActionHandler implements ActionListener {
@@ -77,5 +79,11 @@ public class FileBrowseField extends JPanel {
     public File getFile() {
         String fStr = _fileName.getText();
         return new File(fStr != null ? fStr : ".");
+    }
+    
+    public void setEnabled(boolean state) {
+    	super.setEnabled(state);
+    	_fileName.setEnabled(state);
+    	_button.setEnabled(state);
     }
 }

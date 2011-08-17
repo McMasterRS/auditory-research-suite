@@ -16,6 +16,7 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
 
+import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.util.MathUtils;
 
 /**
@@ -269,8 +270,13 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
       * Override the demo mode setting in config file.
       */
      public void setDemo(boolean state) {
-         setProperty(ConfigKeys.demo, state);
+         setProperty(ConfigKeys.demo, Boolean.valueOf(state));
      }
+     /**
+      * get ExperimentDemoPanel
+      * @return
+      */
+     public abstract DemoGUIPanel<?, T> getExperimentDemoPanel(); 
      
      /**
       * Get the playback gain as a percentage of maximum [0.0, 1.0]
@@ -362,6 +368,9 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
     protected final boolean getBoolean(Enum<?> key, boolean def) {
         boolean retval = def;
         
+        Object b = getProperty(key);
+        if (b instanceof Boolean) return (Boolean) b;
+        
         String str = getString(key, null);
         try {
             retval = Boolean.parseBoolean(str);
@@ -444,7 +453,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      * Get property value as a list of integers
      * 
      * @param key property name
-     * @param def default value if property name not defeined
+     * @param def default value if property name not defined
      * @return property value parsed as a comma delimited list of integers
      */
     protected final List<Integer> getIntegerList(Enum<?> key, Integer... def) {

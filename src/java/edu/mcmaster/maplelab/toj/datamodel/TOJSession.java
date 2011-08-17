@@ -7,7 +7,12 @@ import java.util.List;
 import java.util.Properties;
 
 import static edu.mcmaster.maplelab.common.datamodel.AVBlock.AVBlockType;
+import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
+
 import edu.mcmaster.maplelab.common.datamodel.Session;
+import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
+import edu.mcmaster.maplelab.common.sound.NotesEnum;
+import edu.mcmaster.maplelab.toj.TOJDemoGUIPanel;
 import edu.mcmaster.maplelab.toj.TOJTrialLogger;
 
 public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
@@ -18,16 +23,18 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 		dataFileName,
 		includeVisualStimuli,
 		pitches,
-		toneDurations,
+		toneDurations, // DurationEnum[]
 		strikeDurations,
 		soundOffsets,
 		numAnimationPointsArray,
 		includeAudioBlock,
 		includeVideoBlock,
-		includeAudioVideoBlock
+		includeAudioVideoBlock,
+		speedMode,
+		baseIOIs
 	}
 	
-	protected TOJSession(Properties props) {
+	public TOJSession(Properties props) {
 		super(props);
 		// TODO Auto-generated constructor stub
 	}
@@ -117,7 +124,64 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 	public boolean includeAudioVideoBlock() {
 		return getBoolean(ConfigKeys.includeAudioVideoBlock, true);
 	}
-
+	
+	 // add getters
+	public List<NotesEnum> getPitches() {
+		List<String> pitches = getStringList(ConfigKeys.pitches, "C");
+		List<NotesEnum> retval = new ArrayList<NotesEnum>();
+		for (String s: pitches) {
+			try {
+				NotesEnum nEnum = NotesEnum.valueOf(s);
+				retval.add(nEnum);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return retval;
+	}
+	
+	public List<DurationEnum> getToneDurations() {
+		List<String> durations = getStringList(ConfigKeys.toneDurations, "0.03");
+		List<DurationEnum> retval = new ArrayList<DurationEnum>();
+		for (String s : durations) {
+			try {
+				DurationEnum dEnum = DurationEnum.valueOf(s);
+				retval.add(dEnum);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return retval;
+	}
+	
+	public List<DurationEnum> getStrikeDurations() {
+		List<String> durations = getStringList(ConfigKeys.strikeDurations, "0.03");
+		List<DurationEnum> retval = new ArrayList<DurationEnum>();
+		for (String s : durations) {
+			try {
+				DurationEnum dEnum = DurationEnum.valueOf(s);
+				retval.add(dEnum);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return retval;
+	}
+	
+	public List<Float> getSoundOffsets() {
+		List<Float> offsets = getFloatList(ConfigKeys.soundOffsets, new Float[]{0f});
+		return offsets;
+	}
+	
+	public List<Integer> getNumAnimationPointsArray() {
+		List<Integer> intList= getIntegerList(ConfigKeys.numAnimationPointsArray);
+		return intList;
+	}
+	
+	
 	/**
      * Generate the experiment blocks. The number of blocks is determined by 
      * the types included from the properties.
@@ -148,5 +212,39 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 	public TOJBlock generateWarmup() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	
+    /**
+     * List of integers specifying the inter-onset time between notes in milliseconds
+     */
+    public List<Integer> getBaseIOIs() {
+        List<Integer> retval = getIntegerList(ConfigKeys.baseIOIs, new Integer[]{400});
+        
+        if(isSpeedMode()) {
+            for(int i = 0, len = retval.size(); i < len; i++) {
+                retval.set(i, retval.get(i)/10);
+            }
+        }
+        
+        return retval;
+    }
+    
+    /**
+    * Flag to indicate dividing IOIs by 10 to speed through stimulus for
+    * testing.
+    */
+   public boolean isSpeedMode() {
+       boolean retval = false;
+       Object val = getProperty(ConfigKeys.speedMode);
+       if(val instanceof String) {
+           retval = Boolean.parseBoolean((String)val);
+       }
+       return retval;
+   }
+
+	@Override
+	public TOJDemoGUIPanel getExperimentDemoPanel() {
+		return new TOJDemoGUIPanel(this);
 	}
 }

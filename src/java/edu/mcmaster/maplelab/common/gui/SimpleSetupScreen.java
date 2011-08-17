@@ -67,7 +67,6 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
         _fieldGBC.weightx = 1;
         _fieldGBC.fill = GridBagConstraints.HORIZONTAL;
         
-        
         addLabel("RA ID:");
         _raID = new JFormattedTextField();
         _raID.setValue("1");

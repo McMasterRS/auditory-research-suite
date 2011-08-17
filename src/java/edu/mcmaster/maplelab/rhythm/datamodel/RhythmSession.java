@@ -17,6 +17,7 @@ import java.util.*;
 import edu.mcmaster.maplelab.common.datamodel.ConfidenceLevel;
 import edu.mcmaster.maplelab.common.datamodel.ResponseParameters;
 import edu.mcmaster.maplelab.common.datamodel.Session;
+import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.sound.Pitch;
 import edu.mcmaster.maplelab.rhythm.RhythmExperiment;
 import edu.mcmaster.maplelab.rhythm.RhythmTrialLogger;
@@ -309,4 +310,9 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
          retval += toPropertiesStringWithEnum(EnumSet.allOf(ConfigKeys.class));
          return retval;
      }
+
+	@Override
+	public DemoGUIPanel<?, RhythmTrial> getExperimentDemoPanel() {
+		return null;
+	}
 }

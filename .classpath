@@ -13,5 +13,6 @@
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="auditory-research-suite/src/java/lib/jogl"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="/Users/Catherine/Downloads/miglayout-3.7.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

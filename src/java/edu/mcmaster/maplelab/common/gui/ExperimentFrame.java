@@ -115,14 +115,19 @@ public abstract class ExperimentFrame
                 logger.warning(ex.toString());
             }
         }        
-        
-        this.setContentPane(createContent(_session));
+        if (_session.isDemo()) {
+    	   this.setContentPane(_session.getExperimentDemoPanel());
+        }
+        else {
+        	this.setContentPane(createContent(_session));
+        }
         
         if(_session.isDebug()) {
             logger.finer("-------Config-------");
             logger.finer(_session.toPropertiesString());
             logger.finer("-------Config-------");
         }
+       
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
         if(_isFullScreen) {

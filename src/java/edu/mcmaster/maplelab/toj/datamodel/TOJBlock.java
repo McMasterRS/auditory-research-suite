@@ -1,20 +1,122 @@
 package edu.mcmaster.maplelab.toj.datamodel;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
+//import java.nio.file;
 
 import edu.mcmaster.maplelab.common.datamodel.AVBlock;
+import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
+import edu.mcmaster.maplelab.common.sound.NotesEnum;
+import edu.mcmaster.maplelab.common.sound.Playable;
+import edu.mcmaster.maplelab.common.sound.SoundClip;
+import edu.mcmaster.maplelab.toj.animator.AnimationParser;
+import edu.mcmaster.maplelab.toj.animator.AnimationSequence;
 
 public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 
+	ArrayList<TOJTrial> _trials = null;
+	
 	protected TOJBlock(TOJSession session, int blockNum, AVBlockType type) {
 		super(session, blockNum, type);
-		// TODO Auto-generated constructor stub
+
+		// create trials from session
+	
+		if (type == AVBlockType.AUDIO_VIDEO) {
+			for (NotesEnum p : session.getPitches()) {
+				for (DurationEnum td : session.getToneDurations()) {
+					// pitch and tone duration will give filename
+					// parse file and get animation sequence
+
+					String filename = p.toString() + "_" +  td.toString() + ".wav"; // path or file name?
+					
+					File dir = new File(session.getDataDir(), "aud");
+
+					Playable audio = SoundClip.findPlayable(filename, dir);
+					
+					for (DurationEnum sd : session.getStrikeDurations()) {
+						filename = p.toString() + sd.toString() + "_.txt";
+						dir = new File(session.getDataDir(), "vis");
+						
+						try {
+							AnimationSequence aniSeq = AnimationParser.parseFile(new File(dir, filename));
+							for (Float so : session.getSoundOffsets()) {
+								// look into sound objects
+								for (int pts : session.getNumAnimationPointsArray()) {
+									TOJTrial trial = new TOJTrial(aniSeq, false, audio, so, pts, 0.3f);
+									_trials.add(trial);
+								}
+							}
+						}
+						catch (FileNotFoundException ex) {
+							ex.printStackTrace();
+						}								
+					}
+				}
+			}
+		}
+		
+		else if (type == AVBlockType.AUDIO_ONLY) {
+			for (NotesEnum p : session.getPitches()) {
+				for (DurationEnum td : session.getToneDurations()) {
+					
+					String filename = p.toString() + "_" +  td.toString() + ".wav"; // path or file name?
+					File dir = new File(session.getDataDir(), "aud");
+					
+					Playable audio = SoundClip.findPlayable(filename, dir);
+					
+					for (DurationEnum sd : session.getStrikeDurations()) {
+						filename = p.toString() + sd.toString() + "_.txt";
+						dir = new File(session.getDataDir(), "vis");
+						
+						try {
+							AnimationSequence aniSeq = AnimationParser.parseFile(new File(dir, filename));
+
+							TOJTrial trial = new TOJTrial(aniSeq, false, audio, 0f, 0, 0.3f);
+							_trials.add(trial);
+
+						}
+						catch (FileNotFoundException ex) {
+							ex.printStackTrace();
+						}
+					}
+				}
+			}
+		}
+		
+		else if (type == AVBlockType.VIDEO_ONLY) {
+			for (NotesEnum p : session.getPitches()) {
+
+				for (DurationEnum sd : session.getStrikeDurations()) {
+					String filename = p.toString() + sd.toString() + "_.txt";
+					File dir = new File(session.getDataDir(), "vis");
+
+					try {
+						AnimationSequence aniSeq = AnimationParser.parseFile(new File(dir, filename));
+						for (int pts : session.getNumAnimationPointsArray()) {
+							TOJTrial trial = new TOJTrial(aniSeq, false, null, 0f, pts, 0.3f); // can audio be null?
+							_trials.add(trial);
+						}
+					}
+					catch (FileNotFoundException ex) {
+						ex.printStackTrace();
+					}								
+				}
+			}
+		}
 	}
+
 
 	@Override
 	public List<TOJTrial> getTrials() {
+		return _trials;
+	}
+	
+	public List<TOJTrial> addBlock() {
 		// TODO Auto-generated method stub
+
+		
 		return null;
 	}
-
 }

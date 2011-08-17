@@ -9,7 +9,6 @@ import static javax.media.opengl.GL.GL_MODELVIEW;
 import static javax.media.opengl.GL.GL_PROJECTION;
 import static javax.media.opengl.GL.GL_SMOOTH;
 
-import java.awt.geom.Point2D;
 import java.util.List;
 
 import javax.media.opengl.GL;
@@ -27,7 +26,7 @@ public class AnimationRenderer implements GLEventListener {
 	private TOJTrial _trial = null;
 
 	private int _currentFrame = 0;  
-	private long _startTime;
+	private long _startTime;				// milliseconds
 	private boolean _animatedOnce = false; // set to true when 1 stroke is animated
 
 	// constructor
@@ -48,14 +47,13 @@ public class AnimationRenderer implements GLEventListener {
 
 		final int numFrames = _trial.getAnimation().getNumFrames();
 		if(frameNum < 0 || frameNum > numFrames) {
-			throw new IllegalArgumentException(String.format("Frame number must be between 0 and %d", numFrames));
+			throw new IllegalArgumentException(String.format("Frame number must be between 0 and %d", numFrames - 1));
 		}
 		_currentFrame = frameNum;
 	}
 
 	@Override
 	public void init(GLAutoDrawable canvas) {
-		System.out.println("init in Animator class called");
 
 		if (!(canvas instanceof GLAutoDrawable)) {
 			throw new IllegalArgumentException("canvas must be type GLAutoDrawable");
@@ -92,12 +90,11 @@ public class AnimationRenderer implements GLEventListener {
 		AnimationFrame frame = _trial.getAnimation().getFrame(_currentFrame);
 		System.out.printf("current frame.getTime = %f\n", frame.getTime());
 		
-		//long currentTime = (System.currentTimeMillis() - _startTime) % _trial.getAnimation().getTotalAnimationTime(); // loop animation
-		long currentTime = (System.currentTimeMillis() - _startTime);			// animate only once
+		long currentTime = (System.currentTimeMillis() - getStartTime());			// animate only once
 
 		System.out.printf("current time = %f\n", (float)currentTime);
 
-		if (_currentFrame < totalFrames - 1) { // animate all frames but last frame. to loop animation: totalframes - 2
+		if (_currentFrame < totalFrames - 1) { // animate all frames but last frame.
 			
 			AnimationFrame nextFrame = _trial.getAnimation().getFrame(_currentFrame + 1);
 			System.out.printf("next frame.getTime = %f\n", nextFrame.getTime());
@@ -136,8 +133,6 @@ public class AnimationRenderer implements GLEventListener {
 	public void displayFrame(GL gl, AnimationFrame frame) {
 
 		if(_trial != null) {
-			//GL gl = d.getGL();
-
 			// draw white circle
 			// TODO: Can the disk can be instantiated in the init method?
 			GLU glu = new GLU();
@@ -147,28 +142,47 @@ public class AnimationRenderer implements GLEventListener {
 			glu.gluQuadricOrientation(circle, GLU.GLU_OUTSIDE);
 			gl.glColor3f(1f, 1f, 1f);
 
-			//List<Point2D> points = currFrame.getJointLocations();
-			List<Point2D> jointLocations = frame.getJointLocations();
-			for(Point2D p : jointLocations) {
-				gl.glPushMatrix();
-				// Draw sphere (possible styles: FILL, LINE, POINT).
-				gl.glTranslated(p.getX(),p.getY(), 0.0);						
+			List<AnimationDot> jointLocations = frame.getJointLocations();
 
-				float radius = _trial.getDiskRadius();
+			System.out.printf("number of dots in frame = %d\n", jointLocations.size());
+			
+			for (int i = 0; i < jointLocations.size(); i++) {
+				if (i < _trial.getNumPoints()) {
+					AnimationDot dot = jointLocations.get(i);
+					
+					gl.glPushMatrix();
+					
+					if (dot.getLocation() != null) {				// fixing null pointer ex
+						gl.glTranslated(dot.getLocation().x, dot.getLocation().y, 0.0);						
+					}
 
-				final int slices = 32;
-				final int stacks = 32;
-				glu.gluSphere(circle, radius, slices, stacks); // draw sphere
-				gl.glPopMatrix(); 
-			}		        
+					float radius = _trial.getDiskRadius();
+
+					// Draw sphere (possible styles: FILL, LINE, POINT).
+					final int slices = 32;
+					final int stacks = 32;
+					glu.gluSphere(circle, radius, slices, stacks); // draw sphere
+					gl.glPopMatrix(); 
+				}
+			}
+						        
 			glu.gluDeleteQuadric(circle);
 
 			// draw connecting lines
+			
 			if (_connectTheDots) {
 				gl.glBegin(GL_LINE_STRIP);
 				//gl.glLineWidth(3f); 		// has no effect?
-				for (Point2D p: jointLocations) {
-					gl.glVertex2d(p.getX(), p.getY());
+
+				// TODO: consider number of joints allowed (from trial)
+				for (int j = 0; j < jointLocations.size(); j++) {
+					if (j < _trial.getNumPoints()) {
+						AnimationDot dot = jointLocations.get(j);
+						
+						if (dot.getLocation() != null) {				// fixing null pointer ex
+							gl.glVertex2d(dot.getLocation().x, dot.getLocation().y);
+						}
+					}
 				} 
 				gl.glEnd();
 			}

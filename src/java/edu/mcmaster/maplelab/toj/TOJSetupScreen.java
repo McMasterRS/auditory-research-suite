@@ -2,11 +2,11 @@ package edu.mcmaster.maplelab.toj;
 
 import java.util.prefs.Preferences;
 
-import edu.mcmaster.maplelab.common.datamodel.Session;
+import javax.swing.JCheckBox;
+import javax.swing.JFormattedTextField;
+
 import edu.mcmaster.maplelab.common.gui.SimpleSetupScreen;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
-
-import javax.swing.*;
 
 
 public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {

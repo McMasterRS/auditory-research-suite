@@ -1,5 +1,6 @@
 package edu.mcmaster.maplelab.common.sound;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -61,38 +62,37 @@ public class SoundClip implements Playable {
      * @param name key name used in config file.
      * @return translated Playable type.
      */
-    public static Playable findPlayable(String name, Session<?, ?, ?> session) {
-        return findPlayable(name, session, -1);
+    public static Playable findPlayable(String filename, File directory) {
+    	return findPlayable(filename, directory, -1);
     }
-    public static Playable findPlayable(String name, Session<?, ?, ?> session, int desiredDur) {
-        Playable p = _soundCache.get(name);
-        if(p == null) {
-            String fileName = session.getString(name);
-            if (fileName == null) fileName = name;
-            if (fileName != null) {
+    
+    public static Playable findPlayable(String filename, File directory, int desiredDur) {
+        Playable p = _soundCache.get(filename);
+        if (p == null) {
+            if (filename != null) {
                 Clip clip = null;
                 try {
-                    InputStream input = ResourceLoader.findAudioData(session.getDataDir(), fileName);
+                    InputStream input = ResourceLoader.findAudioData(directory, filename);
                     if(input == null) {
-                        throw new FileNotFoundException("Couldn't find " + fileName);
+                        throw new FileNotFoundException("Couldn't find " + filename);
                     }
                     AudioInputStream stream = AudioSystem.getAudioInputStream(input);
                     AudioFormat format = stream.getFormat();
-                    LogContext.getLogger().fine(String.format("%s -> %s", format, fileName));
+                    LogContext.getLogger().fine(String.format("%s -> %s", format, filename));
                     clip = (Clip) AudioSystem.getLine(new DataLine.Info(Clip.class, format));
                     clip.open(stream);
                 }
                 catch (Exception ex) {
-                    LogContext.getLogger().log(Level.SEVERE, "Couldn't load audio resource " + fileName, ex);
+                    LogContext.getLogger().log(Level.SEVERE, "Couldn't load audio resource " + filename, ex);
                     return null;
                 }
 
                 if(clip != null)  {
-                    p = new SoundClip(name, clip);
+                    p = new SoundClip(filename, clip);
                     if (desiredDur > 0) {
                         ((SoundClip) p).setDesiredDuration(desiredDur);
                     }
-                    _soundCache.put(name, p);
+                    _soundCache.put(filename, p);
                 }
             }
         }
