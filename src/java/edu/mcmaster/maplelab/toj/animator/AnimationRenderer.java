@@ -45,7 +45,7 @@ public class AnimationRenderer implements GLEventListener {
 			throw new IllegalStateException("Must have an active trial to set the current frame.");
 		}
 
-		final int numFrames = _trial.getAnimation().getNumFrames();
+		final int numFrames = _trial.getAnimationSequence().getNumFrames();
 		if(frameNum < 0 || frameNum > numFrames) {
 			throw new IllegalArgumentException(String.format("Frame number must be between 0 and %d", numFrames - 1));
 		}
@@ -83,11 +83,11 @@ public class AnimationRenderer implements GLEventListener {
 		gl.glLoadIdentity();                                         //Reset The View
 		gl.glTranslatef(-6.6f,-4.5f,-8.0f);						// TODO: translate to (roughly) origin
 		
-		int totalFrames = _trial.getAnimation().getNumFrames();
+		int totalFrames = _trial.getAnimationSequence().getNumFrames();
 		System.out.printf("total number of frames = %d\n", totalFrames);
 		System.out.printf("current frame = frame %d\n", _currentFrame);
 
-		AnimationFrame frame = _trial.getAnimation().getFrame(_currentFrame);
+		AnimationFrame frame = _trial.getAnimationSequence().getFrame(_currentFrame);
 		System.out.printf("current frame.getTime = %f\n", frame.getTime());
 		
 		long currentTime = (System.currentTimeMillis() - getStartTime());			// animate only once
@@ -96,7 +96,7 @@ public class AnimationRenderer implements GLEventListener {
 
 		if (_currentFrame < totalFrames - 1) { // animate all frames but last frame.
 			
-			AnimationFrame nextFrame = _trial.getAnimation().getFrame(_currentFrame + 1);
+			AnimationFrame nextFrame = _trial.getAnimationSequence().getFrame(_currentFrame + 1);
 			System.out.printf("next frame.getTime = %f\n", nextFrame.getTime());
 			
 			if (currentTime >= frame.getTime()) {

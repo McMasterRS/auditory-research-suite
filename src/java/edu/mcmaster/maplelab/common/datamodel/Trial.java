@@ -11,6 +11,9 @@
 */
 package edu.mcmaster.maplelab.common.datamodel;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Abstract base class for trial data.
  * @version  $Revision$
@@ -19,6 +22,8 @@ package edu.mcmaster.maplelab.common.datamodel;
  */
 public abstract class Trial<T> {
     private int _trialNum;
+    private String _timeStamp;
+    
     /**
      * @uml.property  name="response"
      */
@@ -61,5 +66,25 @@ public abstract class Trial<T> {
     public T getResponse() {
         return _response;
     }
+    
+    /**
+     * Set the trial start time stamp.
+     */
+    public void setTimeStamp(Date stamp) {
+    	SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy; hh:mm:ss a");
+    	_timeStamp = sdf.format(stamp);
+    }
+    
+    /**
+     * Get the trial start time stamp.
+     */
+    public String getTimeStamp() {
+    	return _timeStamp;
+    }
+    
+    /**
+     * Indicate if the current response is accurate.
+     */
+    public abstract boolean isResponseCorrect();
     
 }

@@ -21,17 +21,16 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 		screenWidth,
 		screenHeight,
 		dataFileName,
-		includeVisualStimuli,
 		pitches,
 		toneDurations, // DurationEnum[]
 		strikeDurations,
 		soundOffsets,
-		numAnimationPointsArray,
+		numAnimationPoints,
 		includeAudioBlock,
 		includeVideoBlock,
 		includeAudioVideoBlock,
-		speedMode,
-		baseIOIs
+		connectDots,
+		speedMode
 	}
 	
 	public TOJSession(Properties props) {
@@ -65,24 +64,17 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 	}
 	
 	/**
-	 * Set the screen width.
+	 * Set the screen height.
 	 */
 	public void setScreenHeight(int height) {
 		setProperty(ConfigKeys.screenHeight, height);
 	}
 
 	/**
-	 * Set the screen width.
+	 * Set the data file name.
 	 */
 	public void setDataFileName(String name) {
 		setProperty(ConfigKeys.dataFileName, name);
-	}
-	
-	/**
-	 * Set the screen width.
-	 */
-	public void setIncludeVisualStimuli(boolean include) {
-		setProperty(ConfigKeys.includeVisualStimuli, include);
 	}
 	
 	/**
@@ -93,24 +85,14 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 	}
 	
 	/**
-	 * Get the screen width.
+	 * Get the screen height.
 	 */
 	public int getScreenHeight() {
 		return getInteger(ConfigKeys.screenHeight, 480);
 	}
 	
-	/**
-	 * Get the screen width.
-	 */
 	public String getDataFileName() {
 		return getString(ConfigKeys.dataFileName, null);
-	}
-	
-	/**
-	 * Get the screen width.
-	 */
-	public boolean includeVisualStimuli() {
-		return getBoolean(ConfigKeys.includeVisualStimuli, true);
 	}
 	
 	public boolean includeAudioBlock() {
@@ -125,7 +107,10 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 		return getBoolean(ConfigKeys.includeAudioVideoBlock, true);
 	}
 	
-	 // add getters
+	public boolean connectDots() {
+		return getBoolean(ConfigKeys.connectDots, true);
+	}
+	
 	public List<NotesEnum> getPitches() {
 		List<String> pitches = getStringList(ConfigKeys.pitches, "C");
 		List<NotesEnum> retval = new ArrayList<NotesEnum>();
@@ -141,34 +126,12 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 		return retval;
 	}
 	
-	public List<DurationEnum> getToneDurations() {
-		List<String> durations = getStringList(ConfigKeys.toneDurations, "0.03");
-		List<DurationEnum> retval = new ArrayList<DurationEnum>();
-		for (String s : durations) {
-			try {
-				DurationEnum dEnum = DurationEnum.valueOf(s);
-				retval.add(dEnum);
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		return retval;
+	public List<String> getToneDurations() {
+		return getStringList(ConfigKeys.strikeDurations, DurationEnum.NORMAL.codeString());
 	}
 	
-	public List<DurationEnum> getStrikeDurations() {
-		List<String> durations = getStringList(ConfigKeys.strikeDurations, "0.03");
-		List<DurationEnum> retval = new ArrayList<DurationEnum>();
-		for (String s : durations) {
-			try {
-				DurationEnum dEnum = DurationEnum.valueOf(s);
-				retval.add(dEnum);
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		return retval;
+	public List<String> getStrikeDurations() {
+		return getStringList(ConfigKeys.strikeDurations, DurationEnum.NORMAL.codeString());
 	}
 	
 	public List<Float> getSoundOffsets() {
@@ -177,10 +140,9 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 	}
 	
 	public List<Integer> getNumAnimationPointsArray() {
-		List<Integer> intList= getIntegerList(ConfigKeys.numAnimationPointsArray);
+		List<Integer> intList= getIntegerList(ConfigKeys.numAnimationPoints);
 		return intList;
 	}
-	
 	
 	/**
      * Generate the experiment blocks. The number of blocks is determined by 
@@ -213,22 +175,6 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	
-    /**
-     * List of integers specifying the inter-onset time between notes in milliseconds
-     */
-    public List<Integer> getBaseIOIs() {
-        List<Integer> retval = getIntegerList(ConfigKeys.baseIOIs, new Integer[]{400});
-        
-        if(isSpeedMode()) {
-            for(int i = 0, len = retval.size(); i < len; i++) {
-                retval.set(i, retval.get(i)/10);
-            }
-        }
-        
-        return retval;
-    }
     
     /**
     * Flag to indicate dividing IOIs by 10 to speed through stimulus for

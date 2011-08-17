@@ -45,7 +45,7 @@ public class SoundClip implements Playable {
     public void play() {
         _clip.setFramePosition(0);
         _clip.start();
-
+        
         // The call _clip.drain() below takes too long, messing up synchronization.
         // Just using Thread.sleep() gives us the accuracy we want. Required
         // to support blocking semantics of method.
@@ -54,6 +54,17 @@ public class SoundClip implements Playable {
 
     public String name() {
         return _name;
+    }
+    
+    @Override
+    public void setVolume(float volume) {
+    	FloatControl c = null;
+    	try {
+    		c = (FloatControl) _clip.getControl(FloatControl.Type.VOLUME);
+    	}
+    	catch (IllegalArgumentException e) { } // no-op
+        
+    	if (c != null) c.setValue(volume);
     }
 
     /**
@@ -103,4 +114,14 @@ public class SoundClip implements Playable {
     public String toString() {
         return name();
     }
+
+	@Override
+	public void addListener(PlayableListener listener) {
+		_clip.addLineListener(listener);
+	}
+
+	@Override
+	public void removeListener(PlayableListener listener) {
+		_clip.removeLineListener(listener);
+	}
 }

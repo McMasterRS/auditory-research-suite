@@ -18,6 +18,7 @@ import java.util.concurrent.*;
 
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.util.MathUtils;
+import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession.ConfigKeys;
 
 /**
  * Context data for the experiment session.
@@ -48,6 +49,8 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         numWarmupTrials,
         randomizeBlocks,
         randomizeTrials,
+        preStimulusSilence,
+        allowFeedback,
         trialDelay,
         debug,
         demo,
@@ -198,6 +201,21 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      */
     public String getSubExperimentID() {
         return getString(ConfigKeys.subExperimentID, "-1");
+    }    
+    
+    /**
+     * Flag to indicate if text feedback relating to subject
+     * responses should be displayed, if applicable.
+     */
+    public boolean allowResponseFeedback() {
+    	return getBoolean(ConfigKeys.allowFeedback, true);
+    }
+    
+    /**
+     * Number of milliseconds to wait before playback of stimulus, if applicable.
+     */
+    public int getPreStimulusSilence() {
+        return getInteger(ConfigKeys.preStimulusSilence, 2000);
     }    
     
     /**

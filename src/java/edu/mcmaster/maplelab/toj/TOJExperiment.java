@@ -13,7 +13,6 @@ import edu.mcmaster.maplelab.common.gui.*;
 import edu.mcmaster.maplelab.toj.datamodel.*;
 
 public class TOJExperiment extends JPanel {
-
 	    public static final String EXPERIMENT_BASENAME = "TOJ";
 	    
 	    private enum VersionProps {
@@ -30,7 +29,7 @@ public class TOJExperiment extends JPanel {
 	        super(new BorderLayout());
 	        _session = session;
 	        
-	        LogContext.getLogger().finest("baseIOIs: " + _session.getBaseIOIs());
+	        LogContext.getLogger().finest("offsets: " + _session.getSoundOffsets());
 	        
 	        add(getContent(), BorderLayout.CENTER);
 	        
@@ -66,10 +65,10 @@ public class TOJExperiment extends JPanel {
 	            _contentCard.add(new Introduction(sMgr, _session), "intro");   
 	            if(_session.getNumWarmupTrials() > 0) {
 	                _contentCard.add(new PreWarmupInstructions(sMgr, _session),  "prewarmup");
-	                _contentCard.add(new TOJStimulusResponseScreen(_session, true), "warmup");
+	                _contentCard.add(new TOJStimulusResponseScreen(sMgr, _session, true), "warmup");
 	            }   
 	            _contentCard.add(new PreTrialsInstructions(sMgr, _session),  "pretrials");            
-	            _contentCard.add(new TOJStimulusResponseScreen(_session, false), "test");            
+	            _contentCard.add(new TOJStimulusResponseScreen(sMgr, _session, false), "test");            
 	            _contentCard.add(new Completion(sMgr, _session), "complete");            
 	            _contentCard.add(new JLabel(), "Blank");
 	        }
@@ -117,7 +116,7 @@ public class TOJExperiment extends JPanel {
 	    			@Override
 	    			public void run() {
 
-	    				final TOJSetupScreen setup = new TOJSetupScreen(new String("")); // TODO: prefsPrefix
+	    				final TOJSetupScreen setup = new TOJSetupScreen();
 	    				setup.display();
 
 	    				TOJFrame f = new TOJFrame(setup);

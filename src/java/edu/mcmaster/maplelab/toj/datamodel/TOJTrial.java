@@ -9,17 +9,14 @@ public class TOJTrial extends Trial<Response> {
 	
 	private final Playable _audio;
 	private final boolean _isVideo;
-//	private final File _videoFile;
-//	private final File _audioFile;
-//	private final File _animationFile;
 	private final float _offset;
 	private final int _numPoints;
-	
 	private final float _diskRadius;
 	private final AnimationSequence _animationSequence;
 
 	
-	public TOJTrial(AnimationSequence animationSequence, boolean isVideo, Playable audio, Float timingOffset, int animationPoints, float diskRadius) {
+	public TOJTrial(AnimationSequence animationSequence, boolean isVideo, Playable audio, 
+			Float timingOffset, int animationPoints, float diskRadius) {
 		
 		_animationSequence = animationSequence;
 		_isVideo = isVideo;
@@ -28,35 +25,37 @@ public class TOJTrial extends Trial<Response> {
 		_audio = audio;
 		
 		_diskRadius = diskRadius;
-		
-		//TODO: determine files
-//		_videoFile = null;
-//		_audioFile = null;
-//		_animationFile = null;
 	}
-
-	//getters
 
 	public boolean isVideo() {
 		return _isVideo;
 	}
+	
 	public float getOffset() {
 		return _offset;
 	}
+	
 	public int getNumPoints() {
 		return _numPoints;
 	}
 	
-	public AnimationSequence getAnimation() {
-		return getAnimationSequence();
+	public AnimationSequence getAnimationSequence() {
+		return _animationSequence;
 	}
-
 	
-	// return a useful string to test creation of TOJTrial
-	public void printDescription() {
-		System.out.printf("TOJTrial:	%d frames, isVideo: %b, " +
-				"Playable name: %s, timingOffset: %f, animationPoints: %d, diskRadius: %f\n",
-				getAnimationSequence().getNumFrames(), _isVideo, _audio.name(), _offset, _numPoints, _diskRadius);
+	@Override
+	public boolean isResponseCorrect() {
+		Response response = getResponse();
+        if(response != null) {
+            if (TOJResponseParameters.isDotFirst(response)) {
+                return getOffset() <= 0.0;
+            }
+            else {
+                return getOffset() >= 0.0;
+            }
+                
+        }
+        return false;
 	}
 	
 	/**
@@ -65,15 +64,17 @@ public class TOJTrial extends Trial<Response> {
 	public float getDiskRadius() {
 		return _diskRadius;
 	}
-
-	/**
-	 * @return the _animationSequence
-	 */
-	public AnimationSequence getAnimationSequence() {
-		return _animationSequence;
-	}
 	
 	public Playable getPlayable() {
 		return _audio;
+	}
+	
+	/** 
+	 * Get a human-readable string description of TOJTrial
+	 */
+	public void printDescription() {
+		System.out.printf("TOJTrial:	%d frames, isVideo: %b, " +
+				"Playable name: %s, timingOffset: %f, animationPoints: %d, diskRadius: %f\n",
+				getAnimationSequence().getNumFrames(), _isVideo, _audio.name(), _offset, _numPoints, _diskRadius);
 	}
 }

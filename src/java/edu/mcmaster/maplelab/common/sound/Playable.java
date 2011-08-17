@@ -13,8 +13,6 @@
 package edu.mcmaster.maplelab.common.sound;
 
 
-
-
 /**
  * Interface for objects that can generate audio.
  * 
@@ -38,4 +36,19 @@ public interface Playable {
      * Get an identifier name.
      */
     String name();
+    
+    /**
+     * Set the volume level.  Must be called before {@link #play()}.
+     */
+    void setVolume(float volume);
+    
+    /**
+     * Add a PlayableListener to this.
+     */
+    void addListener(PlayableListener listener);
+    
+    /**
+     * Remove a PlayableListener from this.
+     */
+    void removeListener(PlayableListener listener);
 }

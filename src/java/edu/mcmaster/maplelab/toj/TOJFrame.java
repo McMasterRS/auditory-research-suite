@@ -10,7 +10,6 @@ import java.util.logging.Level;
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.gui.ExperimentFrame;
-import edu.mcmaster.maplelab.rhythm.RhythmExperiment;
 import edu.mcmaster.maplelab.toj.datamodel.TOJBlock;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;

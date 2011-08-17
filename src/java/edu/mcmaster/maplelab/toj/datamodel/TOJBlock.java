@@ -7,7 +7,6 @@ import java.util.List;
 //import java.nio.file;
 
 import edu.mcmaster.maplelab.common.datamodel.AVBlock;
-import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
 import edu.mcmaster.maplelab.common.sound.NotesEnum;
 import edu.mcmaster.maplelab.common.sound.Playable;
 import edu.mcmaster.maplelab.common.sound.SoundClip;
@@ -25,7 +24,7 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 	
 		if (type == AVBlockType.AUDIO_VIDEO) {
 			for (NotesEnum p : session.getPitches()) {
-				for (DurationEnum td : session.getToneDurations()) {
+				for (String td : session.getToneDurations()) {
 					// pitch and tone duration will give filename
 					// parse file and get animation sequence
 
@@ -35,7 +34,7 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 
 					Playable audio = SoundClip.findPlayable(filename, dir);
 					
-					for (DurationEnum sd : session.getStrikeDurations()) {
+					for (String sd : session.getStrikeDurations()) {
 						filename = p.toString() + sd.toString() + "_.txt";
 						dir = new File(session.getDataDir(), "vis");
 						
@@ -59,14 +58,14 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 		
 		else if (type == AVBlockType.AUDIO_ONLY) {
 			for (NotesEnum p : session.getPitches()) {
-				for (DurationEnum td : session.getToneDurations()) {
+				for (String td : session.getToneDurations()) {
 					
 					String filename = p.toString() + "_" +  td.toString() + ".wav"; // path or file name?
 					File dir = new File(session.getDataDir(), "aud");
 					
 					Playable audio = SoundClip.findPlayable(filename, dir);
 					
-					for (DurationEnum sd : session.getStrikeDurations()) {
+					for (String sd : session.getStrikeDurations()) {
 						filename = p.toString() + sd.toString() + "_.txt";
 						dir = new File(session.getDataDir(), "vis");
 						
@@ -88,7 +87,7 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 		else if (type == AVBlockType.VIDEO_ONLY) {
 			for (NotesEnum p : session.getPitches()) {
 
-				for (DurationEnum sd : session.getStrikeDurations()) {
+				for (String sd : session.getStrikeDurations()) {
 					String filename = p.toString() + sd.toString() + "_.txt";
 					File dir = new File(session.getDataDir(), "vis");
 
@@ -111,12 +110,5 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 	@Override
 	public List<TOJTrial> getTrials() {
 		return _trials;
-	}
-	
-	public List<TOJTrial> addBlock() {
-		// TODO Auto-generated method stub
-
-		
-		return null;
 	}
 }

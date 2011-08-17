@@ -8,11 +8,15 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.EventObject;
 import java.util.List;
 import java.util.logging.Level;
 
 import javax.sound.midi.MetaEventListener;
 import javax.sound.midi.MetaMessage;
+import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineListener;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -20,9 +24,15 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import edu.mcmaster.maplelab.common.LogContext;
+import edu.mcmaster.maplelab.common.datamodel.AVBlock.AVBlockType;
 import edu.mcmaster.maplelab.common.gui.BasicStep;
 import edu.mcmaster.maplelab.common.gui.InvokeOnAWTQueueRunnable;
 import edu.mcmaster.maplelab.common.gui.ResponseInputs;
+import edu.mcmaster.maplelab.common.gui.StepManager;
+import edu.mcmaster.maplelab.common.sound.Playable;
+import edu.mcmaster.maplelab.common.sound.PlayableListener;
+import edu.mcmaster.maplelab.toj.animator.AnimationRenderer;
+import edu.mcmaster.maplelab.toj.animator.AnimatorPanel;
 import edu.mcmaster.maplelab.toj.datamodel.TOJBlock;
 import edu.mcmaster.maplelab.toj.datamodel.TOJResponseParameters;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
@@ -39,8 +49,7 @@ public class TOJStimulusResponseScreen extends BasicStep {
         testScreenTrialText, 
         warmupScreenTrialTitle, 
         warmupScreenTrialText, 
-        withTapText,
-        withoutTapText, 
+        duringTrialText, 
         enterResponseText,
         accuracyCorrectText, 
         accuracyIncorrectText, 
@@ -61,12 +70,17 @@ public class TOJStimulusResponseScreen extends BasicStep {
 
     private final TOJSession _session;
 	private final boolean _isWarmup;
+	private final AnimatorPanel _aniPanel;
+	private final AnimationRenderer _renderer;
 	//private final boolean _isDemo;
 
-	public TOJStimulusResponseScreen(TOJSession session, boolean isWarmup) {
-		super(false);
+	public TOJStimulusResponseScreen(StepManager steps, TOJSession session, boolean isWarmup) {
+		super(true);
+		setStepManager(steps);
+		
 		_session = session;
 		_isWarmup = isWarmup;
+		_renderer = new AnimationRenderer(_session.connectDots());
 		
 		setTitleText(_session.getString(
             isWarmup ? ConfigKeys.warmupScreenTrialTitle : ConfigKeys.testScreenTrialTitle, 
@@ -74,6 +88,8 @@ public class TOJStimulusResponseScreen extends BasicStep {
         setInstructionText(_session.getString(
             isWarmup ? ConfigKeys.warmupScreenTrialText : ConfigKeys.testScreenTrialText, 
                 null));
+        
+        _aniPanel = new AnimatorPanel(_renderer);
         
         JPanel bottom = new JPanel(new GridLayout(1, 0));
         getContentPanel().add(bottom, BorderLayout.SOUTH);
@@ -219,12 +235,10 @@ public class TOJStimulusResponseScreen extends BasicStep {
         TOJBlock currBlock = currBlock();
 
         TOJTrial currTrial = currTrial();
-        if(currTrial == null) return;
- //       currTrial.setTimeStamp(new Date());
+        if (currTrial == null) return;
+        currTrial.setTimeStamp(new Date());
         
-        LogContext.getLogger().fine(
-            String.format("-> %s: %s", currBlock, currTrial));
-        
+        LogContext.getLogger().fine(String.format("-> %s: %s", currBlock, currTrial));
 
         _session.execute(new PrepareRunnable(currTrial));
         _session.execute(new PlaybackRunnable(currTrial));
@@ -273,17 +287,17 @@ public class TOJStimulusResponseScreen extends BasicStep {
     }    
     
     private void updateResultsText() {
-//    	if (_session.allowResponseFeedback()) {
-//    		int percent = _completed == 0 ? 100 :
-//                (int)Math.round(_correct/(float)_completed*100);
-//            
-//            _results.setText(String.format(
-//                _session.getString(ConfigKeys.resultsFormatText, "??"),
-//                _correct, _completed, percent));
-//    	}
-//    	else {
-//    		_results.setText("");
-//    	}
+    	if (_session.allowResponseFeedback()) {
+    		int percent = _completed == 0 ? 100 :
+                (int)Math.round(_correct/(float)_completed*100);
+            
+            _results.setText(String.format(
+                _session.getString(ConfigKeys.resultsFormatText, "??"),
+                _correct, _completed, percent));
+    	}
+    	else {
+    		_results.setText("");
+    	}
     }
     
     /** Task to update screen and prepare user for running trial. */
@@ -316,15 +330,19 @@ public class TOJStimulusResponseScreen extends BasicStep {
             	// actual delay until next trial
             	Thread.sleep(_session.getTrialDelay());
                 
-//                SwingUtilities.invokeAndWait(new Runnable() {
-//                    public void run() {
-//                        _statusText.setText(_session.getString(_trial.isWithTap() ? 
-//                            ConfigKeys.withTapText : ConfigKeys.withoutTapText, null));
-//                    }
-//                });
+                SwingUtilities.invokeAndWait(new Runnable() {
+                    public void run() {
+                    	TOJBlock block = currBlock();
+                    	getContentPanel().remove(_aniPanel);
+                    	if (block.getType() == AVBlockType.AUDIO_VIDEO) {
+                    		getContentPanel().add(_aniPanel, BorderLayout.CENTER);
+                    	}
+                        _statusText.setText(_session.getString(ConfigKeys.duringTrialText, ""));
+                    }
+                });
                 
                 // Give user time to prepare for playback.
-//                Thread.sleep(_session.getPreStimulusSilence());
+                Thread.sleep(_session.getPreStimulusSilence());
             }
             catch (InterruptedException ex) {
                 // Ignore
@@ -342,32 +360,58 @@ public class TOJStimulusResponseScreen extends BasicStep {
      */
     private class PlaybackRunnable implements Runnable {
         private final TOJTrial _trial;
-        private MetaEventListener _endListener = new MetaEventListener() {
-            private static final int MIDI_TRACK_END = 47;
-            public void meta(MetaMessage meta) {
-                // Check for end of track message.
-                if (meta.getType() == MIDI_TRACK_END) {
-                    playbackEnded();
-                }
-            }
+        private long _playbackStart;
+        private int _playCount;
+        private PlayableListener _endListener = new PlayableListener() {
+			@Override
+			public void playableEnded(EventObject e) {
+				playbackEnded();
+			}
         };
         
         public PlaybackRunnable(TOJTrial trial) {
             _trial = trial;
+            
+            TOJBlock block = currBlock();
+            // how many items to play (and wait to end)
+            _playCount = block.getType() == AVBlockType.AUDIO_VIDEO ? 2 : 1;
+            _trial.printDescription();
+            // TODO: remove this
+            //_playCount = 1;
         }
          
         public void run() {
             try {
-
+            	// TODO: start animation, add listener
+            	//       start video (handle video?), add listener
+            	if (_playCount > 1) _renderer.setTrial(_trial);
+            	
+            	Playable p = _trial.getPlayable();
+            	// TODO: may need to perform conversion on this gain value:
+            	p.setVolume(_session.getPlaybackGain());
+            	p.addListener(_endListener);
+            	_playbackStart = System.currentTimeMillis();
+                LogContext.getLogger().fine("Playback started @ " + _playbackStart);
+                if (_playCount > 1) {
+                	_renderer.setStartTime(_playbackStart);
+                }
+            	_trial.getPlayable().play();
             }
             catch (Exception ex) {
                 LogContext.getLogger().log(Level.SEVERE, "Playback error", ex);
             }
         }
         
-        private void playbackEnded() {
+        private synchronized void playbackEnded() {
+        	// barrier to make sure all playback has ended
+        	--_playCount;
+        	if (_playCount > 0) return;
+        	
             try {
-            	
+            	long playbackStop = System.currentTimeMillis();
+                LogContext.getLogger().fine(String.format(
+                    "Playback ended @ %s: duration (approx) = %s milliseconds", 
+                    playbackStop,  playbackStop - _playbackStart));
             }
             catch (Exception ex) {
                 LogContext.getLogger().log(Level.SEVERE, "Media system error", ex);                
@@ -387,43 +431,42 @@ public class TOJStimulusResponseScreen extends BasicStep {
 
         public StatusUpdaterRunnable(TOJTrial currTrial) {
             _currTrial = currTrial;
- 
         }
 
         public void run() {
         	_completed++;
             
-//            final boolean wasCorrect = _currTrial.isResponseCorrect();
-//
-//            if(wasCorrect) {
-//                _correct++;
-//            }
-//            
-//            try {
-//                SwingUtilities.invokeAndWait(new Runnable() {
-//                    public void run() {
-//                    	if (_session.allowResponseFeedback()) {
-//                    		_statusText.setText(_session.getString(wasCorrect ?
-//                                    ConfigKeys.accuracyCorrectText : ConfigKeys.accuracyIncorrectText, null)); 
-//                    	}
-//                    	else {
-//                    		_statusText.setText("");
-//                    	}
-//                    	updateResultsText();
-//                    }
-//                });
-//                
-//                // Give user time to read results, if necessary.
-//                if (_session.allowResponseFeedback()) {
-//                	Thread.sleep(_session.getPreStimulusSilence());
-//                }
-//            }
-//            catch (InterruptedException ex) {
-//                // ignore
-//            }
-//            catch (InvocationTargetException ex) {
-//                LogContext.getLogger().log(Level.SEVERE, "Status update error", ex);       
-//            }  
+            final boolean wasCorrect = _currTrial.isResponseCorrect();
+
+            if(wasCorrect) {
+                _correct++;
+            }
+            
+            try {
+                SwingUtilities.invokeAndWait(new Runnable() {
+                    public void run() {
+                    	if (_session.allowResponseFeedback()) {
+                    		_statusText.setText(_session.getString(wasCorrect ?
+                                    ConfigKeys.accuracyCorrectText : ConfigKeys.accuracyIncorrectText, null)); 
+                    	}
+                    	else {
+                    		_statusText.setText("");
+                    	}
+                    	updateResultsText();
+                    }
+                });
+                
+                // Give user time to read results, if necessary.
+                if (_session.allowResponseFeedback()) {
+                	Thread.sleep(_session.getPreStimulusSilence());
+                }
+            }
+            catch (InterruptedException ex) {
+                // ignore
+            }
+            catch (InvocationTargetException ex) {
+                LogContext.getLogger().log(Level.SEVERE, "Status update error", ex);       
+            }  
         }
     }
 }

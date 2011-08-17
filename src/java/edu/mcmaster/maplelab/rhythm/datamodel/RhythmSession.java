@@ -49,14 +49,12 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
         playbackMeasures,
         beatsPerMeasure,
         silenceMultiplier, 
-        preStimulusSilence,
         speedMode,
         midiDevID,
         tapTestSound,
         computerKeyInput,
         recordNoteOff,
         suppressionWindow,
-        allowFeedback,
         subjectTapSound,
         subjectTapVelocity,
         subjectTapNote,
@@ -167,14 +165,6 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
     }
     
     /**
-     * Flag to indicate if text feedback relating to subject
-     * responses should be displayed.
-     */
-    public boolean allowResponseFeedback() {
-    	return getBoolean(ConfigKeys.allowFeedback, true);
-    }
-    
-    /**
      * Get the period of time (in milliseconds) within which
      * to ignore repeat note-on events.
      */
@@ -243,13 +233,6 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
     public int getBeatsPerMeasure() {
         return getInteger(ConfigKeys.beatsPerMeasure, 4);        
     }
-    
-    /**
-     * Number of milliseconds to wait before playback of stimulus.
-     */
-    public int getPreStimulusSilence() {
-        return getInteger(ConfigKeys.preStimulusSilence, 2000);
-    }    
     
     /**
      * Number of IOI units of silence after sounded measures (not including offset)

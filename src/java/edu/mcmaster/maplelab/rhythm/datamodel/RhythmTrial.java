@@ -11,9 +11,7 @@
 */
 package edu.mcmaster.maplelab.rhythm.datamodel;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.sound.midi.Sequence;
@@ -36,7 +34,6 @@ public class RhythmTrial extends Trial<Response> {
     private final float _offsetDegree;
     private final boolean _withTap;
     private Sequence _sequence;
-    private String _timeStamp;
 
     public RhythmTrial(int baseIOI, float offsetDegree, boolean withTap) {
         _baseIOI = baseIOI;
@@ -44,21 +41,6 @@ public class RhythmTrial extends Trial<Response> {
         _withTap = withTap;
     }
 
-    /**
-     * Set the trial start time stamp.
-     */
-    public void setTimeStamp(Date stamp) {
-    	SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy; hh:mm:ss a");
-    	_timeStamp = sdf.format(stamp);
-    }
-    
-    /**
-     * Get the trial start time stamp.
-     */
-    public String getTimeStamp() {
-    	return _timeStamp;
-    }
-    
     /**
      * Inter-onset interval in milliseconds.
      */
@@ -141,6 +123,7 @@ public class RhythmTrial extends Trial<Response> {
      * Convenience method to determine if the user's "accuracy" response 
      * was correct.
      */
+    @Override
     public boolean isResponseCorrect() {
         Response response = getResponse();
         if(response != null) {

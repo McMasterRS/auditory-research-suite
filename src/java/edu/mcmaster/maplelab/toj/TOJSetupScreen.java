@@ -2,7 +2,6 @@ package edu.mcmaster.maplelab.toj;
 
 import java.util.prefs.Preferences;
 
-import javax.swing.JCheckBox;
 import javax.swing.JFormattedTextField;
 
 import edu.mcmaster.maplelab.common.gui.SimpleSetupScreen;
@@ -10,24 +9,17 @@ import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
 
 
 public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
-	/** Experiment basename - placed here temporarily */
-	public static final String EXPERIMENT_BASENAME = "Temporal Order Judgment";
-
-	
 	// new text fields
 	private JFormattedTextField _screenWidth;
 	private JFormattedTextField _screenHeight;
 	private JFormattedTextField _dataFileName;
-	private JCheckBox _includeVideoStimuli;
 	
-	public TOJSetupScreen(String prefsPrefix) {
-		super(EXPERIMENT_BASENAME.replace(" ", "").toLowerCase(), true);
+	public TOJSetupScreen() {
+		super(TOJExperiment.EXPERIMENT_BASENAME.replace(" ", "").toLowerCase(), true);
 	}
 
 	@Override
 	protected void addExperimentFields() {
-		// where on screen do they go?
-		
 		addLabel("Screen width");
 		_screenWidth = new JFormattedTextField();
 		_screenWidth.setValue(720);
@@ -41,11 +33,7 @@ public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 		addLabel("Data file name");
 		_dataFileName = new JFormattedTextField();
 		_dataFileName.setValue("TemporalOrderJudgmentTrialData.txt");
-		addField(_dataFileName);
-		
-		addLabel("Include video stimuli");
-		_includeVideoStimuli = new JCheckBox();
-		addField(_includeVideoStimuli);		
+		addField(_dataFileName);	
 	}
 
 	@Override
@@ -53,7 +41,6 @@ public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 		session.setScreenWidth(Integer.parseInt(_screenWidth.getText()));
 		session.setScreenHeight(Integer.parseInt(_screenHeight.getText()));
 		session.setDataFileName(_dataFileName.getText());
-		session.setIncludeVisualStimuli(_includeVideoStimuli.isSelected());
 	}
 
 	@Override
@@ -66,10 +53,6 @@ public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 		
 		String prefDataFileName = _dataFileName.getText();
 		prefs.put(TOJSession.ConfigKeys.dataFileName.name(), prefDataFileName);
-		
-		boolean prefIncludeVideoSimuli = _includeVideoStimuli.isSelected();
-		prefs.putBoolean(TOJSession.ConfigKeys.includeVisualStimuli.name(), prefIncludeVideoSimuli);
-		
 	}
 
 	@Override
@@ -82,9 +65,6 @@ public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 		
 		String prefDataFileName = prefs.get(TOJSession.ConfigKeys.dataFileName.name(), "TemporalOrderJudgmentTrialData.txt");
 		_dataFileName.setValue(prefDataFileName);
-		
-		boolean prefIncludeVideoStimuli = prefs.getBoolean(TOJSession.ConfigKeys.includeVisualStimuli.name(), true);
-		_includeVideoStimuli.setSelected(new Boolean(prefIncludeVideoStimuli));
 	}
 
 }
