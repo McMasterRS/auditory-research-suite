@@ -18,7 +18,6 @@ import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
@@ -86,11 +85,9 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 		
 		add(_delayText,     "gapright 100, wrap");
 		
-		
 		// visual info
 		add(new JLabel("Visual"),	"split, span, gaptop 10");
 		add(new JSeparator(),       "growx, wrap, gaptop 10");
-
 		
 		add(new JLabel("Use Video"), "gap 10");
 		_useVideo = new JCheckBox();
@@ -98,7 +95,6 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 		add(_useVideo);
 		_useVideo.setEnabled(false);
 	
-
 		_vDurations = new JComboBox(DurationEnum.values());
 		_vDurations.setSelectedItem(DurationEnum.NORMAL);
 		_vDurations.addActionListener(_fUpdater);
@@ -106,9 +102,8 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 		add(new JLabel("Duration"),  "gap 10");
 		add(_vDurations, "growx");
 		
-		
 		add (new JLabel("Number of points"), "gap 10");
-		SpinnerModel model = new SpinnerNumberModel(4, 1, 20, 1);
+		SpinnerModel model = new SpinnerNumberModel(6, 1, 10, 1);
 		_numPts = new JSpinner(model);
 		add(_numPts, 		"gapright 95, wrap");
 		
@@ -129,7 +124,6 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 		File audDir = new File("datafiles/examples/aud" + "/" + audFileName);
 		_audFile.setFile(audDir);
 		add (_audFile, "span, growx");
-
 		
 		add(new JLabel("Visual File"));
 		_visFile = new FileBrowseField(false);
@@ -138,14 +132,12 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 		_visFile.setFile(visDir);
 		add (_visFile, "span, growx");
 		
-		
 		add(new JLabel("Video File"));
 		FileBrowseField vidFile = new FileBrowseField(false);
-		File vidDir = new File(""); //TODO: get video file
+		File vidDir = new File("");				 //TODO: get video file
 		vidFile.setFile(vidDir);
 		add (vidFile, "span, growx");
 		vidFile.setEnabled(false);
-
 		
 		JButton startButton = new JButton("Start");
 		startButton.addActionListener(new StartUpdater());
@@ -198,6 +190,7 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 			_audFile.setFile(audDir);
 
 			String visFileName = new String(_pitches.getSelectedItem().toString().toLowerCase() + _vDurations.getSelectedItem().toString().toLowerCase().charAt(0) + "_.txt"); 
+//			String visFileName = new String("dn2_.txt");
 			File visDir = new File("datafiles/examples/vis" + "/" + visFileName);
 			_visFile.setFile(visDir);
 		}
@@ -224,18 +217,19 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
         	if (_testFrame == null) {
         		_testFrame = new JFrame(AnimatorPanel.class.getName());
                 _testFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                _testFrame.setVisible(true);
-                
         	}
+        	
         	AnimationRenderer renderer = new AnimationRenderer(true); // connect the dots
         	final AnimatorPanel view = new AnimatorPanel(renderer);
 
         	_testFrame.getContentPane().removeAll();
             _testFrame.getContentPane().add(view, BorderLayout.CENTER);
-            _testFrame.pack();
             
-           
-            final Playable audio = trial.getPlayable();
+            _testFrame.pack();
+            _testFrame.setLocationRelativeTo(null);
+            _testFrame.setVisible(true);
+            
+          final Playable audio = trial.getPlayable();
 			
 			Runnable r = new Runnable() {
 				@Override
@@ -248,16 +242,13 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
             renderer.setTrial(trial);
             renderer.setCurrentFrame(0);
             
-            
     		long currentTime = System.currentTimeMillis();
 
     		renderer.setStartTime(currentTime); 
-    		SwingUtilities.invokeLater(r);
+//    		SwingUtilities.invokeLater(r);
         }
         catch (Throwable ex) {
             ex.printStackTrace();
         }
-		
-    
 	}
 }

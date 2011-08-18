@@ -154,6 +154,7 @@ public class AnimatorPanel extends JPanel {
 
             f.getContentPane().add(view, BorderLayout.CENTER);
             f.pack();
+            f.setLocationRelativeTo(null);
             f.setVisible(true);
             
     		File file = new File("/Users/Catherine/Workspace/Maple/auditory-research-suite/datafiles/examples/vis/es_.txt");

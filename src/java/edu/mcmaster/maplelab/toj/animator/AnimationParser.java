@@ -141,67 +141,112 @@ public class AnimationParser {
 							
 							
 							
-							// get dot color
+							// get dot color and size
 							if (scanner.hasNext("-")) {
+								// assume color and size are null
 								String color = scanner.next();
 								System.out.printf("color = %s\n", color);
-							}
-							else {
-								try {
-									scanner.findInLine("((\\d{1,3}),\\s*(\\d{1,3}),\\s*(\\d{1,3}))");									
-									MatchResult match = scanner.match();
-									
-									System.out.printf("number of matches = %d\n", match.groupCount());
-									for (int i=1; i<=match.groupCount(); i++) {
-								         System.out.printf("color match found: %s\n", match.group(i));
-									}
-									colorVec = new Vector3d(Double.parseDouble(match.group(2)), 
-											Double.parseDouble(match.group(3)), Double.parseDouble(match.group(4)));
-									
-									scanner.next();		// skip end parenthesis
-								}
-								catch (Exception ex) {
-									ex.printStackTrace();
-									continue;
-								}
-							}
-							cols++;
-							System.out.printf("cols = %d\n", cols);
-							if (cols >= colsPerDot) {break;}
-
-							
-
-							// get dot size
-							
-							if (scanner.hasNext("-")) {
+								
 								String size = scanner.next();
 								System.out.printf("size = %s\n", size);
 							}
 							else {
 								try {
+									scanner.findInLine("((\\d{1,3}),\\s*(\\d{1,3}),\\s*(\\d{1,3}))");									
+									MatchResult colorMatch = scanner.match();
+
 									scanner.findInLine("(size\\s*\\d*\\.{0,1}\\d*)");									
-									MatchResult match = scanner.match();
+									MatchResult sizeMatch = scanner.match();
+
 									
-									System.out.printf("number of matches = %d\n", match.groupCount());
-									for (int i=1; i<=match.groupCount(); i++) {
-								         System.out.printf("size match found: %s\n", match.group(i));
+									System.out.printf("number of matches = %d\n", sizeMatch.groupCount());
+									for (int i = 1; i <= sizeMatch.groupCount(); i++) {
+										System.out.printf("size match found: %s\n", sizeMatch.group(i));
 									}
-									sizeDouble = new Double(match.group(1).substring(4).trim());
+									sizeDouble = new Double(sizeMatch.group(1).substring(4).trim());
+
+
+
+									System.out.printf("number of matches = %d\n", colorMatch.groupCount());
+									for (int i = 1; i <= colorMatch.groupCount(); i++) {
+								         System.out.printf("color match found: %s\n", colorMatch.group(i));
+									}
+									colorVec = new Vector3d(Double.parseDouble(colorMatch.group(2)), 
+											Double.parseDouble(colorMatch.group(3)), Double.parseDouble(colorMatch.group(4)));
+									
+//									scanner.next();		// skip end parenthesis
 								}
 								catch (Exception ex) {
 									ex.printStackTrace();
 									continue;
 								}
 							}
-							cols++;
+							cols += 2;
 							System.out.printf("cols = %d\n", cols);
 							if (cols >= colsPerDot) {break;}
 						}
+						
+						
+//							// get dot color
+//							if (scanner.hasNext("-")) {
+//								String color = scanner.next();
+//								System.out.printf("color = %s\n", color);
+//							}
+//							else {
+//								try {
+//									scanner.findInLine("((\\d{1,3}),\\s*(\\d{1,3}),\\s*(\\d{1,3}))");									
+//									MatchResult match = scanner.match();
+//									
+//									System.out.printf("number of matches = %d\n", match.groupCount());
+//									for (int i=1; i<=match.groupCount(); i++) {
+//								         System.out.printf("color match found: %s\n", match.group(i));
+//									}
+//									colorVec = new Vector3d(Double.parseDouble(match.group(2)), 
+//											Double.parseDouble(match.group(3)), Double.parseDouble(match.group(4)));
+//									
+//									scanner.next();		// skip end parenthesis
+//								}
+//								catch (Exception ex) {
+//									ex.printStackTrace();
+//									continue;
+//								}
+//							}
+//							cols++;
+//							System.out.printf("cols = %d\n", cols);
+//							if (cols >= colsPerDot) {break;}
+//
+//							
+//
+//							// get dot size
+//							
+//							if (scanner.hasNext("-")) {
+//								String size = scanner.next();
+//								System.out.printf("size = %s\n", size);
+//							}
+//							else {
+//								try {
+//									scanner.findInLine("(size\\s*\\d*\\.{0,1}\\d*)");									
+//									MatchResult match = scanner.match();
+//									
+//									System.out.printf("number of matches = %d\n", match.groupCount());
+//									for (int i=1; i<=match.groupCount(); i++) {
+//								         System.out.printf("size match found: %s\n", match.group(i));
+//									}
+//									sizeDouble = new Double(match.group(1).substring(4).trim());
+//								}
+//								catch (Exception ex) {
+//									ex.printStackTrace();
+//									continue;
+//								}
+//							}
+//							cols++;
+//							System.out.printf("cols = %d\n", cols);
+//							if (cols >= colsPerDot) {break;}
+//						}
 
 						AnimationDot currentDot = new AnimationDot(point, colorVec, sizeDouble, lum);
 						currentDot.printDescription();
 						dotList.add(currentDot);
-
 					}
 
 					AnimationFrame animFrame = new AnimationFrame(time, dotList);	// new frame
