@@ -73,8 +73,11 @@ public class TOJTrial extends Trial<Response> {
 	 * Get a human-readable string description of TOJTrial
 	 */
 	public void printDescription() {
-		System.out.printf("TOJTrial:	%d frames, isVideo: %b, " +
+		String frames = (_animationSequence != null ? 
+				String.valueOf(_animationSequence.getNumFrames()) : "N/A") + " frames";
+		String audio = _audio != null ? _audio.name() : "N/A";
+		System.out.printf("TOJTrial:	%s, isVideo: %b, " +
 				"Playable name: %s, timingOffset: %f, animationPoints: %d, diskRadius: %f\n",
-				getAnimationSequence().getNumFrames(), _isVideo, _audio.name(), _offset, _numPoints, _diskRadius);
+				frames, _isVideo, audio, _offset, _numPoints, _diskRadius);
 	}
 }

@@ -1,6 +1,7 @@
 package edu.mcmaster.maplelab.toj;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -22,6 +23,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+
+import net.miginfocom.swing.MigLayout;
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.AVBlock.AVBlockType;
@@ -89,17 +92,18 @@ public class TOJStimulusResponseScreen extends BasicStep {
             isWarmup ? ConfigKeys.warmupScreenTrialText : ConfigKeys.testScreenTrialText, 
                 null));
         
-        _aniPanel = new AnimatorPanel(_renderer);
+        Dimension dim = new Dimension(_session.getScreenWidth(), _session.getScreenHeight());
+        _aniPanel = new AnimatorPanel(_renderer, dim);
         
-        JPanel bottom = new JPanel(new GridLayout(1, 0));
+        JPanel bottom = new JPanel(new MigLayout("insets 0, fill", "[][]", "[]"));
         getContentPanel().add(bottom, BorderLayout.SOUTH);
         
-        JPanel textItems = new JPanel(new BorderLayout());
+        JPanel textItems = new JPanel(new MigLayout("insets 0, fill"));
         textItems.setBorder(BorderFactory.createTitledBorder("Status"));
-        bottom.add(textItems);
+        bottom.add(textItems, "sgx, grow");
         
         _statusText = new JLabel();
-        textItems.add(_statusText, BorderLayout.CENTER);
+        textItems.add(_statusText);
         Font f = _statusText.getFont();
         _statusText.setFont(new Font(f.getName(), Font.PLAIN, f.getSize() + 4));
         _statusText.setVerticalAlignment(SwingConstants.CENTER);
@@ -108,12 +112,12 @@ public class TOJStimulusResponseScreen extends BasicStep {
         _results = new JLabel("<html>0 Correct");
         _results.setVerticalAlignment(SwingConstants.BOTTOM);
         _results.setHorizontalAlignment(SwingConstants.RIGHT);
-        textItems.add(_results, BorderLayout.SOUTH);
+        textItems.add(_results, "south");
         
         updateResultsText();
         
-        _response = new ResponseInputs(new TOJResponseParameters(_session));
-        bottom.add(_response);
+        _response = new ResponseInputs(new TOJResponseParameters(_session), false);
+        bottom.add(_response, "sgx");
         
         _response.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -376,8 +380,6 @@ public class TOJStimulusResponseScreen extends BasicStep {
             // how many items to play (and wait to end)
             _playCount = block.getType() == AVBlockType.AUDIO_VIDEO ? 2 : 1;
             _trial.printDescription();
-            // TODO: remove this
-            //_playCount = 1;
         }
          
         public void run() {
@@ -395,6 +397,8 @@ public class TOJStimulusResponseScreen extends BasicStep {
                 if (_playCount > 1) {
                 	_renderer.setStartTime(_playbackStart);
                 }
+                // TODO: remove this
+                _playCount = 1;
             	_trial.getPlayable().play();
             }
             catch (Exception ex) {

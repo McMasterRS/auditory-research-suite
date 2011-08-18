@@ -19,6 +19,8 @@ import java.util.*;
 
 import javax.swing.*;
 
+import net.miginfocom.swing.MigLayout;
+
 import edu.mcmaster.maplelab.common.datamodel.Answer;
 import edu.mcmaster.maplelab.common.datamodel.ConfidenceLevel;
 import edu.mcmaster.maplelab.common.datamodel.Response;
@@ -53,13 +55,23 @@ public class ResponseInputs extends JPanel {
      * possible choices as indicated.
      */
     public ResponseInputs(ResponseParameters<?> interpreter) {
+        this(interpreter, true);
+    }
+    
+    /**
+     * Default constructor sets the question asked and labels for the two
+     * possible choices as indicated.
+     */
+    public ResponseInputs(ResponseParameters<?> interpreter, boolean vertical) {
         super();
         _responseParams = interpreter;
         
         setSize(300, 200);
-        setLayout(new BorderLayout(0, 0));
-        add(getTop(), BorderLayout.NORTH);
-        add(getBottom(), BorderLayout.CENTER);
+        MigLayout layout = vertical ? 
+        		new MigLayout("insets 0, fill") : new MigLayout("insets 0, fill", "[][]", "");
+        setLayout(layout);
+        add(getTop(), vertical ? "north" : "");
+        add(getBottom());
     }
     
     /**

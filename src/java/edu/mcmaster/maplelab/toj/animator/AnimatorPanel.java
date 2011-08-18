@@ -43,6 +43,13 @@ public class AnimatorPanel extends JPanel {
      * Default ctor.
      */
     public AnimatorPanel(AnimationRenderer animator) {
+    	this(animator, null);
+    }
+    
+    /** 
+     * Default ctor.
+     */
+    public AnimatorPanel(AnimationRenderer animator, Dimension dim) {
 
         super(new BorderLayout());
 
@@ -60,7 +67,11 @@ public class AnimatorPanel extends JPanel {
  		trigger.start();
  		
         add(_canvas, BorderLayout.CENTER);
-        setPreferredSize(new Dimension(640, 480));
+        if (dim != null) {
+        	setPreferredSize(dim);
+        	setMinimumSize(dim);
+        }
+        else setPreferredSize(new Dimension(640, 480));
         
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.indexOf("mac") >= 0 || osName.indexOf("darwin") >= 0) {

@@ -297,7 +297,8 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
         
         d.getContentPane().add(p, BorderLayout.SOUTH);
         
-        d.setSize(600, 300);
+        d.setMinimumSize(new Dimension(600, 300));
+        d.pack();
         d.setLocationRelativeTo(null);
         d.setVisible(true);
         

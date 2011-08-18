@@ -139,7 +139,7 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 		return offsets;
 	}
 	
-	public List<Integer> getNumAnimationPointsArray() {
+	public List<Integer> getNumAnimationPoints() {
 		List<Integer> intList= getIntegerList(ConfigKeys.numAnimationPoints);
 		return intList;
 	}

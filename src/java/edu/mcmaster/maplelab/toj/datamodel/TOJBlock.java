@@ -19,6 +19,8 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 	
 	protected TOJBlock(TOJSession session, int blockNum, AVBlockType type) {
 		super(session, blockNum, type);
+		
+		_trials = new ArrayList<TOJTrial>();
 
 		// create trials from session
 	
@@ -28,21 +30,21 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 					// pitch and tone duration will give filename
 					// parse file and get animation sequence
 
-					String filename = p.toString() + "_" +  td.toString() + ".wav"; // path or file name?
+					String filename = p.toString().toLowerCase() + "_" +  td.toString().toLowerCase() + ".wav"; // path or file name?
 					
 					File dir = new File(session.getDataDir(), "aud");
 
 					Playable audio = SoundClip.findPlayable(filename, dir);
 					
 					for (String sd : session.getStrikeDurations()) {
-						filename = p.toString() + sd.toString() + "_.txt";
+						filename = p.toString().toLowerCase() + sd.toString().toLowerCase() + "_.txt";
 						dir = new File(session.getDataDir(), "vis");
 						
 						try {
 							AnimationSequence aniSeq = AnimationParser.parseFile(new File(dir, filename));
 							for (Float so : session.getSoundOffsets()) {
 								// look into sound objects
-								for (int pts : session.getNumAnimationPointsArray()) {
+								for (int pts : session.getNumAnimationPoints()) {
 									TOJTrial trial = new TOJTrial(aniSeq, false, audio, so, pts, 0.3f);
 									_trials.add(trial);
 								}
@@ -93,7 +95,7 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 
 					try {
 						AnimationSequence aniSeq = AnimationParser.parseFile(new File(dir, filename));
-						for (int pts : session.getNumAnimationPointsArray()) {
+						for (int pts : session.getNumAnimationPoints()) {
 							TOJTrial trial = new TOJTrial(aniSeq, false, null, 0f, pts, 0.3f); // can audio be null?
 							_trials.add(trial);
 						}
