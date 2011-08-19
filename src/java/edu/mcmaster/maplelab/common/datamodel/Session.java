@@ -13,9 +13,17 @@ package edu.mcmaster.maplelab.common.datamodel;
 
 import java.applet.Applet;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.logging.Level;
 
+import javax.swing.JLabel;
+
+import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.util.MathUtils;
 import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession.ConfigKeys;
@@ -181,6 +189,42 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      * encapsulates.  Will be used for file/directory naming.
      */
     public abstract String getExperimentBaseName();
+    
+    /**
+     * Load a set of properties from the given file.
+     */
+    protected Properties loadSecondaryProps(File propFile) {
+    	Properties props = new Properties();
+    	
+    	// prepare input stream
+    	InputStream is = null;
+    	try {
+    		if (propFile.exists()) {
+                is = new FileInputStream(propFile);              
+            }
+            else {
+                is = getClass().getResourceAsStream(propFile.getName());
+            }
+    	}
+    	catch (FileNotFoundException fe) {
+    		String msg = String.format("Could not find file: ", propFile.getName());
+            LogContext.getLogger().log(Level.SEVERE, msg, fe);
+    	}
+        
+        // load properties
+        try {
+            props.load(is);
+        }
+        catch (Exception ex) {
+            String msg = String.format("Error reading configuration file: ", propFile.getName());
+            LogContext.getLogger().log(Level.SEVERE, msg, ex);
+        }
+        finally {
+            if(is != null)  try { is.close(); } catch (IOException e) {}
+        }
+        
+        return props;
+    }
     
     /**
      * Get the experiment identifier database key.

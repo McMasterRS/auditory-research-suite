@@ -16,6 +16,11 @@ import edu.mcmaster.maplelab.toj.TOJDemoGUIPanel;
 import edu.mcmaster.maplelab.toj.TOJTrialLogger;
 
 public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
+	private static final String AUDIO_META_FILE = "sound-metadata.properties";
+	
+	public enum SoundMeta {
+		toneOnset
+	}
 	
 	public enum ConfigKeys {
 		screenWidth,
@@ -32,6 +37,8 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 		connectDots,
 		speedMode
 	}
+	
+	private Properties _audioFileMetaData = null;
 	
 	public TOJSession(Properties props) {
 		super(props);
@@ -142,6 +149,43 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 	public List<Integer> getNumAnimationPoints() {
 		List<Integer> intList= getIntegerList(ConfigKeys.numAnimationPoints);
 		return intList;
+	}
+	
+	/**
+	 * Get the tone onset time ('introductory silence') associated with the 
+	 * given audio file.  If no introductory silence is associated with the 
+	 * given file, the return value will be zero.
+	 */
+	public Long getToneOnsetTime(File file) {
+		if (file == null || !file.exists()) return null;
+		return getToneOnsetTime(file.getName());
+	}
+	
+	/**
+	 * Get the tone onset time ('introductory silence') associated with the 
+	 * given audio file.  If no introductory silence is associated with the 
+	 * given file, the return value will be zero.
+	 */
+	public Long getToneOnsetTime(String fileName) {
+		if (_audioFileMetaData == null) {
+			File dir = new File(getDataDir(), "aud");
+			File propFile = new File(dir, AUDIO_META_FILE);
+			_audioFileMetaData = loadSecondaryProps(propFile);
+		}
+		
+		long retval = 0;
+        Object val = getProperty(fileName + "." + SoundMeta.toneOnset.name());
+        if (val instanceof String) {
+            try {
+                retval = Long.parseLong((String)val);
+            }
+            catch(NumberFormatException ex) {
+            }
+        }
+        else if (val instanceof Long) {
+            retval = ((Long)val).longValue();
+        }
+        return retval;
 	}
 	
 	/**
