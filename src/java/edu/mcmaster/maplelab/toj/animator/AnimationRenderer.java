@@ -87,17 +87,17 @@ public class AnimationRenderer implements GLEventListener {
 		int totalFrames = _trial.getAnimationSequence().getNumFrames();
 
 		long currentTime = (System.currentTimeMillis() - getStartTime());			// animate only once
-		System.out.printf("current time = %f\n", (float)currentTime);
+//		System.out.printf("current time = %f\n", (float)currentTime);
 		
-		System.out.printf("total number of frames = %d\n", totalFrames);
+//		System.out.printf("total number of frames = %d\n", totalFrames);
 		
 		if (currentTime > _trial.getAnimationSequence().getFrameAtIndex(totalFrames - 1).getTime()) {
 			_animatedOnce = true;
 		}
 		displayFrame(gl, _trial.getAnimationSequence().getFrameAtTime(currentTime));
 
-		AnimationFrame frame = _trial.getAnimationSequence().getFrameAtIndex(_currentFrame);
-		System.out.printf("current frame.getTime = %f\n", frame.getTime());
+//		AnimationFrame frame = _trial.getAnimationSequence().getFrameAtIndex(_currentFrame);
+//		System.out.printf("current frame.getTime = %f\n", frame.getTime());
 		
 //		System.out.printf("current frame = frame %d\n", _currentFrame);
 //		if (_currentFrame <= totalFrames - 1) {
@@ -180,7 +180,7 @@ public class AnimationRenderer implements GLEventListener {
 
 			List<AnimationDot> jointLocations = frame.getJointLocations();
 
-			System.out.printf("number of dots in frame = %d\n\n", jointLocations.size());
+//			System.out.printf("number of dots in frame = %d\n\n", jointLocations.size());
 			
 			
 			// draw connecting lines
@@ -263,7 +263,7 @@ public class AnimationRenderer implements GLEventListener {
 		GL gl = canvas.getGL();
 		GLU glu = new GLU();
 
-		System.out.println("Width : "+width+" Height: "+height);
+//		System.out.println("Width : "+width+" Height: "+height);
 		if(height==0)height=1;
 		gl.glViewport(0, 0, width, height);                       // Reset The Current Viewport And Perspective Transformation
 		gl.glMatrixMode(GL_PROJECTION);                           // Select The Projection Matrix

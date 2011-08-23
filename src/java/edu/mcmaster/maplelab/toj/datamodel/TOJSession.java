@@ -6,11 +6,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
-import static edu.mcmaster.maplelab.common.datamodel.AVBlock.AVBlockType;
+import edu.mcmaster.maplelab.common.datamodel.AVBlock.AVBlockType;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
-
 import edu.mcmaster.maplelab.common.datamodel.Session;
-import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.sound.NotesEnum;
 import edu.mcmaster.maplelab.toj.TOJDemoGUIPanel;
 import edu.mcmaster.maplelab.toj.TOJTrialLogger;
@@ -173,8 +171,13 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 			_audioFileMetaData = loadSecondaryProps(propFile);
 		}
 		
+		if (fileName.contains(File.separator)) {
+			fileName = fileName.substring(fileName.lastIndexOf(File.separator)+1);
+		}
+		
 		long retval = 0;
-        Object val = getProperty(fileName + "." + SoundMeta.toneOnset.name());
+		String s = fileName + "." + SoundMeta.toneOnset.name();
+        Object val = _audioFileMetaData.getProperty(s);
         if (val instanceof String) {
             try {
                 retval = Long.parseLong((String)val);

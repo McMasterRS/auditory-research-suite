@@ -1,22 +1,21 @@
 package edu.mcmaster.maplelab.toj.animator;
 
-import javax.swing.JPanel;
-
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Graphics;
 import java.io.File;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
-import javax.media.opengl.*;
-import javax.swing.*;
-import javax.vecmath.Vector3d;
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLJPanel;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.ToolTipManager;
+import javax.swing.UIManager;
 
 import com.sun.opengl.util.Animator;
-
-import java.awt.geom.Point2D;
-
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;

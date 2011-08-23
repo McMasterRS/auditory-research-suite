@@ -30,7 +30,7 @@ public class AnimationSequence {
 	 * @return a new frame using interpolation. time in ms.
 	 */
 	public AnimationFrame getFrameAtTime(double time) {
-		System.out.printf("getting frame at time %f\n", time);
+//		System.out.printf("getting frame at time %f\n", time);
 
 		if (time <= getFrameAtIndex(0).getTime()) {
 			return getFrameAtIndex(0);
@@ -46,13 +46,13 @@ public class AnimationSequence {
 			double t = getFrameAtIndex(i).getTime();
 			if (t >= time) {
 				if (t == time) {
-					System.out.printf("animating frame %d\n", i);
+//					System.out.printf("animating frame %d\n", i);
 					return getFrameAtIndex(i);
 				}
 				else {
 					frame2 = getFrameAtIndex(i);
 					frame1 = getFrameAtIndex(i-1);
-					System.out.printf("interpolating b/t frames %d and %d\n", i-1, i);
+//					System.out.printf("interpolating b/t frames %d and %d\n", i-1, i);
 					break;
 				}
 			}
@@ -191,7 +191,7 @@ public class AnimationSequence {
 			*/
 	
 			AnimationDot dot = new AnimationDot(pt, col, size, lum);
-			dot.printDescription();
+//			dot.printDescription();
 			dotList.add(dot);
 		}
 		AnimationFrame frame = new AnimationFrame(time, dotList);
@@ -205,10 +205,30 @@ public class AnimationSequence {
 	/**
 	 * @return the totalAnimationTime
 	 */
-	public long getTotalAnimationTime() {
+	public double getTotalAnimationTime() {
 		int numFrames = _aniFrames.size();
 		AnimationFrame lastFrame = _aniFrames.get(numFrames - 1);
 		
-		return (long)lastFrame.getTime();
+		return lastFrame.getTime();
+	}
+	
+	/**
+	 * 
+	 * @return the time stamp of the frame at which the strike occurs.
+	 * This method assumes that the mallet head is always the first dot in the file,
+	 * 	and the strike occurs when the mallet head is at its lowest point.
+	 */
+	public double getStrikeTime() {
+		
+		AnimationFrame lowestFrame = _aniFrames.get(0);
+		double	lowestPt = lowestFrame.getJointLocations().get(0).getLocation().y;
+		
+		for (AnimationFrame frame: _aniFrames) {
+			AnimationDot malletDot = frame.getJointLocations().get(0);
+			if (malletDot.getLocation().y < lowestPt) {
+				lowestFrame = frame;
+			}
+		}
+		return lowestFrame.getTime();
 	}
 }

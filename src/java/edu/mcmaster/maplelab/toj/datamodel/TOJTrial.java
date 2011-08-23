@@ -80,4 +80,18 @@ public class TOJTrial extends Trial<Response> {
 				"Playable name: %s, timingOffset: %f, animationPoints: %d, diskRadius: %f\n",
 				frames, _isVideo, audio, _offset, _numPoints, _diskRadius);
 	}
+	
+	/**
+	 * Get the total animation time.
+	 */
+	public double getADuration() {
+		return getAnimationSequence().getTotalAnimationTime();
+	}
+	
+	/**
+	 * Get the time that the strike occurs (mallet head is at its lowest point).
+	 */
+	public double getSDuration() {
+		return getAnimationSequence().getStrikeTime();
+	}
 }

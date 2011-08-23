@@ -2,6 +2,7 @@ package edu.mcmaster.maplelab.toj;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -190,7 +191,6 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 			_audFile.setFile(audDir);
 
 			String visFileName = new String(_pitches.getSelectedItem().toString().toLowerCase() + _vDurations.getSelectedItem().toString().toLowerCase().charAt(0) + "_.txt"); 
-//			String visFileName = new String("dn2_.txt");
 			File visDir = new File("datafiles/examples/vis" + "/" + visFileName);
 			_visFile.setFile(visDir);
 		}
@@ -203,11 +203,106 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 			System.out.println("Start button pressed\n");
 			System.out.printf("delay = %f\n", _delayText.getValue());
 			
-			TOJTrial t = getTrial();
-
+			final TOJTrial t = getTrial();
 			t.printDescription();
 			
-			testRun(t);
+			final Playable audio = t.getPlayable();
+		
+			double l_a = t.getADuration();											// l_a = length of animation
+			double t_a = t.getSDuration();											// t_a = strike time in animation
+			double l_s = ((SoundClip)audio).getClipDuration(); 						// l_s = length of sound clip
+			double t_s = getSession().getToneOnsetTime(audio.name());				// t_s = attack time in sound clip
+			
+			System.out.printf("total ani duration = %f, strike occurs at %f, \n " +
+					"total sound duration = %f, attack occurs at %f\n", (float) l_a, (float) t_a, (float) l_s, (float) t_s);
+				
+			// figure out: 	1. which stimulus starts first
+			//				2. how much to delay 2nd stimulus
+			
+			boolean aIsFirst;
+			final double delay;
+			double offset = (double)t.getOffset();
+			
+			if (t_a > t_s - offset) {
+				// A comes first
+				aIsFirst = true;
+				delay = t_a - t_s + offset;
+			}
+			else {
+				// S comes first
+				aIsFirst = false;
+				delay = t_s - t_a - offset;
+			}
+			System.out.printf("%s is first, delay %s by %f ms\n", aIsFirst? "A":"S", !aIsFirst? "A":"S", (float)delay);
+		
+			
+			
+			
+			final long currTime = System.currentTimeMillis();
+		
+			class AniRun implements Runnable {
+				TOJTrial _t;
+				double _delay;
+				AniRun (TOJTrial trial, double delay) {
+					this._t = trial;
+					this._delay = delay;
+				}
+				public void run() {
+					try {
+						Thread.sleep((long)_delay);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					System.out.printf("animation starts at time = %d\n", System.currentTimeMillis() - currTime);
+					testRun(_t);
+				}
+			}
+
+			class AudRun implements Runnable {
+				Playable _audio;
+				double _delay;
+				AudRun (Playable aud, double delay) {
+					this._audio = aud;
+					this._delay = delay;
+				}
+				public void run() {
+					try {
+						Thread.sleep((long) _delay);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					System.out.printf("audio starts at time = %d\n", System.currentTimeMillis() - currTime);
+					_audio.play();
+				}
+			}
+			
+			// if sound comes first, delay animation
+			if (!aIsFirst) {
+				System.out.println("starting sound, then animation\n");
+				AniRun ani = new AniRun(t, delay);
+				AudRun aud = new AudRun(audio, 0);
+				
+				new Thread(aud).start();
+				new Thread(ani).start();
+			}
+			
+			// is animation comes first, delay sound
+			// javax.swing.timer;
+			if (aIsFirst) {
+				System.out.println("starting animation, then sound\n");
+				AniRun ani = new AniRun(t, 0);
+				AudRun aud = new AudRun(audio, delay);
+				
+				new Thread(ani).start();
+				new Thread(aud).start();
+			}
+//			AniRun ani = new AniRun(t);
+//			AudRun aud = new AudRun(audio, delay);
+//			
+//			new Thread(aud).start();
+//			EventQueue.invokeLater(ani);
+		
+			
 		}
 	}
 	
@@ -229,15 +324,6 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
             _testFrame.setLocationRelativeTo(null);
             _testFrame.setVisible(true);
             
-          final Playable audio = trial.getPlayable();
-			
-			Runnable r = new Runnable() {
-				@Override
-				public void run() {
-					audio.play();
-
-				}
-			} ;
 
             renderer.setTrial(trial);
             renderer.setCurrentFrame(0);
@@ -245,7 +331,7 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
     		long currentTime = System.currentTimeMillis();
 
     		renderer.setStartTime(currentTime); 
-//    		SwingUtilities.invokeLater(r);
+//    		SwingUtilities.invokeLater(rAud);
         }
         catch (Throwable ex) {
             ex.printStackTrace();
