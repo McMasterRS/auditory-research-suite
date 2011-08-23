@@ -227,6 +227,7 @@ public class AnimationSequence {
 			AnimationDot malletDot = frame.getJointLocations().get(0);
 			if (malletDot.getLocation().y < lowestPt) {
 				lowestFrame = frame;
+				lowestPt = lowestFrame.getJointLocations().get(0).getLocation().y;
 			}
 		}
 		return lowestFrame.getTime();

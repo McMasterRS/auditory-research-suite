@@ -91,7 +91,7 @@ public class TOJTrial extends Trial<Response> {
 	/**
 	 * Get the time that the strike occurs (mallet head is at its lowest point).
 	 */
-	public double getSDuration() {
+	public double getAStrikeTime() {
 		return getAnimationSequence().getStrikeTime();
 	}
 }

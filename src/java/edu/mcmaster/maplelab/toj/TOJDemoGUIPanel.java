@@ -19,8 +19,10 @@ import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.Timer;
 
 import net.miginfocom.swing.MigLayout;
+import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.gui.FileBrowseField;
@@ -209,7 +211,7 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 			final Playable audio = t.getPlayable();
 		
 			double l_a = t.getADuration();											// l_a = length of animation
-			double t_a = t.getSDuration();											// t_a = strike time in animation
+			double t_a = t.getAStrikeTime();											// t_a = strike time in animation
 			double l_s = ((SoundClip)audio).getClipDuration(); 						// l_s = length of sound clip
 			double t_s = getSession().getToneOnsetTime(audio.name());				// t_s = attack time in sound clip
 			
@@ -222,6 +224,7 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 			boolean aIsFirst;
 			final double delay;
 			double offset = (double)t.getOffset();
+			System.out.println("Time offset: " + offset);
 			
 			if (t_a > t_s - offset) {
 				// A comes first
@@ -240,23 +243,7 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 			
 			final long currTime = System.currentTimeMillis();
 		
-			class AniRun implements Runnable {
-				TOJTrial _t;
-				double _delay;
-				AniRun (TOJTrial trial, double delay) {
-					this._t = trial;
-					this._delay = delay;
-				}
-				public void run() {
-					try {
-						Thread.sleep((long)_delay);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					System.out.printf("animation starts at time = %d\n", System.currentTimeMillis() - currTime);
-					testRun(_t);
-				}
-			}
+		
 
 			class AudRun implements Runnable {
 				Playable _audio;
@@ -271,30 +258,78 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					System.out.printf("audio starts at time = %d\n", System.currentTimeMillis() - currTime);
+					LogContext.getLogger().info(String.format("Sound starts at time %d", System.currentTimeMillis() - currTime));
 					_audio.play();
+					LogContext.getLogger().info(String.format("Sound ends at time %d", System.currentTimeMillis() - currTime));
+					
 				}
 			}
 			
+			
+			class AniRun implements Runnable {
+				double _delay;
+				AniRun (double delay) {
+					this._delay = delay;
+				}
+				public void run() {
+					try {
+						Thread.sleep((long) _delay);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					LogContext.getLogger().info(String.format("Animation starts at time %d", System.currentTimeMillis() - currTime));
+					testRun(t);
+					LogContext.getLogger().info(String.format("Animation ends at time %d", System.currentTimeMillis() - currTime));
+					
+				}
+			}
+			
+			
+			ActionListener animationTrigger = new ActionListener() {
+				public void actionPerformed(ActionEvent event) {
+					LogContext.getLogger().info(String.format("Animation starts at time %d", System.currentTimeMillis() - currTime));
+					testRun(t);
+					LogContext.getLogger().info(String.format("Animation ends at time %d", System.currentTimeMillis() - currTime));
+					
+				}
+			};
 			// if sound comes first, delay animation
+			// javax.swing.timer;
 			if (!aIsFirst) {
-				System.out.println("starting sound, then animation\n");
-				AniRun ani = new AniRun(t, delay);
-				AudRun aud = new AudRun(audio, 0);
+				LogContext.getLogger().info("starting sound, then animation");
 				
-				new Thread(aud).start();
-				new Thread(ani).start();
+				Timer aniTimer = new Timer((int) delay, animationTrigger);
+				aniTimer.setRepeats(false);
+				
+				AniRun ani = new AniRun(delay);
+				
+//				audio.play();
+			
+				//AniRun ani = new AniRun(t, delay);
+				AudRun aud = new AudRun(audio, 0);
+				Thread audioThread = new Thread(aud);
+
+				
+//				aniTimer.start();
+				audioThread.start();
+				ani.run();
+				//new Thread(ani).start();
 			}
 			
 			// is animation comes first, delay sound
-			// javax.swing.timer;
 			if (aIsFirst) {
-				System.out.println("starting animation, then sound\n");
-				AniRun ani = new AniRun(t, 0);
-				AudRun aud = new AudRun(audio, delay);
 				
-				new Thread(ani).start();
-				new Thread(aud).start();
+				LogContext.getLogger().info("starting animation, then sound");
+//				Timer aniTimer = new Timer((int) 0, animationTrigger);
+//				aniTimer.setRepeats(false);
+				AniRun ani = new AniRun(0);
+				
+				AudRun aud = new AudRun(audio, delay);
+				Thread audioThread = new Thread(aud);
+
+//				aniTimer.start();
+				audioThread.start();
+				ani.run();
 			}
 //			AniRun ani = new AniRun(t);
 //			AudRun aud = new AudRun(audio, delay);
