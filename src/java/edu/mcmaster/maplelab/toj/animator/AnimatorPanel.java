@@ -165,7 +165,7 @@ public class AnimatorPanel extends JPanel {
 			AnimationSequence animation = AnimationParser.parseFile(file);
 			
 			String filename = NotesEnum.D.toString().toLowerCase() + "_" +  DurationEnum.LONG.toString().toLowerCase().substring(0,1) + ".wav";
-			System.out.printf("sound clip filename = %s\n", filename);
+			//System.out.printf("sound clip filename = %s\n", filename);
 
 			File dir = new File("/Users/Catherine/Workspace/Maple/auditory-research-suite/datafiles/examples/aud");
 

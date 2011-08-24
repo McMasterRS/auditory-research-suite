@@ -178,17 +178,6 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			Object source = e.getSource();
-			if ((JComboBox)source == _pitches) {
-				System.out.println("Auditory pitch was changed");
-			}
-			if ((JComboBox)source == _aDurations) {
-				System.out.println("Auditory duration was changed");
-			}
-			if ((JComboBox)source == _vDurations) {
-				System.out.println("Visual duration was changed");
-			}
-
 			String audFileName = new String(_pitches.getSelectedItem().toString().toLowerCase() +"_" + _aDurations.getSelectedItem().toString().toLowerCase().charAt(0) + ".wav");
 			File audDir = new File(getSession().getExpectedAudioSubDir(), audFileName);
 			_audFile.setFile(audDir);
@@ -208,11 +197,9 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			System.out.println("Start button pressed\n");
-			System.out.println("delay =" +  _delayText.getValue().toString());
 			
 			final TOJTrial t = getTrial();
-			t.printDescription();
+			//t.printDescription();
 			
 			final Playable audio = t.getPlayable();
 		
@@ -229,15 +216,15 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 				return;
 			}
 			
-			System.out.printf("total ani duration = %f, strike occurs at %f, \n " +
-					"total sound duration = %f, attack occurs at %f\n", (float) l_a, (float) t_a, (float) l_s, (float) t_s);
+			//System.out.printf("total ani duration = %f, strike occurs at %f, \n " +
+			//		"total sound duration = %f, attack occurs at %f\n", (float) l_a, (float) t_a, (float) l_s, (float) t_s);
 				
 			// figure out: 	1. which stimulus starts first
 			//				2. how much to delay 2nd stimulus
 			boolean aIsFirst;
 			final double delay;
 			double offset = (double)t.getOffset();
-			System.out.println("Time offset: " + offset);
+			//System.out.println("Time offset: " + offset);
 			
 			if (t_a > t_s - offset) {
 				// A comes first
@@ -249,7 +236,7 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 				aIsFirst = false;
 				delay = t_s - t_a - offset;
 			}
-			System.out.printf("%s is first, delay %s by %f ms\n", aIsFirst? "A":"S", !aIsFirst? "A":"S", (float)delay);
+			//System.out.printf("%s is first, delay %s by %f ms\n", aIsFirst? "A":"S", !aIsFirst? "A":"S", (float)delay);
 		
 		
 			final long currTime = System.currentTimeMillis();

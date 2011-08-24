@@ -380,7 +380,7 @@ public class TOJStimulusResponseScreen extends BasicStep {
             TOJBlock block = currBlock();
             // how many items to play (and wait to end)
             _playCount = block.getType() == AVBlockType.AUDIO_VIDEO ? 2 : 1;
-            _trial.printDescription();
+            //_trial.printDescription();
         }
          
         public void run() {
