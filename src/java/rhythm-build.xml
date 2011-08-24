@@ -34,6 +34,7 @@
 	<path id="used.jars.path">
         <fileset dir="lib">
 	        <include name="junit-4.1.jar" />
+        	<include name="miglayout-4.0.jar" />
         </fileset>
     </path>	
 	
@@ -58,7 +59,7 @@
 
 	
 	<target name="rhythm" depends="rhythm.jar">
-	    <ant antfile="${basedir}/app/build.xml" dir="${basedir}/app" />
+	    <ant antfile="${basedir}/app/rhythm-app-build.xml" dir="${basedir}/app" />
 	</target>
 	
     <target name="rhythm.jar" depends="rhythm.version, compile">
@@ -108,9 +109,9 @@
         	</redirector>
     	</exec>
 	</target>
-	
+
+	<available property="is.svn" file=".svn" type="dir" />
 	<target name="rhythm.version" depends="svn.version, git.version" >
-		<available property="is.svn" file=".svn" type="dir" />
 		
 		<echo>Got build num.</echo>
 		<echo>Got build num=${build-num}.</echo>
@@ -124,9 +125,19 @@
 	
     <target name="compile">
 	    <javac nowarn="yes" source="1.6" srcdir="${src}" destdir="${build}">
-	    	<include name="edu/mcmaster/maplelab/**/*.java"/>
+	    	<include name="edu/mcmaster/maplelab/common/**/*.java"/>
+	    	<include name="edu/mcmaster/maplelab/rhythm/**/*.java"/>
+	    	<exclude name="edu/mcmaster/maplelab/toj/*.java" />
+	    	<exclude name="edu/mcmaster/maplelab/toj/**/*.java" />
 	    	<classpath refid="used.jars.path" />
         </javac>
     </target>	
+	
+	<target name="clean">
+		<delete dir="edu/mcmaster/maplelab">
+			<include name="*.class"/>
+			<include name="**/*.class"/>
+		</delete>
+	</target>
 
 </project>

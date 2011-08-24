@@ -112,9 +112,9 @@
         	</redirector>
     	</exec>
 	</target>
-	
+
+	<available property="is.svn" file=".svn" type="dir" />
 	<target name="toj.version" depends="svn.version, git.version" >
-		<available property="is.svn" file=".svn" type="dir" />
 		
 		<echo>Got build num.</echo>
 		<echo>Got build num=${build-num}.</echo>
@@ -135,5 +135,12 @@
 	    	<classpath refid="used.jars.path" />
         </javac>
     </target>	
+	
+	<target name="clean">
+		<delete dir="edu/mcmaster/maplelab">
+			<include name="*.class"/>
+			<include name="./**/*.class"/>
+		</delete>
+	</target>
 
 </project>
