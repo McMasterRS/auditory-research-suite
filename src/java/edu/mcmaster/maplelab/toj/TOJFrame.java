@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
+ * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
+ */
 package edu.mcmaster.maplelab.toj;
 
 import java.awt.Container;
@@ -15,7 +22,7 @@ import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
 
 /**
- * TOJ specific extension of ExperimentFrame
+ * TOJ specific extension of ExperimentFrame.
  * @author Catherine Elder <cje@datamininglab.com>
  *
  */
@@ -43,7 +50,8 @@ public class TOJFrame extends ExperimentFrame<TOJSession, TOJBlock, TOJTrial, TO
 
     @Override
     protected InputStream getConfigData(File dataDir) throws IOException {
-        String name = TOJExperiment.EXPERIMENT_BASENAME.toLowerCase() + ".properties";
+        String name = TOJExperiment.getEXPERIMENT_BASENAME().toLowerCase() + ".properties";
+
         File f = new File(dataDir, name);
         
         if(f.exists()) {

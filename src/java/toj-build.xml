@@ -11,33 +11,37 @@
     <property name="src" value="${basedir}" />
     <property name="build" value="${basedir}" />
 	
-    <property name="rhythm.jar" value="rhythm.jar" />
+    <property name="toj.jar" value="toj.jar" />
 	
-	<property name="rhythm.dist.dir" value="${build}/www/rhythm" />
-    <property name="rhythm.jar.path" location="${rhythm.dist.dir}/${rhythm.jar}"/>	
+	<property name="toj.dist.dir" value="${build}/www/toj" />
+    <property name="toj.jar.path" location="${toj.dist.dir}/${toj.jar}"/>	
 	
-	<property name="rhythm.vprops" value="${basedir}/edu/mcmaster/maplelab/rhythm/rhythm.version.properties"/>
+	<property name="toj.vprops" value="${basedir}/edu/mcmaster/maplelab/toj/toj.version.properties"/>
 	
     <patternset id="common.classes">
-	    <include name="edu/mcmaster/maplelab/common/**/*.class" />
+    	<include name="edu/mcmaster/maplelab/common/*.class" />
+    	<include name="edu/mcmaster/maplelab/common/**/*.class" />
         <include name="edu/mcmaster/maplelab/common/**/*.png" />
         <include name="edu/mcmaster/maplelab/common/**/*.properties" />      	
     </patternset>
 
-    <patternset id="rhythm.classes">
-	    <include name="edu/mcmaster/maplelab/rhythm/*.class" />
-	    <include name="edu/mcmaster/maplelab/rhythm/**/*.class" />
-        <include name="edu/mcmaster/maplelab/rhythm/**/*.png" />
-        <include name="edu/mcmaster/maplelab/rhythm/**/*.properties" />       	
+    <patternset id="toj.classes">
+	    <include name="edu/mcmaster/maplelab/toj/*.class" />
+	    <include name="edu/mcmaster/maplelab/toj/**/*.class" />
+        <include name="edu/mcmaster/maplelab/toj/**/*.png" />
+        <include name="edu/mcmaster/maplelab/toj/**/*.properties" />  
     </patternset>
 	
 	<path id="used.jars.path">
         <fileset dir="lib">
 	        <include name="junit-4.1.jar" />
+        	<include name="miglayout-4.0.jar" />
+        	<include name="jogl.jar" />
+        	<include name="gluegen-rt.jar" />
         </fileset>
     </path>	
 	
-    <target name="all" depends="rhythm"/> 
+    <target name="all" depends="toj"/> 
 	
 	<target name="cache_version.update">
 		<!-- Update applet cache number to browser knows to re-download it -->
@@ -57,15 +61,15 @@
 	</target>
 
 	
-	<target name="rhythm" depends="rhythm.jar">
-	    <ant antfile="${basedir}/app/build.xml" dir="${basedir}/app" />
+	<target name="toj" depends="toj.jar">
+	    <ant antfile="${basedir}/app/toj-app-build.xml" dir="${basedir}/app" />
 	</target>
 	
-    <target name="rhythm.jar" depends="rhythm.version, compile">
-		<jar destfile="${rhythm.jar.path}">
+    <target name="toj.jar" depends="toj.version, compile">
+		<jar destfile="${toj.jar.path}">
             <fileset dir="${build}">
                 <patternset refid="common.classes" />
-                <patternset refid="rhythm.classes" />
+                <patternset refid="toj.classes" />
             </fileset>
             <manifest>
                     <attribute name="Built-By" value="${user.name}" />
@@ -109,14 +113,14 @@
     	</exec>
 	</target>
 	
-	<target name="rhythm.version" depends="svn.version, git.version" >
+	<target name="toj.version" depends="svn.version, git.version" >
 		<available property="is.svn" file=".svn" type="dir" />
 		
 		<echo>Got build num.</echo>
 		<echo>Got build num=${build-num}.</echo>
 		
 		<!-- Write the property file using the current date and time. -->
-		<propertyfile file="${rhythm.vprops}" comment="Rhythm Experiment Build Information File">
+		<propertyfile file="${toj.vprops}" comment="Temporal Order Judgement Experiment Build Information File">
 			<entry key="buildVersion" type="int" value="${build-num}"/>
 			<entry key="buildDate" type="date" value="now" pattern="yyyy-MM-dd HH-mm-ss zzz"/>
 		</propertyfile>
@@ -124,7 +128,10 @@
 	
     <target name="compile">
 	    <javac nowarn="yes" source="1.6" srcdir="${src}" destdir="${build}">
-    		<include name="edu/**/*.java"/>
+    		<include name="edu/mcmaster/maplelab/common/**/*.java"/>
+	    	<include name="edu/mcmaster/maplelab/toj/**/*.java"/>
+	    	<exclude name="edu/mcmaster/maplelab/rhythm/*.java" />
+	    	<exclude name="edu/mcmaster/maplelab/rhythm/**/*.java" />
 	    	<classpath refid="used.jars.path" />
         </javac>
     </target>	

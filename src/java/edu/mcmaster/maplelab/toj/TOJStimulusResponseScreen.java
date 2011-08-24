@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
+ * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
+ */
 package edu.mcmaster.maplelab.toj;
 
 import java.awt.BorderLayout;
@@ -37,6 +44,7 @@ import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
 
 public class TOJStimulusResponseScreen extends BasicStep {
 	/**
+	 * TOJStimulusResponseScreen handles the user's response to stimulus.
      * @version   $Revision$
      * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
      * @since   Feb 28, 2007
@@ -69,7 +77,6 @@ public class TOJStimulusResponseScreen extends BasicStep {
 	private final boolean _isWarmup;
 	private final AnimatorPanel _aniPanel;
 	private final AnimationRenderer _renderer;
-	//private final boolean _isDemo;
 
 	public TOJStimulusResponseScreen(StepManager steps, TOJSession session, boolean isWarmup) {
 		super(true);

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
+ * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
+ */
 package edu.mcmaster.maplelab.toj.animator;
 
 import java.io.BufferedReader;
@@ -17,31 +24,29 @@ import javax.vecmath.Vector3d;
 import edu.mcmaster.maplelab.common.LogContext;
 
 /**
- * This class parses a file and creates an AnimationSequence
+ * This class parses a file and creates an AnimationSequence.
  * @author Catherine Elder <cje@datamininglab.com>
- *
  */
 
 public class AnimationParser {
-	// parses a file and returns AnimationSequence
 	private static final String COLOR_DATA_KEY = "colorData";
 	private static final String SIZE_DATA_KEY = "sizeData";
 	private static final String LUMINANCE_DATA_KEY = "luminanceData";
 
-	public static AnimationSequence parseFile(File file) throws FileNotFoundException { // how should this exception be handled?
+	public static AnimationSequence parseFile(File file) throws FileNotFoundException {
 		// method accepts a file  and returns AnimationSequence
 		// assign frames from file contents
 
 		BufferedReader reader = null;
 
-		ArrayList<AnimationFrame> frameList = new ArrayList<AnimationFrame>();	// create list of frames
+		ArrayList<AnimationFrame> frameList = new ArrayList<AnimationFrame>();
 
 		boolean colorData = false;
 		boolean sizeData = false;
 		boolean luminanceData = false;
 		
 		try {
-			reader = new BufferedReader(new FileReader(file));	// construct reader
+			reader = new BufferedReader(new FileReader(file));	
 			String line = null;
 			int colsPerDot = 2;
 
@@ -144,10 +149,12 @@ public class AnimationParser {
 							// get dot color and size
 							if (scanner.hasNext("-")) {
 								// assume color and size are null
-								String color = scanner.next();
+								scanner.next();
+//								String color = scanner.next();
 //								System.out.printf("color = %s\n", color);
 								
-								String size = scanner.next();
+								scanner.next();
+//								String size = scanner.next();
 //								System.out.printf("size = %s\n", size);
 							}
 							else {
@@ -173,8 +180,6 @@ public class AnimationParser {
 									}
 									colorVec = new Vector3d(Double.parseDouble(colorMatch.group(2)), 
 											Double.parseDouble(colorMatch.group(3)), Double.parseDouble(colorMatch.group(4)));
-									
-//									scanner.next();		// skip end parenthesis
 								}
 								catch (Exception ex) {
 									ex.printStackTrace();
@@ -191,9 +196,9 @@ public class AnimationParser {
 						dotList.add(currentDot);
 					}
 
-					AnimationFrame animFrame = new AnimationFrame(time, dotList);	// new frame
+					AnimationFrame animFrame = new AnimationFrame(time, dotList);
 
-					frameList.add(animFrame);							// add frame to frameList
+					frameList.add(animFrame);							
 				} 
 				scanner.close();
 			} 
@@ -211,7 +216,7 @@ public class AnimationParser {
 			}
 		}
 
-		AnimationSequence aniSeq = new AnimationSequence(frameList);	// initialize AnimationSequence
+		AnimationSequence aniSeq = new AnimationSequence(frameList);
 
 		return aniSeq;
 	}

@@ -18,16 +18,14 @@ import edu.mcmaster.maplelab.toj.datamodel.TOJBlock;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
 /**
- * 
+ * TOJ specific extension of FileTrialLogger.
  * @author Catherine Elder <cje@datamininglab.com>
- *
  */
 public class TOJTrialLogger extends FileTrialLogger<TOJSession, TOJBlock, TOJTrial> {
 
 	public TOJTrialLogger(TOJSession session, File workingDirectory,
 			boolean separateOutput, boolean deleteTempFile) throws IOException {
 		super(session, workingDirectory, separateOutput, deleteTempFile);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override

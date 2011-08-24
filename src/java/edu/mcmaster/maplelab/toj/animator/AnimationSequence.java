@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
+ * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
+ */
 package edu.mcmaster.maplelab.toj.animator;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,28 +101,6 @@ public class AnimationSequence {
 				col.interpolate(col2, alpha);
 			}
 			
-			/*
-			// alternate method: fade in and out
-			if (col1 != null) {
-				col = col1;
-				if (col2 != null) {
-					col.interpolate(col2, alpha);
-				}
-				else {
-					col.scale(1 - alpha);
-				}
-			}
-			else {
-				if (col2 != null) {
-					col = col2;
-					col.scale(alpha);
-				}
-				else {
-					col = null;
-				}
-			}
-			*/
-			
 			// get size
 			Double size1 = dot1.getSize();
 			Double size2 = dot2.getSize();
@@ -132,26 +117,6 @@ public class AnimationSequence {
 			else {
 				size = alpha*size2 + (1 - alpha)*size1;
 			}
-			
-			/*
-			 // alternate method: grow and shrink dots
-			if (size1 != null) {
-				if (size2 != null) {
-					size = alpha*size2 + (1 - alpha)*size1;
-				}
-				else {
-					size = (1 - alpha)*size1;
-				}
-			}
-			else {
-				if (col2 != null) {
-					size = alpha*size2;
-				}
-				else {
-					size = null;
-				}
-			}
-			*/
 			
 			// get luminance
 			Double lum1 = dot1.getLuminance();
@@ -170,26 +135,6 @@ public class AnimationSequence {
 				lum = alpha*lum2 + (1 - alpha)*lum1;
 			}
 			
-			/*
-			// alternate method: fade in and out
-			if (lum1 != null) {
-				if (lum2 != null) {
-					lum = alpha*lum2 + (1 - alpha)*lum1;
-				}
-				else {
-					lum = (1 - alpha)*lum1;
-				}
-			}
-			else {
-				if (lum2 != null) {
-					lum = alpha*lum2;
-				}
-				else {
-					lum = null;
-				}
-			}
-			*/
-	
 			AnimationDot dot = new AnimationDot(pt, col, size, lum);
 //			dot.printDescription();
 			dotList.add(dot);
@@ -207,6 +152,8 @@ public class AnimationSequence {
 	 */
 	public double getTotalAnimationTime() {
 		int numFrames = _aniFrames.size();
+		if (numFrames == 0) return 0;
+		
 		AnimationFrame lastFrame = _aniFrames.get(numFrames - 1);
 		
 		return lastFrame.getTime();
@@ -219,6 +166,7 @@ public class AnimationSequence {
 	 * 	and the strike occurs when the mallet head is at its lowest point.
 	 */
 	public double getStrikeTime() {
+		if (_aniFrames.size() == 0) return 0;
 		
 		AnimationFrame lowestFrame = _aniFrames.get(0);
 		double	lowestPt = lowestFrame.getJointLocations().get(0).getLocation().y;

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
+ * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
+ */
 package edu.mcmaster.maplelab.toj.datamodel;
 
 import edu.mcmaster.maplelab.common.datamodel.Response;
@@ -5,6 +12,10 @@ import edu.mcmaster.maplelab.common.datamodel.Trial;
 import edu.mcmaster.maplelab.common.sound.Playable;
 import edu.mcmaster.maplelab.toj.animator.AnimationSequence;
 
+/**
+ * TOJ specific implementation of Trial.
+ * @author Catherine Elder <cje@datamininglab.com>
+ */
 public class TOJTrial extends Trial<Response> {
 	
 	private final Playable _audio;
@@ -14,7 +25,6 @@ public class TOJTrial extends Trial<Response> {
 	private final float _diskRadius;
 	private final AnimationSequence _animationSequence;
 
-	
 	public TOJTrial(AnimationSequence animationSequence, boolean isVideo, Playable audio, 
 			Float timingOffset, int animationPoints, float diskRadius) {
 		

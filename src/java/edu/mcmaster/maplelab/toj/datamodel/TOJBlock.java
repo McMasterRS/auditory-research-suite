@@ -32,13 +32,13 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 
 					String filename = p.toString().toLowerCase() + "_" +  td.toString().toLowerCase() + ".wav"; // path or file name?
 					
-					File dir = new File(session.getDataDir(), "aud");
+					File dir = session.getExpectedAudioSubDir();
 
 					Playable audio = SoundClip.findPlayable(filename, dir);
 					
 					for (String sd : session.getStrikeDurations()) {
 						filename = p.toString().toLowerCase() + sd.toString().toLowerCase() + "_.txt";
-						dir = new File(session.getDataDir(), "vis");
+						dir = session.getExpectedVisualSubDir();
 						
 						try {
 							AnimationSequence aniSeq = AnimationParser.parseFile(new File(dir, filename));

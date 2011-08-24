@@ -1,8 +1,18 @@
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
+ * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
+ */
 package edu.mcmaster.maplelab.toj.animator;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector3d;
-
+/**
+ * AnimationDot represents one dot (joint) in the image.
+ * @author Catherine Elder <cje@datamininglab.com>
+ */
 public class AnimationDot {
 	private Point2d _location;
 	private Vector3d _color;
@@ -36,6 +46,9 @@ public class AnimationDot {
 		return _luminance;
 	}
 	
+	/**
+	 * Prints a detailed description of the dot.
+	 */
 	public void printDescription() {
 		String loc = getLocation() != null ? String.format("(%.2f,%.2f)", getLocation().x, getLocation().y) : "null";
 		String col = getColor() != null ? String.format("(%.2f, %.2f, %.2f)", getColor().x, getColor().y, getColor().z) : "null";

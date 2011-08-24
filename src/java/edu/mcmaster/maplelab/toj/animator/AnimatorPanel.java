@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
+ * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
+ */
 package edu.mcmaster.maplelab.toj.animator;
 
 import java.awt.BorderLayout;
@@ -24,6 +31,10 @@ import edu.mcmaster.maplelab.common.sound.Playable;
 import edu.mcmaster.maplelab.common.sound.SoundClip;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
 
+/**
+ * Creates a panel to be used for animation rendering.
+ * @author Catherine Elder <cje@datamininglab.com>
+ */
 public class AnimatorPanel extends JPanel {
 	private final GLJPanel _canvas;
 	private final AnimationRenderer _animator;
@@ -38,16 +49,10 @@ public class AnimatorPanel extends JPanel {
         ToolTipManager.sharedInstance().setLightWeightPopupEnabled(false);
     }
     
-    /** 
-     * Default ctor.
-     */
     public AnimatorPanel(AnimationRenderer animator) {
     	this(animator, null);
     }
-    
-    /** 
-     * Default ctor.
-     */
+   
     public AnimatorPanel(AnimationRenderer animator, Dimension dim) {
 
         super(new BorderLayout());
@@ -125,10 +130,6 @@ public class AnimatorPanel extends JPanel {
         //invalidate();
         EventQueue.invokeLater(new Runnable() {
            public void run() {
-               /*_canvas.invalidate();
-               getParent().invalidate();
-               getParent().validate();
-               _canvas.validate();*/
                repaint();
            }
         });
@@ -143,6 +144,9 @@ public class AnimatorPanel extends JPanel {
         super.print(g);
     }
     
+    /**
+     * Example panel. Animate an example file (E short) and play a tone (D long).
+     */
     public static void main(String[] args) {
         try {
             JFrame f = new JFrame(AnimatorPanel.class.getName());
@@ -158,12 +162,8 @@ public class AnimatorPanel extends JPanel {
             
     		File file = new File("/Users/Catherine/Workspace/Maple/auditory-research-suite/datafiles/examples/vis/es_.txt");
     		
-    		AnimationParser parser = new AnimationParser();
-
-			AnimationSequence animation = parser.parseFile(file);
-			System.out.printf("total animation time for this seq = %f\n", (float)animation.getTotalAnimationTime());
+			AnimationSequence animation = AnimationParser.parseFile(file);
 			
-			//String filename = NotesEnum.D.toString() + "_" +  DurationEnum.LONG.toString() + ".wav"; // path or file name?
 			String filename = NotesEnum.D.toString().toLowerCase() + "_" +  DurationEnum.LONG.toString().toLowerCase().substring(0,1) + ".wav";
 			System.out.printf("sound clip filename = %s\n", filename);
 

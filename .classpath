@@ -2,17 +2,14 @@
 <classpath>
 	<classpathentry kind="src" path="src/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="src/java/lib/jogl/jogl.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="jar:platform:/resource/auditory-research-suite/src/java/lib/jogl/jogl-1.1.1a-docs.zip!/jogl-1.1.1-docs"/>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="auditory-research-suite/src/java/lib/jogl"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="lib" path="src/java/lib/jogl/gluegen-rt.jar">
 		<attributes>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="auditory-research-suite/src/java/lib/jogl"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="src/java/lib/jogl.jar"/>
+	<classpathentry kind="lib" path="src/java/lib/gluegen-rt.jar"/>
+	<classpathentry kind="lib" path="src/java/lib/jogl/jogl.jar"/>
 	<classpathentry kind="lib" path="src/java/lib/miglayout-4.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

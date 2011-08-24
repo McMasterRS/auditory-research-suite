@@ -1,8 +1,19 @@
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
+ * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
+ */
 package edu.mcmaster.maplelab.toj.animator;
 
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * AnimationFrame represents one frame in the animation.
+ * @author Catherine Elder <cje@datamininglab.com>
+ */
 public class AnimationFrame {
 	// each frame contains one of the rows in the data file
 
@@ -10,13 +21,11 @@ public class AnimationFrame {
 	private final double _time;
 
 	public AnimationFrame(double time, List<AnimationDot> pointList) {
-		this._time = 1000*time;					// time to animate the frame (in milliseconds)
+		this._time = 1000*time;				// time to animate the frame (in ms)
 		_pointList = pointList;
 	}
 
 	/** Provides an unmodifiable ordered list of joint locations. */
-	//create object AnimatedDot
-	// Point2d for loc, vector3d for color, ? luminence, size (double)
 	public List<AnimationDot> getJointLocations() {	
 		return Collections.unmodifiableList(_pointList);
 	}

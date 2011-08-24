@@ -116,6 +116,14 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 		return getBoolean(ConfigKeys.connectDots, true);
 	}
 	
+	public File getExpectedAudioSubDir() {
+		return new File(getDataDir(), "aud");
+	}
+	
+	public File getExpectedVisualSubDir() {
+		return new File(getDataDir(), "vis");
+	}
+	
 	public List<NotesEnum> getPitches() {
 		List<String> pitches = getStringList(ConfigKeys.pitches, "C");
 		List<NotesEnum> retval = new ArrayList<NotesEnum>();
@@ -166,7 +174,7 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 	 */
 	public Long getToneOnsetTime(String fileName) {
 		if (_audioFileMetaData == null) {
-			File dir = new File(getDataDir(), "aud");
+			File dir = getExpectedAudioSubDir();
 			File propFile = new File(dir, AUDIO_META_FILE);
 			_audioFileMetaData = loadSecondaryProps(propFile);
 		}

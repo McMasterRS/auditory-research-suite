@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
+ * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
+ */
 package edu.mcmaster.maplelab.toj;
 
 import javax.swing.JPanel;
@@ -12,9 +19,15 @@ import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.gui.*;
 import edu.mcmaster.maplelab.toj.datamodel.*;
 
+/**
+ * TOJExperiment allows the user to set up and run one TOJTrial.
+ * @author Catherine Elder <cje@datamininglab.com>
+ */
+
 public class TOJExperiment extends JPanel {
-	    public static final String EXPERIMENT_BASENAME = "TOJ";
-	    
+//	    public static final String EXPERIMENT_BASENAME = "TOJ";
+		private static final String EXPERIMENT_BASENAME = "TOJ";
+
 	    private enum VersionProps {
 			buildVersion,
 			buildDate
@@ -48,6 +61,9 @@ public class TOJExperiment extends JPanel {
 			return _buildVersion;
 		}
 		
+		public static String getEXPERIMENT_BASENAME() {
+			return EXPERIMENT_BASENAME;
+		}
 		public static String getBuildDate() {
 			return _buildDate;
 		}
@@ -103,10 +119,6 @@ public class TOJExperiment extends JPanel {
 	        loadBuildInfo(props);
 	    }
 	    
-	    
-	    /**
-	     * @param args ignored
-	     */
 	    public static void main(String[] args) {
 	    	System.setProperty("com.apple.mrj.application.apple.menu.about.name", "TOJ Experiment");
 	    	try {
@@ -135,4 +147,3 @@ public class TOJExperiment extends JPanel {
 	        }
 	    }
 	}
-

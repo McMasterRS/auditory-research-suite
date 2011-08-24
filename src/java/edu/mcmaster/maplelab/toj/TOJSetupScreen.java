@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
+ * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
+ */
 package edu.mcmaster.maplelab.toj;
 
 import java.util.prefs.Preferences;
@@ -7,7 +14,11 @@ import javax.swing.JFormattedTextField;
 import edu.mcmaster.maplelab.common.gui.SimpleSetupScreen;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
 
-
+/**
+ * A TOJ specific implementation of SimpleSetupScreen.
+ * @author Catherine Elder <cje@datamininglab.com>
+ *
+ */
 public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 	// new text fields
 	private JFormattedTextField _screenWidth;
@@ -15,7 +26,7 @@ public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 	private JFormattedTextField _dataFileName;
 	
 	public TOJSetupScreen() {
-		super(TOJExperiment.EXPERIMENT_BASENAME.replace(" ", "").toLowerCase(), true);
+		super(TOJExperiment.getEXPERIMENT_BASENAME().replace(" ", "").toLowerCase(), true);
 	}
 
 	@Override
@@ -66,5 +77,4 @@ public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 		String prefDataFileName = prefs.get(TOJSession.ConfigKeys.dataFileName.name(), "TemporalOrderJudgmentTrialData.txt");
 		_dataFileName.setValue(prefDataFileName);
 	}
-
 }
