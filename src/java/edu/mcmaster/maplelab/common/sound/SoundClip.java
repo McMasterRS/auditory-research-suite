@@ -62,9 +62,16 @@ public class SoundClip implements Playable {
     	try {
     		c = (FloatControl) _clip.getControl(FloatControl.Type.VOLUME);
     	}
-    	catch (IllegalArgumentException e) { } // no-op
+    	catch (IllegalArgumentException e) { 
+    		try {
+        		c = (FloatControl) _clip.getControl(FloatControl.Type.MASTER_GAIN);
+        	}
+        	catch (IllegalArgumentException ex) { } // no-op
+    	} 
         
-    	if (c != null) c.setValue(volume);
+    	// clip to int to avoid precision issues
+    	int val = (int) (c.getMinimum() + volume*(c.getMaximum()-c.getMinimum())); 
+    	if (c != null) c.setValue(val);
     }
 
     /**

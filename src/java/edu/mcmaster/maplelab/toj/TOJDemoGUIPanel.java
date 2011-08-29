@@ -27,10 +27,9 @@ import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.Timer;
+import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
-import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.gui.FileBrowseField;
@@ -92,8 +91,8 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 		add(_aDurations, "growx");
 		
 		add(new JLabel("Delay (ms)", 2), "gap 10");
-		_delayText = new JFormattedTextField(NumberFormat.getNumberInstance());
-		_delayText.setValue(new Float(0)); // new
+		_delayText = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		_delayText.setValue(new Long(0)); // new
 		_delayText.setColumns(2);
 		
 		add(_delayText,     "gapright 100, wrap");
@@ -157,23 +156,73 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 	  
 	@Override
 	public TOJTrial getTrial() {
-		// turn pitch, duration data into filenames
 			
 		Playable playable = SoundClip.findPlayable(_audFile.getFile().toString(), getSession().getExpectedAudioSubDir()); // TODO: fix sound clip duration
 		
 		try {
 			AnimationSequence aniSeq = AnimationParser.parseFile(_visFile.getFile());
 			Object val = _delayText.getValue();
-			Float delay = Float.valueOf(val instanceof String ? (String) val : ((Number) val).toString());
+			Long delay = Long.valueOf(val instanceof String ? (String) val : ((Number) val).toString());
 			return new TOJTrial(aniSeq, _useVideo.isSelected(), playable, delay, (Integer)_numPts.getValue(), 0.3f);
 		}
 		catch (FileNotFoundException ex) {
-			ex.printStackTrace();
+			Runnable r = new Runnable() {
+				@Override
+				public void run() {
+					boolean vis = _visFile.getFile().exists();
+					boolean aud = _audFile.getFile().exists();
+					String msg = "%s file";
+					if (aud & vis) {
+						msg = "Audio and animation files";
+					}
+					else String.format(msg, aud ? "Animation" : "Audio");
+					
+					JOptionPane.showMessageDialog(TOJDemoGUIPanel.this, 
+							msg + " could not be found.", 
+							"Missing file(s)...", 
+							JOptionPane.ERROR_MESSAGE);
+					
+				}
+			};
+			
+			boolean ran = false;
+			if (!SwingUtilities.isEventDispatchThread()) {
+				try {
+					SwingUtilities.invokeAndWait(r);
+					ran = true;
+				} 
+				catch (Exception e) {}
+			} 
+			
+			if (!ran) r.run();
 		} 
 		
 		return null;
 	}
 	
+	/**
+	 * Prepare and display the demo display window.
+	 */
+	private void prepareDemoScreen() {
+		if (_renderer == null) {
+    		JFrame testFrame = new JFrame(AnimatorPanel.class.getName());
+            testFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            
+            _renderer = new AnimationRenderer(true); // connect the dots
+        	AnimatorPanel view = new AnimatorPanel(_renderer);
+
+        	testFrame.getContentPane().removeAll();
+            testFrame.getContentPane().add(view, BorderLayout.CENTER);
+            
+            testFrame.pack();
+            testFrame.setLocationRelativeTo(null);
+            testFrame.setVisible(true);
+    	}
+	}
+	
+	/**
+	 * Class for updating file fields.
+	 */
 	private class FilePathUpdater implements ActionListener{
 
 		@Override
@@ -189,7 +238,7 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 	}
 	
 	/**
-	 * StartUpdater responds to the "start" button by triggering the animation and sound sequence.
+	 * StartUpdater responds to the "start" button by triggering the trial sequence.
 	 * @author Catherine Elder <cje@datamininglab.com>
 	 *
 	 */
@@ -197,162 +246,13 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			prepareDemoScreen();
 			
-			final TOJTrial t = getTrial();
-			//t.printDescription();
-			
-			final Playable audio = t.getPlayable();
-		
-			double l_a = t.getADuration();													// l_a = length of animation
-			double t_a = t.getAStrikeTime();												// t_a = strike time in animation
-			double l_s = audio != null ? ((SoundClip)audio).getClipDuration() : 0; 			// l_s = length of sound clip
-			double t_s = audio != null ? getSession().getToneOnsetTime(audio.name()) : 0;	// t_s = attack time in sound clip
-			
-			if ((l_a == 0) && (l_s == 0) ) {
-				JOptionPane.showMessageDialog(TOJDemoGUIPanel.this, 
-						"Audio and animation files could not be found.", 
-						"Files do not exist...", 
-						JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-			
-			//System.out.printf("total ani duration = %f, strike occurs at %f, \n " +
-			//		"total sound duration = %f, attack occurs at %f\n", (float) l_a, (float) t_a, (float) l_s, (float) t_s);
-				
-			// figure out: 	1. which stimulus starts first
-			//				2. how much to delay 2nd stimulus
-			boolean aIsFirst;
-			final double delay;
-			double offset = (double)t.getOffset();
-			//System.out.println("Time offset: " + offset);
-			
-			if (t_a > t_s - offset) {
-				// A comes first
-				aIsFirst = true;
-				delay = t_a - t_s + offset;
-			}
-			else {
-				// S comes first
-				aIsFirst = false;
-				delay = t_s - t_a - offset;
-			}
-			//System.out.printf("%s is first, delay %s by %f ms\n", aIsFirst? "A":"S", !aIsFirst? "A":"S", (float)delay);
-		
-		
-			final long currTime = System.currentTimeMillis();
-		
-
-			class AudRun implements Runnable {
-				Playable _audio;
-				double _delay;
-				AudRun (Playable aud, double delay) {
-					this._audio = aud;
-					this._delay = delay;
-				}
-				public void run() {
-					try {
-						Thread.sleep((long) _delay);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					LogContext.getLogger().info(String.format("Sound starts at time %d", System.currentTimeMillis() - currTime));
-					_audio.play();
-					LogContext.getLogger().info(String.format("Sound ends at time %d", System.currentTimeMillis() - currTime));
-					
-				}
-			}
-			
-			class AniRun implements Runnable {
-				double _delay;
-				AniRun (double delay) {
-					this._delay = delay;
-				}
-				public void run() {
-					try {
-						Thread.sleep((long) _delay);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					LogContext.getLogger().info(String.format("Animation starts at time %d", System.currentTimeMillis() - currTime));
-					testRun(t);
-					LogContext.getLogger().info(String.format("Animation ends at time %d", System.currentTimeMillis() - currTime));
-					
-				}
-			}
-			
-			ActionListener animationTrigger = new ActionListener() {
-				public void actionPerformed(ActionEvent event) {
-					LogContext.getLogger().info(String.format("Animation starts at time %d", System.currentTimeMillis() - currTime));
-					testRun(t);
-					LogContext.getLogger().info(String.format("Animation ends at time %d", System.currentTimeMillis() - currTime));
-					
-				}
-			};
-			
-			// if sound comes first, delay animation
-			if (!aIsFirst) {
-				LogContext.getLogger().info("starting sound, then animation");
-				
-				Timer aniTimer = new Timer((int) delay, animationTrigger);
-				aniTimer.setRepeats(false);
-				
-				AniRun ani = new AniRun(delay);
-				
-				AudRun aud = new AudRun(audio, 0);
-				Thread audioThread = new Thread(aud);
-
-				audioThread.start();
-				ani.run();
-			}
-			
-			// is animation comes first, delay sound
-			if (aIsFirst) {
-				
-				LogContext.getLogger().info("starting animation, then sound");
-				AniRun ani = new AniRun(0);
-				
-				AudRun aud = new AudRun(audio, delay);
-				Thread audioThread = new Thread(aud);
-
-				audioThread.start();
-				ani.run();
-			}				
+			TOJTrial t = getTrial();
+			t.preparePlayback(getSession(), _renderer);
+			t.play();
 		}
 	}
-	
-	/**
-	 * testRun renders the animation.
-	 */
-	public void testRun(TOJTrial trial) {
-
-        try {
-        	if (_renderer == null) {
-        		JFrame testFrame = new JFrame(AnimatorPanel.class.getName());
-                testFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                
-                _renderer = new AnimationRenderer(true); // connect the dots
-            	AnimatorPanel view = new AnimatorPanel(_renderer);
-
-            	testFrame.getContentPane().removeAll();
-                testFrame.getContentPane().add(view, BorderLayout.CENTER);
-                
-                testFrame.pack();
-                testFrame.setLocationRelativeTo(null);
-                testFrame.setVisible(true);
-        	}
-
-        	_renderer.setTrial(trial);
-        	_renderer.setCurrentFrame(0);
-            
-    		long currentTime = System.currentTimeMillis();
-
-    		_renderer.setStartTime(currentTime); 
-        }
-        catch (Throwable ex) {
-            ex.printStackTrace();
-        }
-	}
-	
 
 	/**
 	 * Test routine.

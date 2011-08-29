@@ -179,11 +179,10 @@ public class AnimatorPanel extends JPanel {
 			} ;
 			
             TOJTrial trial = new TOJTrial(animation, 
-					true, audio, 1f, 5, 0.3f);
+					true, audio, (long) 1, 5, 0.3f);
 
     		long currentTime = System.currentTimeMillis();
             ani.setTrial(trial);
-            ani.setCurrentFrame(0);
                
     		ani.setStartTime(currentTime); 
     		SwingUtilities.invokeLater(r);

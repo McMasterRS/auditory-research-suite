@@ -16,12 +16,18 @@ import javax.vecmath.*;
  *
  */
 public class AnimationSequence {
-// ArrayList of animation frames
-	private List<AnimationFrame> _aniFrames;
-	//private long _totalAnimationTime;
+	/** Frames. */
+	private final List<AnimationFrame> _aniFrames;
+	/** Source file name. */
+	private final String _fileName;
 	
-	public AnimationSequence(List<AnimationFrame> aniFrames) {
+	public AnimationSequence(String sourceFileName, List<AnimationFrame> aniFrames) {
+		_fileName = sourceFileName;
 		_aniFrames = aniFrames;	
+	}
+	
+	public String getSourceFileName() {
+		return _fileName;
 	}
 
 	public AnimationFrame getFrameAtIndex(int currentFrame) { 
@@ -36,13 +42,13 @@ public class AnimationSequence {
 	 * @param 
 	 * @return a new frame using interpolation. time in ms.
 	 */
-	public AnimationFrame getFrameAtTime(double time) {
+	public AnimationFrame getFrameAtTime(long time) {
 //		System.out.printf("getting frame at time %f\n", time);
 
-		if (time <= getFrameAtIndex(0).getTime()) {
+		if (time <= getFrameAtIndex(0).getTimeInMillis()) {
 			return getFrameAtIndex(0);
 		}
-		if (time >= getFrameAtIndex(getNumFrames() - 1).getTime()) {
+		if (time >= getFrameAtIndex(getNumFrames() - 1).getTimeInMillis()) {
 			return getFrameAtIndex(getNumFrames() - 1);
 		}
 		
@@ -50,7 +56,7 @@ public class AnimationSequence {
 		AnimationFrame frame1 = getFrameAtIndex(0);
 		AnimationFrame frame2 = getFrameAtIndex(1);
 		for (int i = 0; i < getNumFrames(); i++) {
-			double t = getFrameAtIndex(i).getTime();
+			double t = getFrameAtIndex(i).getTimeInMillis();
 			if (t >= time) {
 				if (t == time) {
 //					System.out.printf("animating frame %d\n", i);
@@ -64,7 +70,7 @@ public class AnimationSequence {
 				}
 			}
 		}
-		double alpha = (time - frame1.getTime()) / (frame2.getTime() - frame1.getTime());
+		double alpha = (time - frame1.getTimeInMillis()) / (frame2.getTimeInMillis() - frame1.getTimeInMillis());
 		
 		ArrayList<AnimationDot> dotList = new ArrayList<AnimationDot>();
 		
@@ -150,13 +156,13 @@ public class AnimationSequence {
 	/**
 	 * @return the totalAnimationTime
 	 */
-	public double getTotalAnimationTime() {
+	public long getTotalAnimationTime() {
 		int numFrames = _aniFrames.size();
 		if (numFrames == 0) return 0;
 		
 		AnimationFrame lastFrame = _aniFrames.get(numFrames - 1);
 		
-		return lastFrame.getTime();
+		return lastFrame.getTimeInMillis();
 	}
 	
 	/**
@@ -165,7 +171,7 @@ public class AnimationSequence {
 	 * This method assumes that the mallet head is always the first dot in the file,
 	 * 	and the strike occurs when the mallet head is at its lowest point.
 	 */
-	public double getStrikeTime() {
+	public long getStrikeTime() {
 		if (_aniFrames.size() == 0) return 0;
 		
 		AnimationFrame lowestFrame = _aniFrames.get(0);
@@ -178,6 +184,6 @@ public class AnimationSequence {
 				lowestPt = lowestFrame.getJointLocations().get(0).getLocation().y;
 			}
 		}
-		return lowestFrame.getTime();
+		return lowestFrame.getTimeInMillis();
 	}
 }

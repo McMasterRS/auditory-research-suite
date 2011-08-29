@@ -12,7 +12,6 @@
 
 package edu.mcmaster.maplelab.common.gui;
 
-import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
 import java.util.*;
@@ -68,10 +67,10 @@ public class ResponseInputs extends JPanel {
         
         setSize(300, 200);
         MigLayout layout = vertical ? 
-        		new MigLayout("insets 0, fill") : new MigLayout("insets 0, fill", "[][]", "");
+        		new MigLayout("insets 0, fill") : new MigLayout("insets 0, fill", "[]0px[]", "");
         setLayout(layout);
-        add(getTop(), vertical ? "north" : "");
-        add(getBottom());
+        add(getTop(), vertical ? "north" : "sgy, grow");
+        add(getBottom(), vertical ? "" : "sgy, grow");
     }
     
     /**
@@ -162,6 +161,24 @@ public class ResponseInputs extends JPanel {
         }
         
         return _confButtons;
+    }
+    
+    /**
+     * Set the given answer index to be the selected value.
+     */
+    public void setAnswerSelection(int index) {
+    	if (_answerButtons.size() > index) {
+    		_answerButtons.get(index).setSelected(true);
+    	}
+    }
+    
+    /**
+     * Set the given confidence index to be the selected value.
+     */
+    public void setConfidenceSelection(int index) {
+    	if (_confButtons.size() > index) {
+    		_confButtons.get(index).setSelected(true);
+    	}
     }
     
     /**

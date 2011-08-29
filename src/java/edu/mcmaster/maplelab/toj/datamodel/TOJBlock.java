@@ -3,6 +3,7 @@ package edu.mcmaster.maplelab.toj.datamodel;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 //import java.nio.file;
 
@@ -14,10 +15,12 @@ import edu.mcmaster.maplelab.toj.animator.AnimationParser;
 import edu.mcmaster.maplelab.toj.animator.AnimationSequence;
 
 public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
+	private static final float DISK_RADIUS = 0.3f;
 
 	ArrayList<TOJTrial> _trials = null;
 	
-	protected TOJBlock(TOJSession session, int blockNum, AVBlockType type) {
+	protected TOJBlock(TOJSession session, int blockNum, AVBlockType type, List<NotesEnum> pitches,
+			List<String> tones, List<String> strikes, List<Long> offsets, List<Integer> numPoints) {
 		super(session, blockNum, type);
 		
 		_trials = new ArrayList<TOJTrial>();
@@ -25,8 +28,8 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 		// create trials from session
 	
 		if (type == AVBlockType.AUDIO_VIDEO) {
-			for (NotesEnum p : session.getPitches()) {
-				for (String td : session.getToneDurations()) {
+			for (NotesEnum p : pitches) {
+				for (String td : tones) {
 					// pitch and tone duration will give filename
 					// parse file and get animation sequence
 
@@ -36,16 +39,16 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 
 					Playable audio = SoundClip.findPlayable(filename, dir);
 					
-					for (String sd : session.getStrikeDurations()) {
+					for (String sd : strikes) {
 						filename = p.toString().toLowerCase() + sd.toString().toLowerCase() + "_.txt";
 						dir = session.getExpectedVisualSubDir();
 						
 						try {
 							AnimationSequence aniSeq = AnimationParser.parseFile(new File(dir, filename));
-							for (Float so : session.getSoundOffsets()) {
+							for (Long so : offsets) {
 								// look into sound objects
-								for (int pts : session.getNumAnimationPoints()) {
-									TOJTrial trial = new TOJTrial(aniSeq, false, audio, so, pts, 0.3f);
+								for (int pts : numPoints) {
+									TOJTrial trial = new TOJTrial(aniSeq, false, audio, so, pts, DISK_RADIUS);
 									_trials.add(trial);
 								}
 							}
@@ -59,22 +62,22 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 		}
 		
 		else if (type == AVBlockType.AUDIO_ONLY) {
-			for (NotesEnum p : session.getPitches()) {
-				for (String td : session.getToneDurations()) {
+			for (NotesEnum p : pitches) {
+				for (String td : tones) {
 					
 					String filename = p.toString() + "_" +  td.toString() + ".wav"; // path or file name?
-					File dir = new File(session.getDataDir(), "aud");
+					File dir = session.getExpectedAudioSubDir();
 					
 					Playable audio = SoundClip.findPlayable(filename, dir);
 					
-					for (String sd : session.getStrikeDurations()) {
+					for (String sd : strikes) {
 						filename = p.toString() + sd.toString() + "_.txt";
-						dir = new File(session.getDataDir(), "vis");
+						dir = session.getExpectedVisualSubDir();
 						
 						try {
 							AnimationSequence aniSeq = AnimationParser.parseFile(new File(dir, filename));
 
-							TOJTrial trial = new TOJTrial(aniSeq, false, audio, 0f, 0, 0.3f);
+							TOJTrial trial = new TOJTrial(aniSeq, false, audio, (long) 0, 0, DISK_RADIUS);
 							_trials.add(trial);
 
 						}
@@ -85,18 +88,18 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 				}
 			}
 		}
-		
+		// TODO: support true video?
 		else if (type == AVBlockType.VIDEO_ONLY) {
-			for (NotesEnum p : session.getPitches()) {
+			for (NotesEnum p : pitches) {
 
-				for (String sd : session.getStrikeDurations()) {
+				for (String sd : strikes) {
 					String filename = p.toString() + sd.toString() + "_.txt";
-					File dir = new File(session.getDataDir(), "vis");
+					File dir = session.getExpectedVisualSubDir();
 
 					try {
 						AnimationSequence aniSeq = AnimationParser.parseFile(new File(dir, filename));
-						for (int pts : session.getNumAnimationPoints()) {
-							TOJTrial trial = new TOJTrial(aniSeq, false, null, 0f, pts, 0.3f); // can audio be null?
+						for (int pts : numPoints) {
+							TOJTrial trial = new TOJTrial(aniSeq, false, null, (long) 0, pts, DISK_RADIUS); // can audio be null?
 							_trials.add(trial);
 						}
 					}
@@ -105,6 +108,12 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 					}								
 				}
 			}
+		}
+		
+		if (getSession().randomizeTrials()) Collections.shuffle(_trials);
+		
+		for (int i = 0; i < _trials.size(); i++) {
+			_trials.get(i).setNum(i+1);
 		}
 	}
 

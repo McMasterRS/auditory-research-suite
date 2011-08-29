@@ -7,16 +7,19 @@
  */
 package edu.mcmaster.maplelab.toj;
 
+import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Toolkit;
+import java.awt.event.AWTEventListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.EventObject;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -34,14 +37,18 @@ import edu.mcmaster.maplelab.common.gui.InvokeOnAWTQueueRunnable;
 import edu.mcmaster.maplelab.common.gui.ResponseInputs;
 import edu.mcmaster.maplelab.common.gui.StepManager;
 import edu.mcmaster.maplelab.common.sound.Playable;
-import edu.mcmaster.maplelab.common.sound.PlayableListener;
 import edu.mcmaster.maplelab.toj.animator.AnimationRenderer;
+import edu.mcmaster.maplelab.toj.animator.AnimationSequence;
 import edu.mcmaster.maplelab.toj.animator.AnimatorPanel;
 import edu.mcmaster.maplelab.toj.datamodel.TOJBlock;
 import edu.mcmaster.maplelab.toj.datamodel.TOJResponseParameters;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
+import edu.mcmaster.maplelab.toj.datamodel.TOJTrialPlaybackListener;
 
+/**
+ * Primary trial run screen for the TOJ experiment.
+ */
 public class TOJStimulusResponseScreen extends BasicStep {
 	/**
 	 * TOJStimulusResponseScreen handles the user's response to stimulus.
@@ -77,6 +84,7 @@ public class TOJStimulusResponseScreen extends BasicStep {
 	private final boolean _isWarmup;
 	private final AnimatorPanel _aniPanel;
 	private final AnimationRenderer _renderer;
+	private final ResponseKeyListener _keyListener;
 
 	public TOJStimulusResponseScreen(StepManager steps, TOJSession session, boolean isWarmup) {
 		super(true);
@@ -85,6 +93,7 @@ public class TOJStimulusResponseScreen extends BasicStep {
 		_session = session;
 		_isWarmup = isWarmup;
 		_renderer = new AnimationRenderer(_session.connectDots());
+		_keyListener = new ResponseKeyListener();
 		
 		setTitleText(_session.getString(
             isWarmup ? ConfigKeys.warmupScreenTrialTitle : ConfigKeys.testScreenTrialTitle, 
@@ -96,14 +105,19 @@ public class TOJStimulusResponseScreen extends BasicStep {
         Dimension dim = new Dimension(_session.getScreenWidth(), _session.getScreenHeight());
         _aniPanel = new AnimatorPanel(_renderer, dim);
         
-        JPanel bottom = new JPanel(new MigLayout("insets 0, fill", "[][]", "[]"));
+        JPanel bottom = new JPanel(new MigLayout("insets 0, fill", "[]0px[]", "[]"));
         getContentPanel().add(bottom, BorderLayout.SOUTH);
         
         JPanel textItems = new JPanel(new MigLayout("insets 0, fill"));
         textItems.setBorder(BorderFactory.createTitledBorder("Status"));
         bottom.add(textItems, "sgx, grow");
         
-        _statusText = new JLabel();
+        _statusText = new JLabel() {
+        	@Override
+        	public void setText(String text) {
+        		super.setText("<html><p width=\"330\"" + text);
+        	}
+        };
         textItems.add(_statusText);
         Font f = _statusText.getFont();
         _statusText.setFont(new Font(f.getName(), Font.PLAIN, f.getSize() + 4));
@@ -117,16 +131,21 @@ public class TOJStimulusResponseScreen extends BasicStep {
         
         updateResultsText();
         
-        _response = new ResponseInputs(new TOJResponseParameters(_session), false);
-        bottom.add(_response, "sgx");
+        class TOJResponseInputs extends ResponseInputs {
+        	public TOJResponseInputs(TOJResponseParameters rp, boolean vertical) {
+        		super(rp, vertical);
+        		enableEvents(AWTEvent.KEY_EVENT_MASK);
+        	}
+        }
+        
+        _response = new TOJResponseInputs(new TOJResponseParameters(_session), false);
+        bottom.add(_response, "sgx, grow");
         
         _response.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 updateEnabledState();
             }
         });
-        
-        LogContext.getLogger().fine("* animation file: " + _session.getDataFileName());
     }
     
     /**
@@ -332,6 +351,18 @@ public class TOJStimulusResponseScreen extends BasicStep {
                     }
                 });
             	
+            	AnimationSequence as = _trial.getAnimationSequence();
+            	Playable p = _trial.getPlayable();
+            	LogContext.getLogger().fine("Trial data:");
+            	LogContext.getLogger().fine(String.format("--animation file: %s", 
+            			as != null ? as.getSourceFileName() : "n/a"));
+            	LogContext.getLogger().fine(String.format("--audio file: %s", 
+            			p != null ? p.name() : "n/a"));
+            	LogContext.getLogger().fine(String.format(
+            			"--audio offset: %s", String.valueOf(_trial.getOffset())));
+            	LogContext.getLogger().fine(String.format("--num animation points: %d", 
+            			_trial.getNumPoints()));
+            	
             	// actual delay until next trial
             	Thread.sleep(_session.getTrialDelay());
                 
@@ -365,71 +396,86 @@ public class TOJStimulusResponseScreen extends BasicStep {
      */
     private class PlaybackRunnable implements Runnable {
         private final TOJTrial _trial;
-        private long _playbackStart;
-        private int _playCount;
-        private PlayableListener _endListener = new PlayableListener() {
+        private TOJTrialPlaybackListener _listener = new TOJTrialPlaybackListener() {
 			@Override
-			public void playableEnded(EventObject e) {
-				playbackEnded();
+			public void playbackEnded() {
+				trialPlaybackDone();
 			}
         };
         
         public PlaybackRunnable(TOJTrial trial) {
             _trial = trial;
-            
-            TOJBlock block = currBlock();
-            // how many items to play (and wait to end)
-            _playCount = block.getType() == AVBlockType.AUDIO_VIDEO ? 2 : 1;
-            //_trial.printDescription();
+            _trial.addPlaybackListener(_listener);
+            _trial.preparePlayback(_session, _renderer);
         }
          
         public void run() {
             try {
-            	// TODO: start animation, add listener
-            	//       start video (handle video?), add listener
-            	if (_playCount > 1) _renderer.setTrial(_trial);
-            	
-            	Playable p = _trial.getPlayable();
-            	// TODO: may need to perform conversion on this gain value:
-            	p.setVolume(_session.getPlaybackGain());
-            	p.addListener(_endListener);
-            	_playbackStart = System.currentTimeMillis();
-                LogContext.getLogger().fine("Playback started @ " + _playbackStart);
-                if (_playCount > 1) {
-                	_renderer.setStartTime(_playbackStart);
-                }
-                // TODO: remove this
-                _playCount = 1;
-            	_trial.getPlayable().play();
+                SwingUtilities.invokeAndWait(new Runnable() {
+                	@Override
+                	public void run() {
+                		_trial.play();
+                	}
+                });
             }
             catch (Exception ex) {
                 LogContext.getLogger().log(Level.SEVERE, "Playback error", ex);
             }
         }
         
-        private synchronized void playbackEnded() {
-        	// barrier to make sure all playback has ended
-        	--_playCount;
-        	if (_playCount > 0) return;
-        	
-            try {
-            	long playbackStop = System.currentTimeMillis();
-                LogContext.getLogger().fine(String.format(
-                    "Playback ended @ %s: duration (approx) = %s milliseconds", 
-                    playbackStop,  playbackStop - _playbackStart));
-            }
-            catch (Exception ex) {
-                LogContext.getLogger().log(Level.SEVERE, "Media system error", ex);                
-            }
-            
+        private synchronized void trialPlaybackDone() {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
+                	_trial.removePlaybackListener(_listener);
                     _statusText.setText(_session.getString(ConfigKeys.enterResponseText, null));
                     setEnabled(true);
+                    boolean focusRequest = _response.requestFocusInWindow();
+                    LogContext.getLogger().fine("Result from focus request: " + focusRequest);
+                    Toolkit.getDefaultToolkit().addAWTEventListener(_keyListener, 
+                    		AWTEvent.KEY_EVENT_MASK);
                 }
             });            
         }
     }  
+    
+    /**
+     * Listener for key events corresponding to response selections.s
+     */
+    private class ResponseKeyListener implements AWTEventListener {
+		@Override
+		public void eventDispatched(AWTEvent event) {
+			switch(event.getID()) {
+		        case KeyEvent.KEY_PRESSED:
+		            int key = ((KeyEvent) event).getKeyCode();
+		            if (key == KeyEvent.VK_D) {
+		            	_response.setAnswerSelection(0);
+		            }
+		            else if (key == KeyEvent.VK_T) {
+		            	_response.setAnswerSelection(1);
+		            }
+		            else if (key == KeyEvent.VK_5 || key == KeyEvent.VK_NUMPAD5) {
+		            	_response.setConfidenceSelection(0);
+		            }
+		            else if (key == KeyEvent.VK_4 || key == KeyEvent.VK_NUMPAD4) {
+		            	_response.setConfidenceSelection(1);
+		            }
+		            else if (key == KeyEvent.VK_3 || key == KeyEvent.VK_NUMPAD3) {
+		            	_response.setConfidenceSelection(2);
+		            }
+		            else if (key == KeyEvent.VK_2 || key == KeyEvent.VK_NUMPAD2) {
+		            	_response.setConfidenceSelection(3);
+		            }
+		            else if (key == KeyEvent.VK_1 || key == KeyEvent.VK_NUMPAD1) {
+		            	_response.setConfidenceSelection(4);
+		            }
+		            updateEnabledState();
+		            break;
+		        case KeyEvent.KEY_RELEASED:
+		            return; //nothing
+			} 
+			
+		}
+    }
     
     private class StatusUpdaterRunnable implements Runnable {
         private final TOJTrial _currTrial;
@@ -450,6 +496,7 @@ public class TOJStimulusResponseScreen extends BasicStep {
             try {
                 SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
+                    	Toolkit.getDefaultToolkit().removeAWTEventListener(_keyListener);
                     	if (_session.allowResponseFeedback()) {
                     		_statusText.setText(_session.getString(wasCorrect ?
                                     ConfigKeys.accuracyCorrectText : ConfigKeys.accuracyIncorrectText, null)); 

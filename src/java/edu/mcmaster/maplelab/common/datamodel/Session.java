@@ -21,12 +21,9 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 
-import javax.swing.JLabel;
-
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.util.MathUtils;
-import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession.ConfigKeys;
 
 /**
  * Context data for the experiment session.
@@ -536,6 +533,37 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         }
         
         if(retval == null && def != null) {
+            retval = Arrays.asList(def);            
+        }
+        
+        return retval;
+    }
+    
+    /**
+     * Get property value as a list of longs
+     * 
+     * @param key property name
+     * @param def default value if property name not defined
+     * @return property value parsed as a comma delimited list of longs
+     */
+    protected final List<Long> getLongList(Enum<?> key, Long... def) {
+        List<Long> retval = null;
+        
+        Object val = getProperty(key);
+        
+        if (val instanceof String) {
+            retval = new ArrayList<Long>();
+            Scanner s = new Scanner((String)val);
+            s.useDelimiter("[\\s\\[\\(\\]\\),]+");
+            while(s.hasNextLong()) {
+                retval.add(s.nextLong());
+            }
+        }
+        else if(val instanceof Long[]) {
+            retval = Arrays.asList((Long[]) val);
+        }
+        
+        if (retval == null && def != null) {
             retval = Arrays.asList(def);            
         }
         

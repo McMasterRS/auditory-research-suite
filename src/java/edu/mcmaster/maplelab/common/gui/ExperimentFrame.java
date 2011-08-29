@@ -51,7 +51,7 @@ public abstract class ExperimentFrame
      * @param setup 
      */
     public ExperimentFrame(SimpleSetupScreen<T> setup) {
-        super("KubovyLabExperiment", selectScreenConfiguration());
+        super("Experiment", selectScreenConfiguration());
         _isFullScreen = setup.isFullScreen();
 
         Logger logger = LogContext.getLogger();
@@ -116,10 +116,10 @@ public abstract class ExperimentFrame
             }
         }        
         if (_session.isDemo()) {
-    	   this.setContentPane(_session.getExperimentDemoPanel());
+    	   setContentPane(_session.getExperimentDemoPanel());
         }
         else {
-        	this.setContentPane(createContent(_session));
+        	setContentPane(createContent(_session));
         }
         
         if(_session.isDebug()) {

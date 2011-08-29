@@ -18,10 +18,10 @@ public class AnimationFrame {
 	// each frame contains one of the rows in the data file
 
 	private List<AnimationDot> _pointList;
-	private final double _time;
+	private final long _time;
 
-	public AnimationFrame(double time, List<AnimationDot> pointList) {
-		this._time = 1000*time;				// time to animate the frame (in ms)
+	public AnimationFrame(double timeInSeconds, List<AnimationDot> pointList) {
+		_time = (long) (1000*timeInSeconds);				// time to animate the frame (in ms)
 		_pointList = pointList;
 	}
 
@@ -33,7 +33,7 @@ public class AnimationFrame {
 	/**
 	 * @return The time frame should be rendered after start of animation.
 	 */
-	public double getTime() {
+	public long getTimeInMillis() {
 		return _time;
 	}
 }

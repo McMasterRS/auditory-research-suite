@@ -216,7 +216,7 @@ public class AnimationParser {
 			}
 		}
 
-		AnimationSequence aniSeq = new AnimationSequence(frameList);
+		AnimationSequence aniSeq = new AnimationSequence(file.getName(), frameList);
 
 		return aniSeq;
 	}

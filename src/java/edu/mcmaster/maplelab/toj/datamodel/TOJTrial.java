@@ -7,9 +7,19 @@
  */
 package edu.mcmaster.maplelab.toj.datamodel;
 
+import java.util.ArrayList;
+import java.util.EventObject;
+
+import javax.swing.SwingUtilities;
+
+import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.Response;
 import edu.mcmaster.maplelab.common.datamodel.Trial;
 import edu.mcmaster.maplelab.common.sound.Playable;
+import edu.mcmaster.maplelab.common.sound.PlayableListener;
+import edu.mcmaster.maplelab.common.sound.SoundClip;
+import edu.mcmaster.maplelab.toj.animator.AnimationListener;
+import edu.mcmaster.maplelab.toj.animator.AnimationRenderer;
 import edu.mcmaster.maplelab.toj.animator.AnimationSequence;
 
 /**
@@ -20,13 +30,15 @@ public class TOJTrial extends Trial<Response> {
 	
 	private final Playable _audio;
 	private final boolean _isVideo;
-	private final float _offset;
+	private final long _offset;
 	private final int _numPoints;
 	private final float _diskRadius;
 	private final AnimationSequence _animationSequence;
+	private TrialRunner _trialRunner = null;
+	private ArrayList<TOJTrialPlaybackListener> _listeners;
 
 	public TOJTrial(AnimationSequence animationSequence, boolean isVideo, Playable audio, 
-			Float timingOffset, int animationPoints, float diskRadius) {
+			Long timingOffset, int animationPoints, float diskRadius) {
 		
 		_animationSequence = animationSequence;
 		_isVideo = isVideo;
@@ -41,7 +53,7 @@ public class TOJTrial extends Trial<Response> {
 		return _isVideo;
 	}
 	
-	public float getOffset() {
+	public long getOffset() {
 		return _offset;
 	}
 	
@@ -56,12 +68,13 @@ public class TOJTrial extends Trial<Response> {
 	@Override
 	public boolean isResponseCorrect() {
 		Response response = getResponse();
-        if(response != null) {
+        if (response != null) {
+        	// if offset==0, either is correct
             if (TOJResponseParameters.isDotFirst(response)) {
-                return getOffset() <= 0.0;
+                return getOffset() <= 0;
             }
             else {
-                return getOffset() >= 0.0;
+                return getOffset() >= 0;
             }
                 
         }
@@ -94,14 +107,230 @@ public class TOJTrial extends Trial<Response> {
 	/**
 	 * Get the total animation time.
 	 */
-	public double getADuration() {
+	public long getAnimationDuration() {
+		if (getAnimationSequence() == null) return (long) 0;
 		return getAnimationSequence().getTotalAnimationTime();
 	}
 	
 	/**
 	 * Get the time that the strike occurs (mallet head is at its lowest point).
 	 */
-	public double getAStrikeTime() {
+	public long getAnimationStrikeTime() {
+		if (getAnimationSequence() == null) return (long) 0;
 		return getAnimationSequence().getStrikeTime();
+	}
+	
+	public synchronized void preparePlayback(TOJSession session, AnimationRenderer renderer) {
+		_trialRunner = new TrialRunner(session, renderer);
+	}
+	
+	/**
+	 * Play the contained audio and/or visual items.  MUST BE CALLED ON THE EDT.
+	 */
+	public synchronized void play() {
+		if (_trialRunner == null) {
+			throw new IllegalStateException("Trial must be prepared before calling play.");
+		}
+		
+		_trialRunner.play();
+	}
+	
+	/**
+	 * Add a playback listener.
+	 */
+	public void addPlaybackListener(TOJTrialPlaybackListener listener) {
+		if (_listeners == null) _listeners = new ArrayList<TOJTrialPlaybackListener>();
+		_listeners.add(listener);
+	}
+	
+	/**
+	 * Remove a playback listener.
+	 */
+	public void removePlaybackListener(TOJTrialPlaybackListener listener) {
+		if (_listeners != null) _listeners.remove(listener);
+	}
+	
+	/**
+	 * Class for encapsulating animation and sound preparation and running.
+	 */
+	private class TrialRunner {
+		private final TOJSession _session;
+		private final AnimationRenderer _renderer;
+		private final AnimationRunnable _aniRunner;
+		private final Thread _audThread;
+		private int _playCount = 3;
+		
+		public TrialRunner(TOJSession session, AnimationRenderer renderer) {
+			_session = session;
+			_renderer = renderer;
+			
+			// gather animation and audio data
+			final Playable audio = getPlayable();
+			long aniDuration = getAnimationDuration();
+			long aniStrike = getAnimationStrikeTime();
+			long audDuration = audio != null ? ((SoundClip) audio).getClipDuration() : 0; 
+			long audStrike = audio != null ? _session.getToneOnsetTime(audio.name()) : 0;	
+			
+			// if nothing to play, return
+			if ((aniDuration == 0) && (audDuration == 0) ) {
+				_aniRunner = null;
+				_audThread = null;
+				return;
+			}
+			
+			audio.setVolume(_session.getPlaybackGain());
+			
+			_playCount = aniDuration > 0 && audDuration > 0 ? 2 : 1;
+			
+			// figure out: 	1. which stimulus starts first
+			//				2. how much to delay 2nd stimulus
+			long offset = getOffset();
+			boolean animationFirst = aniStrike > audStrike - offset;
+			long aniDelay = animationFirst ? 0 : audStrike - aniStrike - offset;
+			long audDelay = animationFirst ? aniStrike - audStrike + offset : 0;
+			
+			LogContext.getLogger().fine(String.format(
+					"Will play with animation delay = %d", (int) aniDelay));
+			LogContext.getLogger().fine(String.format(
+					"Will play with audio delay = %d", (int) audDelay));
+			
+			long currTime = System.currentTimeMillis();
+			_aniRunner = new AnimationRunnable(_renderer, aniDelay, currTime);
+			_audThread = new Thread(new AudioRunnable(audio, audDelay, currTime));
+			
+			_renderer.addAnimationListener(new AnimationListener() {
+				@Override
+				public void animationDone() {
+					markFinish(this, null);
+				}
+			});
+			
+			audio.addListener(new PlayableListener() {
+				@Override
+				public void playableEnded(EventObject e) {
+					markFinish(null, this);
+				}
+			});
+		}
+		
+		/**
+		 * Method for signaling playback end when appropriate.
+		 */
+		private synchronized void markFinish(final AnimationListener al, final PlayableListener pl) {
+			--_playCount;
+			
+			if (al != null) {
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						_renderer.removeAnimationListener(al);
+					}
+				});
+			}
+			if (pl != null) {
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						getPlayable().removeListener(pl);
+					}
+				});
+			}
+			
+			if (_playCount == 0 && _listeners != null) {
+				for (TOJTrialPlaybackListener tpl : _listeners) {
+					tpl.playbackEnded();
+				}
+				
+				_trialRunner = null;
+			}
+		}
+		
+		/**
+		 * Run the animation and sound.
+		 */
+		public void play() {
+			boolean edt = SwingUtilities.isEventDispatchThread();
+			
+			if (_audThread != null) _audThread.start();
+			if (_aniRunner != null) {
+				if (!edt) {
+					SwingUtilities.invokeLater(_aniRunner);
+				}
+				else {
+					_aniRunner.run();
+				}
+			}
+		}
+		
+		/**
+		 * Runnable for animation.
+		 */
+		private class AnimationRunnable implements Runnable {
+			private final AnimationRenderer _renderer;
+			private final long _delay;
+			private final long _refTime; // reference time
+			
+			public AnimationRunnable(AnimationRenderer renderer, 
+					long delay, long refTime) {
+				_renderer = renderer;
+				_delay = delay;
+				_refTime = refTime;
+			}
+			
+			public void run() {
+				// delay
+				try {
+					Thread.sleep(_delay);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
+				// render
+				LogContext.getLogger().fine(String.format(
+						"Animation starts at time %d", System.currentTimeMillis() - _refTime));
+				
+				_renderer.setTrial(TOJTrial.this);
+	    		_renderer.setStartTime(System.currentTimeMillis()); 
+	    		
+				LogContext.getLogger().fine(String.format(
+						"Animation ends at time %d", System.currentTimeMillis() - _refTime));
+				
+			}
+		}
+		
+		/**
+		 * Runnable for audio.
+		 */
+		private class AudioRunnable implements Runnable {
+			private final Playable _audio;
+			private final long _delay;
+			private final long _refTime; // reference time
+			
+			public AudioRunnable(Playable audio, long delay, long refTime) {
+				_audio = audio;
+				_delay = delay;
+				_refTime = refTime;
+			}
+			
+			public void run() {
+				// delay
+				try {
+					Thread.sleep(_delay);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
+				// play
+				LogContext.getLogger().fine(String.format(
+						"Sound starts at time %d", System.currentTimeMillis() - _refTime));
+				
+				_audio.play();
+				
+				LogContext.getLogger().fine(String.format(
+						"Sound ends at time %d", System.currentTimeMillis() - _refTime));
+				
+			}
+		}
+		
 	}
 }

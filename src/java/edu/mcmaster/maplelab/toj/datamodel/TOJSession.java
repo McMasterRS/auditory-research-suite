@@ -2,7 +2,9 @@ package edu.mcmaster.maplelab.toj.datamodel;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
 
@@ -10,7 +12,9 @@ import edu.mcmaster.maplelab.common.datamodel.AVBlock.AVBlockType;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
 import edu.mcmaster.maplelab.common.datamodel.Session;
 import edu.mcmaster.maplelab.common.sound.NotesEnum;
+import edu.mcmaster.maplelab.toj.TOJTrialLogger.FileType;
 import edu.mcmaster.maplelab.toj.TOJDemoGUIPanel;
+import edu.mcmaster.maplelab.toj.TOJExperiment;
 import edu.mcmaster.maplelab.toj.TOJTrialLogger;
 
 public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
@@ -25,7 +29,7 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 		screenHeight,
 		dataFileName,
 		pitches,
-		toneDurations, // DurationEnum[]
+		toneDurations, 
 		strikeDurations,
 		soundOffsets,
 		numAnimationPoints,
@@ -40,25 +44,23 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 	
 	public TOJSession(Properties props) {
 		super(props);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	public File getDebugLogFile() {
-		// TODO Auto-generated method stub
-		return null;
+		return getTrialLogger().getOutputFile(FileType.DEBUG);
 	}
 
 	@Override
 	public String getExperimentBaseName() {
-		// TODO Auto-generated method stub
-		return null;
+		return TOJExperiment.EXPERIMENT_BASENAME;
 	}
 
 	@Override
 	public String toPropertiesString() {
-		// TODO Auto-generated method stub
-		return null;
+		String retval = toPropertiesStringWithEnum(EnumSet.allOf(Session.ConfigKeys.class));
+        retval += toPropertiesStringWithEnum(EnumSet.allOf(ConfigKeys.class));
+        return retval;
 	}
 	
 	/**
@@ -147,8 +149,8 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 		return getStringList(ConfigKeys.strikeDurations, DurationEnum.NORMAL.codeString());
 	}
 	
-	public List<Float> getSoundOffsets() {
-		List<Float> offsets = getFloatList(ConfigKeys.soundOffsets, new Float[]{0f});
+	public List<Long> getSoundOffsets() {
+		List<Long> offsets = getLongList(ConfigKeys.soundOffsets, new Long[]{(long) 0});
 		return offsets;
 	}
 	
@@ -208,13 +210,16 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
         List<TOJBlock> retval = new ArrayList<TOJBlock>();
         
         if (includeAudioBlock()) {
-        	retval.add(new TOJBlock(this, 0, AVBlockType.AUDIO_ONLY));
+        	retval.add(new TOJBlock(this, 0, AVBlockType.AUDIO_ONLY, getPitches(), getToneDurations(), 
+        			getStrikeDurations(), getSoundOffsets(), getNumAnimationPoints()));
         }
         if (includeVideoBlock()) {
-        	retval.add(new TOJBlock(this, 0, AVBlockType.VIDEO_ONLY));
+        	retval.add(new TOJBlock(this, 0, AVBlockType.VIDEO_ONLY, getPitches(), getToneDurations(), 
+        			getStrikeDurations(), getSoundOffsets(), getNumAnimationPoints()));
         }
         if (includeAudioVideoBlock()) {
-        	retval.add(new TOJBlock(this, 0, AVBlockType.AUDIO_VIDEO));
+        	retval.add(new TOJBlock(this, 0, AVBlockType.AUDIO_VIDEO, getPitches(), getToneDurations(), 
+        			getStrikeDurations(), getSoundOffsets(), getNumAnimationPoints()));
         }
         
         // Shuffle and renumber blocks
@@ -226,9 +231,15 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
         return retval;
     }
 
+    /**
+     * Create a single-trial, generic audio-video block for warmup.
+     */
 	public TOJBlock generateWarmup() {
-		// TODO Auto-generated method stub
-		return null;
+		return new TOJBlock(this, 0, AVBlockType.AUDIO_VIDEO, 
+				Arrays.asList(NotesEnum.D), 
+				Arrays.asList(DurationEnum.NORMAL.codeString()), 
+				Arrays.asList(DurationEnum.NORMAL.codeString()), 
+				Arrays.asList((long) 0), Arrays.asList(5));
 	}
     
     /**

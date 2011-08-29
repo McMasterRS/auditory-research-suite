@@ -50,7 +50,7 @@ public class TOJFrame extends ExperimentFrame<TOJSession, TOJBlock, TOJTrial, TO
 
     @Override
     protected InputStream getConfigData(File dataDir) throws IOException {
-        String name = TOJExperiment.getEXPERIMENT_BASENAME().toLowerCase() + ".properties";
+        String name = TOJExperiment.EXPERIMENT_BASENAME.toLowerCase() + ".properties";
 
         File f = new File(dataDir, name);
         
@@ -65,7 +65,7 @@ public class TOJFrame extends ExperimentFrame<TOJSession, TOJBlock, TOJTrial, TO
     @Override
     protected TOJTrialLogger initTrialLogger(File dataDir) {
         try {
-            return new TOJTrialLogger(getSession(), dataDir, false, false);
+            return new TOJTrialLogger(getSession(), dataDir);
         }
         catch (IOException ex) {
             logError(ex, "Error setting up logger", ex);

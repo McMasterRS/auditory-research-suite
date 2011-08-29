@@ -23,10 +23,10 @@ public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 	// new text fields
 	private JFormattedTextField _screenWidth;
 	private JFormattedTextField _screenHeight;
-	private JFormattedTextField _dataFileName;
+	//private JFormattedTextField _dataFileName;
 	
 	public TOJSetupScreen() {
-		super(TOJExperiment.getEXPERIMENT_BASENAME().replace(" ", "").toLowerCase(), true);
+		super(TOJExperiment.EXPERIMENT_BASENAME.replace(" ", "").toLowerCase(), true);
 	}
 
 	@Override
@@ -41,17 +41,17 @@ public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 		_screenHeight.setValue(480);
 		addField(_screenHeight);
 		
-		addLabel("Data file name");
+		/*addLabel("Data file name");
 		_dataFileName = new JFormattedTextField();
 		_dataFileName.setValue("TemporalOrderJudgmentTrialData.txt");
-		addField(_dataFileName);	
+		addField(_dataFileName);*/
 	}
 
 	@Override
 	protected void applyExperimentSettings(TOJSession session) {
 		session.setScreenWidth(Integer.parseInt(_screenWidth.getText()));
 		session.setScreenHeight(Integer.parseInt(_screenHeight.getText()));
-		session.setDataFileName(_dataFileName.getText());
+		/*session.setDataFileName(_dataFileName.getText());*/
 	}
 
 	@Override
@@ -62,8 +62,8 @@ public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 		int prefScreenHeight = Integer.parseInt(_screenHeight.getText());
 		prefs.putInt(TOJSession.ConfigKeys.screenHeight.name(), prefScreenHeight);
 		
-		String prefDataFileName = _dataFileName.getText();
-		prefs.put(TOJSession.ConfigKeys.dataFileName.name(), prefDataFileName);
+		/*String prefDataFileName = _dataFileName.getText();
+		prefs.put(TOJSession.ConfigKeys.dataFileName.name(), prefDataFileName);*/
 	}
 
 	@Override
@@ -74,7 +74,7 @@ public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 		int prefScreenHeight = prefs.getInt(TOJSession.ConfigKeys.screenHeight.name(), 480);
 		_screenHeight.setValue(new Integer(prefScreenHeight));
 		
-		String prefDataFileName = prefs.get(TOJSession.ConfigKeys.dataFileName.name(), "TemporalOrderJudgmentTrialData.txt");
-		_dataFileName.setValue(prefDataFileName);
+		/*String prefDataFileName = prefs.get(TOJSession.ConfigKeys.dataFileName.name(), "TemporalOrderJudgmentTrialData.txt");
+		_dataFileName.setValue(prefDataFileName);*/
 	}
 }

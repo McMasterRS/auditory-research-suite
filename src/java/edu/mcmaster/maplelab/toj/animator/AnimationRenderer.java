@@ -16,6 +16,7 @@ import static javax.media.opengl.GL.GL_MODELVIEW;
 import static javax.media.opengl.GL.GL_PROJECTION;
 import static javax.media.opengl.GL.GL_SMOOTH;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.media.opengl.GL;
@@ -31,16 +32,17 @@ import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
  * @author Catherine Elder <cje@datamininglab.com>
  */
 public class AnimationRenderer implements GLEventListener { 
-
-	// fields
-	private boolean _connectTheDots = true;
 	private TOJTrial _trial = null;
-
-	private int _currentFrame = 0;  
+	private boolean _connectTheDots = true;
+	
 	private long _startTime;				// ms
 	private boolean _animatedOnce = false; // set to true when 1 stroke is animated
+	
+	private ArrayList<AnimationListener> _listeners;
 
-	// constructor
+	/**
+	 * Constructor.
+	 */
 	public AnimationRenderer(boolean connectTheDots) {
 		_connectTheDots = connectTheDots;
 	}
@@ -48,19 +50,7 @@ public class AnimationRenderer implements GLEventListener {
 	/** Set the current trial to animate. Doing so implies starting at the first frame. */
 	public void setTrial(TOJTrial trial) {
 		_trial = trial;
-		_currentFrame = 0;
 		_animatedOnce = false;
-	}
-
-	public void setCurrentFrame(int frameNum) {
-		if(_trial == null) {
-			throw new IllegalStateException("Must have an active trial to set the current frame.");
-		}
-		final int numFrames = _trial.getAnimationSequence().getNumFrames();
-		if(frameNum < 0 || frameNum > numFrames) {
-			throw new IllegalArgumentException(String.format("Frame number must be between 0 and %d", numFrames - 1));
-		}
-		_currentFrame = frameNum;
 	}
 
 	@Override
@@ -99,11 +89,16 @@ public class AnimationRenderer implements GLEventListener {
 
 		long currentTime = (System.currentTimeMillis() - getStartTime());			// animate only once
 		
-		if (currentTime > _trial.getAnimationSequence().getFrameAtIndex(totalFrames - 1).getTime()) {
+		if (currentTime > _trial.getAnimationSequence().getFrameAtIndex(totalFrames - 1).getTimeInMillis()) {
 			_animatedOnce = true;
 		}
 		displayFrame(gl, _trial.getAnimationSequence().getFrameAtTime(currentTime));
-	
+		
+		if (_animatedOnce && _listeners != null) {
+			for (AnimationListener al : _listeners) {
+				al.animationDone();
+			}
+		}
 	} 
 
 	// display 1 frame
@@ -168,7 +163,7 @@ public class AnimationRenderer implements GLEventListener {
 					Double rad = 1.0;
 					if (dot.getSize() != null) {
 						rad = dot.getSize();
-					gl.glScaled(rad, rad, rad);
+						gl.glScaled(rad, rad, rad);
 					}
 
 					final int slices = 32;
@@ -210,7 +205,22 @@ public class AnimationRenderer implements GLEventListener {
 		return _startTime;
 	}
 
-	public void setStartTime(long _startTime) {
-		this._startTime = _startTime;
+	public void setStartTime(long startTime) {
+		_startTime = startTime;
+	}
+	
+	/**
+	 * Add an animation listener.
+	 */
+	public void addAnimationListener(AnimationListener listener) {
+		if (_listeners == null) _listeners = new ArrayList<AnimationListener>();
+		_listeners.add(listener);
+	}
+	
+	/**
+	 * Remove an animation listener.
+	 */
+	public void removeAnimationListener(AnimationListener listener) {
+		if (_listeners != null) _listeners.remove(listener);
 	}
 }

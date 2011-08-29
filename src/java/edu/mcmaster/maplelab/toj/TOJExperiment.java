@@ -25,8 +25,7 @@ import edu.mcmaster.maplelab.toj.datamodel.*;
  */
 
 public class TOJExperiment extends JPanel {
-//	    public static final String EXPERIMENT_BASENAME = "TOJ";
-		private static final String EXPERIMENT_BASENAME = "TOJ";
+		public static final String EXPERIMENT_BASENAME = "TOJ";
 
 	    private enum VersionProps {
 			buildVersion,
@@ -46,7 +45,7 @@ public class TOJExperiment extends JPanel {
 	        
 	        add(getContent(), BorderLayout.CENTER);
 	        
-	        setPreferredSize(new Dimension(640, 480));
+	        setPreferredSize(new Dimension(720, 760));
 	    }
 	    
 	    /**
@@ -60,10 +59,7 @@ public class TOJExperiment extends JPanel {
 		public static String getBuildVersion() {
 			return _buildVersion;
 		}
-		
-		public static String getEXPERIMENT_BASENAME() {
-			return EXPERIMENT_BASENAME;
-		}
+
 		public static String getBuildDate() {
 			return _buildDate;
 		}
