@@ -50,10 +50,11 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
     private JCheckBox _demoMode;
 
     public SimpleSetupScreen(String prefsPrefix) {
-        this(prefsPrefix, false);
+        this(prefsPrefix, false, true);
     }
     
-    public SimpleSetupScreen(String prefsPrefix, boolean includeDemoModeSwitch) {
+    public SimpleSetupScreen(String prefsPrefix, boolean includeDemoModeSwitch, 
+    		boolean includeFullScreenSwitch) {
         super(new GridBagLayout());
         _prefsPrefix = prefsPrefix;
         setBorder(BorderFactory.createTitledBorder("Setup"));
@@ -62,35 +63,42 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
         _labelGBC.anchor = GridBagConstraints.EAST;
         
         _fieldGBC = new GridBagConstraints();
-        _fieldGBC.anchor = GridBagConstraints.EAST;
+        _fieldGBC.anchor = GridBagConstraints.WEST;
         _fieldGBC.gridx = 1;
         _fieldGBC.weightx = 1;
-        _fieldGBC.fill = GridBagConstraints.HORIZONTAL;
+        _fieldGBC.fill = GridBagConstraints.NONE;
         
         addLabel("RA ID:");
         _raID = new JFormattedTextField();
+        _raID.setColumns(12);
         _raID.setValue("1");
         addField(_raID);
 
         addLabel("Subject #:");
         _subject = new JFormattedTextField();
+        _subject.setColumns(12);
         _subject.setValue(new Integer(1));
         addField(_subject);
 
         addLabel("Session #:");
         _session = new JFormattedTextField();
+        _session.setColumns(12);
         _session.setValue(new Integer(1));
         addField(_session);
         
         addLabel("Data directory:");
         _dataDir = new FileBrowseField(true);
+        _fieldGBC.fill = GridBagConstraints.HORIZONTAL;
         addField(_dataDir);
+        _fieldGBC.fill = GridBagConstraints.NONE;
         
-        addLabel("Full screen:");
-        _fullScreen = new JCheckBox();
-        addField(_fullScreen);
+        if (includeFullScreenSwitch) {
+            addLabel("Full screen:");
+            _fullScreen = new JCheckBox();
+            addField(_fullScreen);
+        }
         
-        if(includeDemoModeSwitch) {
+        if (includeDemoModeSwitch) {
             addLabel("Demo mode:");
             _demoMode = new JCheckBox();
             addField(_demoMode);
@@ -164,20 +172,15 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
         if(_demoMode != null) {
             session.setDemo(_demoMode.isSelected());
         }
+        if (_fullScreen != null) {
+        	session.setFullScreen(_fullScreen.isSelected());
+        }
     }
     
     /**
      * Apply any experiment-specific settings from experiment-specific fields.
      */
     protected abstract void applyExperimentSettings(E session);
-    
-    /**
-     * Indicate if the user has elected to run the experiment in
-     * full screen mode.
-     */
-    public boolean isFullScreen() {
-        return _fullScreen.isSelected();
-    }
 
     /**
      * @return
@@ -206,7 +209,9 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
         prefs.put(Session.ConfigKeys.subject.name(), _subject.getText());
         prefs.put(Session.ConfigKeys.session.name(), _session.getText());
         prefs.put(Session.ConfigKeys.dataDir.name(), _dataDir.getFile().getAbsolutePath());
-        prefs.putBoolean(ConfigKeys.isFullScreen.name(), _fullScreen.isSelected());
+        if (_fullScreen != null) {
+        	prefs.putBoolean(ConfigKeys.isFullScreen.name(), _fullScreen.isSelected());
+        }
         if(_demoMode != null) {
             prefs.putBoolean(ConfigKeys.isDemoMode.name(), _demoMode.isSelected());
         }
@@ -262,8 +267,10 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
             
         _dataDir.setFile(new File(path));
         
-        boolean isFullScreen = prefs.getBoolean(ConfigKeys.isFullScreen.name(), false);
-        _fullScreen.setSelected(isFullScreen);
+        if (_fullScreen != null) {
+            boolean isFullScreen = prefs.getBoolean(ConfigKeys.isFullScreen.name(), false);
+            _fullScreen.setSelected(isFullScreen);
+        }
         
         if(_demoMode != null) {
             boolean isDemoMode = prefs.getBoolean(ConfigKeys.isDemoMode.name(), false);
@@ -297,7 +304,7 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
         
         d.getContentPane().add(p, BorderLayout.SOUTH);
         
-        d.setMinimumSize(new Dimension(600, 300));
+        d.setMinimumSize(new Dimension(600, 200));
         d.pack();
         d.setLocationRelativeTo(null);
         d.setVisible(true);

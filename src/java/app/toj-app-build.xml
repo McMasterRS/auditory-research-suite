@@ -23,7 +23,7 @@
 	                signature="????"
 	                stubfile="TOJExperiment"
 	                mainclass="edu.mcmaster.maplelab.toj.TOJExperiment"
-	                icon="../resources/McMaster.icns"
+	                icon="../Resources/McMaster.icns"
 	                jvmversion="1.6*"
 	                version="0.6"
 	                infostring="MapleLab TOJ Experiment, Copyright &#xa9; 2011"
@@ -38,7 +38,8 @@
     			<include name="lib/jogl.jar"/>
     			<include name="lib/gluegen-rt.jar"/>
     		</jarfileset>
-	        <resourcefilelist dir="../www/toj" files="toj.properties"/>
+	        <resourcefileset dir="../www/toj" includes="toj.properties"/>
+	        <javafileset dir="../lib/jogl" includes="*.jnilib"/>
    		</jarbundler>
 		
 		<delete dir="tmp" quiet="true" />
@@ -51,11 +52,18 @@
 		    </fileset>
 	  	</copy>
 		<copy todir="tmp">
+		    <fileset dir="../../../src/java/edu/mcmaster/maplelab/toj">
+		    	<include name="toj.properties"/>
+		    </fileset>
+	  	</copy>
+		<copy todir="tmp">
 			<fileset dir=".">
 				<include name="TOJ Experiment.app/"/>
 			</fileset>
 		</copy>
-		<zip destfile="TOJExperiment.zip" basedir="tmp" encoding="UTF-8" />
+		<zip destfile="TOJExperiment.zip" encoding="UTF-8">
+		    <zipfileset dir="tmp" filemode="755" />
+		</zip>
 		
 	</target>
 

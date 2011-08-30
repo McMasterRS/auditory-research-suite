@@ -11,6 +11,7 @@ import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.io.File;
 
@@ -21,6 +22,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
+
+import net.miginfocom.swing.MigLayout;
 
 import com.sun.opengl.util.Animator;
 
@@ -50,14 +53,8 @@ public class AnimatorPanel extends JPanel {
     }
     
     public AnimatorPanel(AnimationRenderer animator) {
-    	this(animator, null);
-    }
-   
-    public AnimatorPanel(AnimationRenderer animator, Dimension dim) {
 
-        super(new BorderLayout());
-
-        setBorder(UIManager.getDefaults().getBorder("ProgressBar.border"));
+        super(new MigLayout("insets 0, nogrid, center, fill", "center", "center"));
 
         GLCapabilities caps = new GLCapabilities();
 
@@ -70,18 +67,15 @@ public class AnimatorPanel extends JPanel {
  		trigger.setPrintExceptions(true);
  		trigger.start();
  		
-        add(_canvas, BorderLayout.CENTER);
-        if (dim != null) {
-        	setPreferredSize(dim);
-        	setMinimumSize(dim);
-        }
-        else setPreferredSize(new Dimension(640, 480));
-        
-        String osName = System.getProperty("os.name").toLowerCase();
-        if (osName.indexOf("mac") >= 0 || osName.indexOf("darwin") >= 0) {
-        	// Without this call we get a canvas width or height == 0 error.
-            _canvas.setSize(getPreferredSize());
-        }
+        add(_canvas);
+        _canvas.setPreferredSize(new Dimension(640, 480));
+    }
+    
+    /**
+     * Set the size of the animation.
+     */
+    public void setAnimationSize(Dimension dim) {
+    	_canvas.setPreferredSize(dim);
     }
     
     /**

@@ -42,6 +42,7 @@ import edu.mcmaster.maplelab.toj.animator.AnimationSequence;
 import edu.mcmaster.maplelab.toj.animator.AnimatorPanel;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
+import edu.mcmaster.maplelab.toj.datamodel.TOJTrialPlaybackListener;
 
 /**
  * This class creates a TOJDemoGUIPanel, which allows the user to run a TOJ demo without the setup screen.
@@ -50,19 +51,23 @@ import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
  */
 public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 	
-	FilePathUpdater _fUpdater = new FilePathUpdater();
-	JComboBox _pitches;
-	JComboBox _aDurations;
-	JComboBox _vDurations;
+	private FilePathUpdater _fUpdater = new FilePathUpdater();
+	private JComboBox _pitches;
+	private JComboBox _aDurations;
+	private JComboBox _vDurations;
 	
-	FileBrowseField _audFile;
-	FileBrowseField _visFile;
+	private FileBrowseField _audFile;
+	private FileBrowseField _visFile;
 	
-	JFormattedTextField _delayText;
-	JSpinner _numPts;
-	JCheckBox _useVideo;
+	private JFormattedTextField _delayText;
+	private JSpinner _numPts;
+	private JCheckBox _loop;
+	private JCheckBox _useVideo;
+	
+	private JButton _startButton;
 	
 	private AnimationRenderer _renderer;
+	private TOJTrial _currTrial;
 		
 	//read data from user entries and create a trial
 	
@@ -120,9 +125,8 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 		add(_numPts, 		"gapright 95, wrap");
 		
 		add(new JLabel("Loop"));
-		JCheckBox loopBox = new JCheckBox();
-		add(loopBox, "wrap");
-		loopBox.setEnabled(false);
+		_loop = new JCheckBox();
+		add(_loop, "wrap");
 
 		// files 
 		add(new JLabel("Files"), "split, span, gaptop 10");
@@ -149,9 +153,9 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 		add (vidFile, "span, growx");
 		vidFile.setEnabled(false);
 		
-		JButton startButton = new JButton("Start");
-		startButton.addActionListener(new StartUpdater());
-		add(startButton);
+		_startButton = new JButton("Start");
+		_startButton.addActionListener(new StartUpdater());
+		add(_startButton);
 	}
 	  
 	@Override
@@ -248,9 +252,33 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 		public void actionPerformed(ActionEvent e) {
 			prepareDemoScreen();
 			
-			TOJTrial t = getTrial();
-			t.preparePlayback(getSession(), _renderer);
-			t.play();
+			_startButton.setEnabled(false);
+			_currTrial = getTrial();
+			_currTrial.preparePlayback(getSession(), _renderer);
+			_currTrial.addPlaybackListener(new LoopListener());
+			_currTrial.play();
+		}
+	}
+	
+	private class LoopListener implements TOJTrialPlaybackListener {
+		@Override
+		public void playbackEnded() {
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					_currTrial.removePlaybackListener(LoopListener.this);
+					if (_loop.isSelected()) {
+						_currTrial = getTrial();
+						_currTrial.preparePlayback(getSession(), _renderer);
+						_currTrial.addPlaybackListener(LoopListener.this);
+						_currTrial.play();
+					}
+					else {
+						_startButton.setEnabled(true);
+					}
+				}
+			});
+			
 		}
 	}
 

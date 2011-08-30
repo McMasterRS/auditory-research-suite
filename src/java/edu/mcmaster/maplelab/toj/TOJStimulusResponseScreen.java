@@ -103,7 +103,8 @@ public class TOJStimulusResponseScreen extends BasicStep {
                 null));
         
         Dimension dim = new Dimension(_session.getScreenWidth(), _session.getScreenHeight());
-        _aniPanel = new AnimatorPanel(_renderer, dim);
+        _aniPanel = new AnimatorPanel(_renderer);
+        _aniPanel.setAnimationSize(dim);
         
         JPanel bottom = new JPanel(new MigLayout("insets 0, fill", "[]0px[]", "[]"));
         getContentPanel().add(bottom, BorderLayout.SOUTH);
@@ -112,12 +113,7 @@ public class TOJStimulusResponseScreen extends BasicStep {
         textItems.setBorder(BorderFactory.createTitledBorder("Status"));
         bottom.add(textItems, "sgx, grow");
         
-        _statusText = new JLabel() {
-        	@Override
-        	public void setText(String text) {
-        		super.setText("<html><p width=\"330\"" + text);
-        	}
-        };
+        _statusText = new JLabel();
         textItems.add(_statusText);
         Font f = _statusText.getFont();
         _statusText.setFont(new Font(f.getName(), Font.PLAIN, f.getSize() + 4));

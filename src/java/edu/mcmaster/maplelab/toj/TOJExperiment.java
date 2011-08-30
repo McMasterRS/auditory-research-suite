@@ -45,7 +45,7 @@ public class TOJExperiment extends JPanel {
 	        
 	        add(getContent(), BorderLayout.CENTER);
 	        
-	        setPreferredSize(new Dimension(720, 760));
+	        //setPreferredSize(new Dimension(720, 760));
 	    }
 	    
 	    /**
@@ -130,8 +130,9 @@ public class TOJExperiment extends JPanel {
 	    				TOJFrame f = new TOJFrame(setup);
 	    				f.setTitle(String.format("TOJ Experiment - Build %s", TOJExperiment.getBuildVersion()));
 	    				f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	    				f.setLocationRelativeTo(null);
 	    				f.pack();
+	    				if (!f.isDemo()) f.setSize(800, 800);
+	    				f.setLocationRelativeTo(null);
 	    				f.setVisible(true);
 	    			}
 	    		});

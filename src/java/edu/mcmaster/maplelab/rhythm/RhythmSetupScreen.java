@@ -24,13 +24,14 @@ public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> {
 	private JFormattedTextField _midiDev;
 
 	public RhythmSetupScreen() {
-		super(RhythmExperiment.EXPERIMENT_BASENAME.replace(" ", "").toLowerCase(), false);
+		super(RhythmExperiment.EXPERIMENT_BASENAME.replace(" ", "").toLowerCase(), false, true);
 	}
 
 	@Override
 	protected void addExperimentFields() {
 		addLabel("<html><p align=right>Tap Source (MIDI <br>Device #):");
 		_midiDev = new JFormattedTextField();
+		_midiDev.setColumns(12);
 		_midiDev.setValue(new Integer(0));
 		addField(_midiDev);    
 		

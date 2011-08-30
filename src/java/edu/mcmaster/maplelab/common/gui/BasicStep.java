@@ -60,7 +60,6 @@ public abstract class BasicStep extends JPanel {
         _title.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         _title.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
         setLayout(new BorderLayout());
-        setSize(300, 200);
         if(_showPrevNext) {
             add(getPrevNextButtons(), java.awt.BorderLayout.SOUTH);
         }
@@ -76,6 +75,15 @@ public abstract class BasicStep extends JPanel {
                 onVisible();
             }
         });      
+    }
+    
+    public ExperimentFrame<?, ?, ?, ?> getParentFrame() {
+    	Container c = getParent();
+    	while (!(c instanceof ExperimentFrame<?, ?, ?, ?>)) {
+    		if (c == null) return null;
+    		c = c.getParent();
+    	}
+    	return (ExperimentFrame<?, ?, ?, ?>) c;
     }
     
     /**
@@ -205,7 +213,6 @@ public abstract class BasicStep extends JPanel {
             _instructions.setEditable(false);
             _instructions.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
             _instructions.addHyperlinkListener(new HyperlinkHandler());
-            _instructions.setMinimumSize(new Dimension(600, 300));
         }
         return _instructions;
     }

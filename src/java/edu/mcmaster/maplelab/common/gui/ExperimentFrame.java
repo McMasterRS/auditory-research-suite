@@ -44,7 +44,7 @@ public abstract class ExperimentFrame
     
     private T _session;
     private DebugConsole _console;
-    private final boolean _isFullScreen;
+    private boolean _isFullScreen;
     
     /**
      * This is the default constructor
@@ -52,7 +52,6 @@ public abstract class ExperimentFrame
      */
     public ExperimentFrame(SimpleSetupScreen<T> setup) {
         super("Experiment", selectScreenConfiguration());
-        _isFullScreen = setup.isFullScreen();
 
         Logger logger = LogContext.getLogger();
         logger.setLevel(Level.WARNING);
@@ -62,6 +61,7 @@ public abstract class ExperimentFrame
         
         _session = createSession(props);
         setup.applySettings(_session);
+        _isFullScreen = _session.isFullScreen() && !_session.isDemo();
 
         final DefaultExceptionHandler exHandler = new DefaultExceptionHandler(_session.isDebug());
         
@@ -115,11 +115,12 @@ public abstract class ExperimentFrame
                 logger.warning(ex.toString());
             }
         }        
+        Container c = createContent(_session); // MUST be called!s
         if (_session.isDemo()) {
     	   setContentPane(_session.getExperimentDemoPanel());
         }
         else {
-        	setContentPane(createContent(_session));
+        	setContentPane(c);
         }
         
         if(_session.isDebug()) {
@@ -156,6 +157,10 @@ public abstract class ExperimentFrame
         if(!_isFullScreen) {
             super.pack();
         }
+    }
+    
+    public boolean isDemo() {
+    	return _session.isDemo();
     }
     
     private static void setFullScreen(final Window win, boolean state, final Dimension size) {

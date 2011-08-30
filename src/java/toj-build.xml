@@ -28,8 +28,8 @@
     <patternset id="toj.classes">
 	    <include name="edu/mcmaster/maplelab/toj/*.class" />
 	    <include name="edu/mcmaster/maplelab/toj/**/*.class" />
-        <include name="edu/mcmaster/maplelab/toj/**/*.png" />
-        <include name="edu/mcmaster/maplelab/toj/**/*.properties" />  
+        <include name="edu/mcmaster/maplelab/toj/**/*.png" />  
+        <include name="edu/mcmaster/maplelab/toj/*.properties" />  
     </patternset>
 	
 	<path id="used.jars.path">

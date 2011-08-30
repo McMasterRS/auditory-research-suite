@@ -59,6 +59,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         trialDelay,
         debug,
         demo,
+        fullScreen,
         defaultFontSize,
         buildVersion,
         buildDate,
@@ -331,6 +332,21 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      public void setDemo(boolean state) {
          setProperty(ConfigKeys.demo, Boolean.valueOf(state));
      }
+     
+     /**
+      * Determine if the experiment should be run in full screen.
+      */
+     public boolean isFullScreen() {
+    	 return getBoolean(ConfigKeys.fullScreen, false);
+     }
+     
+     /**
+      * Override the full screen mode setting in config file.
+      */
+     public void setFullScreen(boolean state) {
+         setProperty(ConfigKeys.fullScreen, Boolean.valueOf(state));
+     }
+     
      /**
       * get ExperimentDemoPanel
       * @return
