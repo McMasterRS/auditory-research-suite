@@ -29,7 +29,9 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 		screenHeight,
 		dataFileName,
 		pitches,
-		toneDurations, 
+		frequencies,
+		spectrums,
+		envelopeDurations,
 		strikeDurations,
 		soundOffsets,
 		numAnimationPoints,
@@ -141,8 +143,16 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 		return retval;
 	}
 	
-	public List<String> getToneDurations() {
-		return getStringList(ConfigKeys.strikeDurations, DurationEnum.NORMAL.codeString());
+	public List<String> getFrequencies() {
+		return getStringList(ConfigKeys.frequencies, "330Hz");
+	}
+	
+	public List<String> getSpectrums() {
+		return getStringList(ConfigKeys.spectrums, "Puretone");
+	}
+	
+	public List<String> getEnvelopeDurations() {
+		return getStringList(ConfigKeys.envelopeDurations, "Flat-360ms");
 	}
 	
 	public List<String> getStrikeDurations() {
@@ -210,16 +220,19 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
         List<TOJBlock> retval = new ArrayList<TOJBlock>();
         
         if (includeAudioBlock()) {
-        	retval.add(new TOJBlock(this, 0, AVBlockType.AUDIO_ONLY, getPitches(), getToneDurations(), 
-        			getStrikeDurations(), getSoundOffsets(), getNumAnimationPoints()));
+        	retval.add(new TOJBlock(this, 0, AVBlockType.AUDIO_ONLY, getStrikeDurations(), getPitches(), 
+        			getFrequencies(), getSpectrums(), getEnvelopeDurations(), getSoundOffsets(), 
+        			getNumAnimationPoints()));
         }
         if (includeVideoBlock()) {
-        	retval.add(new TOJBlock(this, 0, AVBlockType.VIDEO_ONLY, getPitches(), getToneDurations(), 
-        			getStrikeDurations(), getSoundOffsets(), getNumAnimationPoints()));
+        	retval.add(new TOJBlock(this, 0, AVBlockType.VIDEO_ONLY, getStrikeDurations(), getPitches(), 
+        			getFrequencies(), getSpectrums(), getEnvelopeDurations(), getSoundOffsets(), 
+        			getNumAnimationPoints()));
         }
         if (includeAudioVideoBlock()) {
-        	retval.add(new TOJBlock(this, 0, AVBlockType.AUDIO_VIDEO, getPitches(), getToneDurations(), 
-        			getStrikeDurations(), getSoundOffsets(), getNumAnimationPoints()));
+        	retval.add(new TOJBlock(this, 0, AVBlockType.AUDIO_VIDEO, getStrikeDurations(), getPitches(), 
+        			getFrequencies(), getSpectrums(), getEnvelopeDurations(), getSoundOffsets(), 
+        			getNumAnimationPoints()));
         }
         
         // Shuffle and renumber blocks
@@ -236,10 +249,13 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
      */
 	public TOJBlock generateWarmup() {
 		return new TOJBlock(this, 0, AVBlockType.AUDIO_VIDEO, 
+				Arrays.asList(DurationEnum.NORMAL.codeString()), 
 				Arrays.asList(NotesEnum.D), 
-				Arrays.asList(DurationEnum.NORMAL.codeString()), 
-				Arrays.asList(DurationEnum.NORMAL.codeString()), 
-				Arrays.asList((long) 0), Arrays.asList(5));
+				Arrays.asList("330Hz"),
+				Arrays.asList("Puretone"),
+				Arrays.asList("Flat-360ms"),
+				Arrays.asList((long) 0), 
+				Arrays.asList(5));
 	}
     
     /**

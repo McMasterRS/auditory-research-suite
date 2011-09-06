@@ -56,6 +56,13 @@ public class SoundClip implements Playable {
         return _name;
     }
     
+    /**
+     * Get the underlying clip object.
+     */
+    private Clip getClip() {
+    	return _clip;
+    }
+    
     @Override
     public void setVolume(float volume) {
     	FloatControl c = null;
@@ -68,10 +75,21 @@ public class SoundClip implements Playable {
         	}
         	catch (IllegalArgumentException ex) { } // no-op
     	} 
-        
-    	// clip to int to avoid precision issues
-    	int val = (int) (c.getMinimum() + volume*(c.getMaximum()-c.getMinimum())); 
+    	
+    	float val = c.getMinimum() + volume*(c.getMaximum()-c.getMinimum()); 
+    	val = val - (val % c.getPrecision());
     	if (c != null) c.setValue(val);
+    }
+    
+    @Override
+    public void setMute(boolean mute) {
+    	BooleanControl b = null;
+    	try {
+    		b = (BooleanControl) _clip.getControl(BooleanControl.Type.MUTE);
+    	}
+    	catch (IllegalArgumentException e) { } // no-op
+        
+    	if (b != null) b.setValue(mute);
     }
 
     /**
@@ -81,10 +99,14 @@ public class SoundClip implements Playable {
      * @return translated Playable type.
      */
     public static Playable findPlayable(String filename, File directory) {
-    	return findPlayable(filename, directory, -1);
+    	return findPlayable(filename, directory, 1.0f);
     }
     
-    public static Playable findPlayable(String filename, File directory, int desiredDur) {
+    public static Playable findPlayable(String filename, File directory, float volume) {
+    	return findPlayable(filename, directory, -1, volume);
+    }
+    
+    public static Playable findPlayable(String filename, File directory, int desiredDur, float volume) {
         Playable p = _soundCache.get(filename);
         if (p == null) {
             if (filename != null) {
@@ -110,7 +132,13 @@ public class SoundClip implements Playable {
                     if (desiredDur > 0) {
                         ((SoundClip) p).setDesiredDuration(desiredDur);
                     }
+                    
+                    // don't change the volume unless necessary
+                    if (Float.compare(1.0f, volume) != 0) p.setVolume(volume);
+                    
                     _soundCache.put(filename, p);
+                    
+                    //(new Thread(new SoundPreparer((SoundClip) p))).start();
                 }
             }
         }
@@ -130,5 +158,28 @@ public class SoundClip implements Playable {
 	@Override
 	public void removeListener(PlayableListener listener) {
 		_clip.removeLineListener(listener);
+	}
+	
+	/**
+	 * Class that plays a sound clip once silently at load time . Intended to avoid 
+	 * initialization "pop" on first play.  This is a bit of a hack and somewhat 
+	 * imperfect - it would be better to find another way to deal w/ this issue.  
+	 * Using this method, there is still a large "pop" before the first trial, 
+	 * but no more for individual sound files played during a trial.
+	 */
+	private static class SoundPreparer implements Runnable {
+		private final SoundClip _soundClip;
+
+		public SoundPreparer(SoundClip clip) {
+			_soundClip = clip;
+		}
+		
+		@Override
+		public void run() {
+			_soundClip.setMute(true);
+			_soundClip.play();
+			_soundClip.setMute(false);
+		}
+		
 	}
 }

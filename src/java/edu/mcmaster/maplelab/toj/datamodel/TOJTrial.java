@@ -36,6 +36,10 @@ public class TOJTrial extends Trial<Response> {
 	private final AnimationSequence _animationSequence;
 	private TrialRunner _trialRunner = null;
 	private ArrayList<TOJTrialPlaybackListener> _listeners;
+	private Long _animationStart = null;
+	private Long _audioStart = null;
+	private Long _animationStrike = null;
+	private Long _audioTone = null;
 
 	public TOJTrial(AnimationSequence animationSequence, boolean isVideo, Playable audio, 
 			Long timingOffset, int animationPoints, float diskRadius) {
@@ -61,6 +65,20 @@ public class TOJTrial extends Trial<Response> {
 		return _numPoints;
 	}
 	
+	/**
+	 * Get the approximate animation start time during the last run of this trial, if available.
+	 */
+	public Long getLastAnimationStart() {
+		return _animationStart;
+	}
+	
+	/**
+	 * Get the approximate audio start time during the last run of this trial, if available.
+	 */
+	public Long getLastAudioStart() {
+		return _audioStart;
+	}
+	
 	public AnimationSequence getAnimationSequence() {
 		return _animationSequence;
 	}
@@ -71,10 +89,10 @@ public class TOJTrial extends Trial<Response> {
         if (response != null) {
         	// if offset==0, either is correct
             if (TOJResponseParameters.isDotFirst(response)) {
-                return getOffset() <= 0;
+                return getOffset() >= 0;
             }
             else {
-                return getOffset() >= 0;
+                return getOffset() <= 0;
             }
                 
         }
@@ -95,11 +113,11 @@ public class TOJTrial extends Trial<Response> {
 	/** 
 	 * Get a human-readable string description of TOJTrial
 	 */
-	public void printDescription() {
+	public String getDescription() {
 		String frames = (_animationSequence != null ? 
 				String.valueOf(_animationSequence.getNumFrames()) : "N/A") + " frames";
 		String audio = _audio != null ? _audio.name() : "N/A";
-		System.out.printf("TOJTrial:	%s, isVideo: %b, " +
+		return String.format("TOJTrial:	%s, isVideo: %b, " +
 				"Playable name: %s, timingOffset: %f, animationPoints: %d, diskRadius: %f\n",
 				frames, _isVideo, audio, _offset, _numPoints, _diskRadius);
 	}
@@ -116,8 +134,17 @@ public class TOJTrial extends Trial<Response> {
 	 * Get the time that the strike occurs (mallet head is at its lowest point).
 	 */
 	public long getAnimationStrikeTime() {
-		if (getAnimationSequence() == null) return (long) 0;
-		return getAnimationSequence().getStrikeTime();
+		if (_animationStrike == null) {
+			_animationStrike = _animationSequence != null ? _animationSequence.getStrikeTime() : 0;
+		}
+		return _animationStrike;
+	}
+	
+	/**
+	 * Get the time the tone occurs (tone onset delay).
+	 */
+	public long getAudioToneOnset() {
+		return _audioTone != null ? _audioTone : 0;
 	}
 	
 	public synchronized void preparePlayback(TOJSession session, AnimationRenderer renderer) {
@@ -163,13 +190,15 @@ public class TOJTrial extends Trial<Response> {
 		public TrialRunner(TOJSession session, AnimationRenderer renderer) {
 			_session = session;
 			_renderer = renderer;
+			_animationStart = null;
+			_audioStart = null;
 			
 			// gather animation and audio data
 			final Playable audio = getPlayable();
 			long aniDuration = getAnimationDuration();
 			long aniStrike = getAnimationStrikeTime();
 			long audDuration = audio != null ? ((SoundClip) audio).getClipDuration() : 0; 
-			long audStrike = audio != null ? _session.getToneOnsetTime(audio.name()) : 0;	
+			_audioTone = audio != null ? _session.getToneOnsetTime(audio.name()) : 0;	
 			
 			// if nothing to play, return
 			if ((aniDuration == 0) && (audDuration == 0) ) {
@@ -178,17 +207,17 @@ public class TOJTrial extends Trial<Response> {
 				return;
 			}
 			
-			audio.setVolume(_session.getPlaybackGain());
-			
 			_playCount = aniDuration > 0 && audDuration > 0 ? 2 : 1;
 			
 			// figure out: 	1. which stimulus starts first
 			//				2. how much to delay 2nd stimulus
 			long offset = getOffset();
-			boolean animationFirst = aniStrike > audStrike - offset;
-			long aniDelay = animationFirst ? 0 : audStrike - aniStrike - offset;
-			long audDelay = animationFirst ? aniStrike - audStrike + offset : 0;
+			boolean animationFirst = aniStrike > _audioTone - offset;
+			long aniDelay = animationFirst ? 0 : _audioTone - aniStrike - offset;
+			long audDelay = animationFirst ? aniStrike - _audioTone + offset : 0;
 			
+			LogContext.getLogger().fine(String.format(
+					"Calculated events: audio tone delay=%d, animation strike delay=%d", _audioTone, aniStrike));
 			LogContext.getLogger().fine(String.format(
 					"Will play with animation delay = %d", (int) aniDelay));
 			LogContext.getLogger().fine(String.format(
@@ -196,8 +225,6 @@ public class TOJTrial extends Trial<Response> {
 			
 			long currTime = System.currentTimeMillis();
 			_aniRunner = new AnimationRunnable(_renderer, aniDelay, currTime);
-			_audThread = new Thread(new AudioRunnable(audio, audDelay, currTime));
-			
 			_renderer.addAnimationListener(new AnimationListener() {
 				@Override
 				public void animationDone() {
@@ -205,12 +232,16 @@ public class TOJTrial extends Trial<Response> {
 				}
 			});
 			
-			audio.addListener(new PlayableListener() {
-				@Override
-				public void playableEnded(EventObject e) {
-					markFinish(null, this);
-				}
-			});
+			if (audio != null) {
+				_audThread = new Thread(new AudioRunnable(audio, audDelay, currTime));
+				audio.addListener(new PlayableListener() {
+					@Override
+					public void playableEnded(EventObject e) {
+						markFinish(null, this);
+					}
+				});
+			}
+			else _audThread = null;
 		}
 		
 		/**
@@ -290,7 +321,7 @@ public class TOJTrial extends Trial<Response> {
 						"Animation starts at time %d", System.currentTimeMillis() - _refTime));
 				
 				_renderer.setTrial(TOJTrial.this);
-	    		_renderer.setStartTime(System.currentTimeMillis()); 
+	    		_renderer.setStartTime(_animationStart = System.currentTimeMillis()); 
 	    		
 				LogContext.getLogger().fine(String.format(
 						"Animation ends at time %d", System.currentTimeMillis() - _refTime));
@@ -324,6 +355,7 @@ public class TOJTrial extends Trial<Response> {
 				LogContext.getLogger().fine(String.format(
 						"Sound starts at time %d", System.currentTimeMillis() - _refTime));
 				
+				_audioStart = System.currentTimeMillis();
 				_audio.play();
 				
 				LogContext.getLogger().fine(String.format(

@@ -654,7 +654,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      * @param def default value if property name not defeined
      * @return property value parsed as a comma delimited list of integers
      */
-    protected final List<String> getStringList(Enum<?> key, String... def) {
+    public final List<String> getStringList(Enum<?> key, String... def) {
         return getStringList(key.name(), def);
     }
     
@@ -673,7 +673,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         if(val instanceof String) {
             retval = new ArrayList<String>();
             Scanner s = new Scanner((String)val);
-            s.useDelimiter("[, \t]");
+            s.useDelimiter("[,\\s\\t]+");
             while(s.hasNext()) {
                 retval.add(s.next());
             }

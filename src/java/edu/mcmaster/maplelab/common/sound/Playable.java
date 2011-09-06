@@ -43,6 +43,11 @@ public interface Playable {
     void setVolume(float volume);
     
     /**
+     * Set the mute state.
+     */
+    void setMute(boolean mute);
+    
+    /**
      * Add a PlayableListener to this.
      */
     void addListener(PlayableListener listener);

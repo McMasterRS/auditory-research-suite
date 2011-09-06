@@ -6,8 +6,6 @@ import java.util.Collections;
 
 /**
  * This class is a dynamic replacement for the old, hard-coded ConfidenceRatingEnum.
- * The class must be initialized (initialize(Session session)) to populate
- * its values.
  * 
  * @author <a href="mailto:ben.guseman@mseedsoft.com">Ben Guseman</a>
  */
@@ -35,8 +33,7 @@ public class ConfidenceLevel {
 			levels.add(new ConfidenceLevel(counter, description));
 		}
 		
-		// Reverse the order, if required - this is a linear-time operation,
-		// but the number of confidence levels should realistically stay < 10
+		// Reverse the order, if required
 		boolean reverse = Boolean.valueOf(
 				session.getString(Keys.confidenceOrderHighToLow, "true"));
 		if (reverse && levels.size() > 1) Collections.reverse(levels);

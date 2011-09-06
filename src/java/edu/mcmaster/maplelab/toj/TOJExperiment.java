@@ -131,8 +131,14 @@ public class TOJExperiment extends JPanel {
 	    				f.setTitle(String.format("TOJ Experiment - Build %s", TOJExperiment.getBuildVersion()));
 	    				f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	    				f.pack();
-	    				if (!f.isDemo()) f.setSize(800, 800);
-	    				f.setLocationRelativeTo(null);
+    					f.setLocationRelativeTo(null);
+	    				if (!f.isDemo()) {
+	    					f.setSize(800, 800);
+	    				}
+	    				else {
+	    					// adjust the window left to make room for the animation window
+	    					f.setLocation(f.getLocation().x - 300, f.getLocation().y);
+	    				}
 	    				f.setVisible(true);
 	    			}
 	    		});

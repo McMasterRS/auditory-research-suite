@@ -22,6 +22,6 @@ public enum DurationEnum {
     }
     
     public String codeString() {
-    	return name().substring(0, 1);
+    	return name().substring(0, 1).toLowerCase();
     }
 }

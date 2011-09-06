@@ -9,7 +9,7 @@
 package edu.mcmaster.maplelab.toj;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -23,6 +23,7 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerModel;
@@ -53,11 +54,14 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 	
 	private FilePathUpdater _fUpdater = new FilePathUpdater();
 	private JComboBox _pitches;
-	private JComboBox _aDurations;
 	private JComboBox _vDurations;
+	private JComboBox _frequency;
+	private JComboBox _spectrum;
+	private JComboBox _envDuration;
 	
 	private FileBrowseField _audFile;
 	private FileBrowseField _visFile;
+	private FileBrowseField _vidFile;
 	
 	private JFormattedTextField _delayText;
 	private JSpinner _numPts;
@@ -73,96 +77,105 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 	
 	public TOJDemoGUIPanel(TOJSession session) {
 		super(session);
-		setLayout(new MigLayout("", "[right]"));
-
-		setPreferredSize(new Dimension(640, 480));
+		setLayout(new MigLayout("", "[][]30px[][]30px[][]30px[][]", ""));
 
 		// auditory info
-		add(new JLabel("Auditory"),  "split, span, gaptop 10");
-		add(new JSeparator(),       "growx, wrap, gaptop 10");
+		add(new JLabel("Auditory"), "split, span, gaptop 10");
+		add(new JSeparator(), "growx, wrap, gaptop 10");
+		
+		_frequency = new JComboBox(new String[]{"330Hz"});
+		_frequency.setSelectedIndex(0);
+		_frequency.addActionListener(_fUpdater);
+
+		add(new JLabel("Frequency"), "right");
+		add(_frequency, "left, growx");
+		
+		_spectrum = new JComboBox(new String[]{"Puretone"});
+		_spectrum.setSelectedIndex(0);
+		_spectrum.addActionListener(_fUpdater);
+
+		add(new JLabel("Spectrum"), "right");
+		add(_spectrum, "left, growx");
+		
+		_envDuration = new JComboBox(new String[]{"Flat-228ms", "Flat-360ms",
+				"Flat-580ms", "Perc-400ms", "Perc-600ms", "Perc-1075ms"});
+		_envDuration.setSelectedIndex(0);
+		_envDuration.addActionListener(_fUpdater);
+
+		add(new JLabel("Envelope & Duration"), "right");
+		add(_envDuration, "left, growx");
+		
+		add(new JLabel("Delay (ms)", 2), "right");
+		_delayText = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		_delayText.setValue(new Long(0)); // new
+		_delayText.setColumns(2);
+		
+		add(_delayText, "left, wrap");
+		
+		// visual info
+		add(new JLabel("Visual"), "split, span, gaptop 10");
+		add(new JSeparator(), "growx, wrap, gaptop 10");
 
 		_pitches = new JComboBox(NotesEnum.values());
 		_pitches.setSelectedItem(NotesEnum.D);
 	    _pitches.addActionListener(_fUpdater);
 	     
-	    add(new JLabel("Pitch"),  "gap 10");
-		add(_pitches, "growx");
-		
-		_aDurations = new JComboBox(DurationEnum.values());
-		_aDurations.setSelectedItem(DurationEnum.LONG);
-		_aDurations.addActionListener(_fUpdater);
-		
-		add(new JLabel("Duration"),  "gap 10");
-		add(_aDurations, "growx");
-		
-		add(new JLabel("Delay (ms)", 2), "gap 10");
-		_delayText = new JFormattedTextField(NumberFormat.getIntegerInstance());
-		_delayText.setValue(new Long(0)); // new
-		_delayText.setColumns(2);
-		
-		add(_delayText,     "gapright 100, wrap");
-		
-		// visual info
-		add(new JLabel("Visual"),	"split, span, gaptop 10");
-		add(new JSeparator(),       "growx, wrap, gaptop 10");
-		
-		add(new JLabel("Use Video"), "gap 10");
-		_useVideo = new JCheckBox();
-		_useVideo.setEnabled(false);
-		add(_useVideo);
-		_useVideo.setEnabled(false);
+	    add(new JLabel("Pitch"), "right");
+		add(_pitches, "left, growx");
 	
 		_vDurations = new JComboBox(DurationEnum.values());
 		_vDurations.setSelectedItem(DurationEnum.NORMAL);
 		_vDurations.addActionListener(_fUpdater);
 		
-		add(new JLabel("Duration"),  "gap 10");
-		add(_vDurations, "growx");
+		add(new JLabel("Duration"), "right");
+		add(_vDurations, "left, growx");
 		
-		add (new JLabel("Number of points"), "gap 10");
-		SpinnerModel model = new SpinnerNumberModel(6, 1, 10, 1);
+		add (new JLabel("Number of dots"), "right");
+		SpinnerModel model = new SpinnerNumberModel(6, 1, 20, 1);
 		_numPts = new JSpinner(model);
-		add(_numPts, 		"gapright 95, wrap");
+		add(_numPts, "left, wrap");
 		
-		add(new JLabel("Loop"));
+		add(new JLabel("Loop"), "right");
 		_loop = new JCheckBox();
-		add(_loop, "wrap");
+		add(_loop, "left");
+		
+		add(new JLabel("Use Video"), "right");
+		_useVideo = new JCheckBox();
+		_useVideo.setEnabled(false);
+		add(_useVideo, "left, wrap");
+		_useVideo.setEnabled(false);
 
 		// files 
 		add(new JLabel("Files"), "split, span, gaptop 10");
-		add(new JSeparator(),    "growx, wrap, gaptop 10");
+		add(new JSeparator(), "growx, wrap, gaptop 10");
 		
 		add(new JLabel("Audio File"));
 		_audFile = new FileBrowseField(false);
-		String audFileName = new String(_pitches.getSelectedItem().toString().toLowerCase() +"_" + _aDurations.getSelectedItem().toString().toLowerCase().charAt(0) + ".wav");
-		File audDir = new File(session.getExpectedAudioSubDir(), audFileName);
-		_audFile.setFile(audDir);
-		add (_audFile, "span, growx");
+		add(_audFile, "span, growx");
 		
 		add(new JLabel("Visual File"));
 		_visFile = new FileBrowseField(false);
-		String visFileName = new String(_pitches.getSelectedItem().toString().toLowerCase() + _vDurations.getSelectedItem().toString().toLowerCase().charAt(0) + "_.txt"); 
-		File visDir = new File(session.getExpectedVisualSubDir(), visFileName);
-		_visFile.setFile(visDir);
-		add (_visFile, "span, growx");
+		add(_visFile, "span, growx");
 		
 		add(new JLabel("Video File"));
-		FileBrowseField vidFile = new FileBrowseField(false);
-		File vidDir = new File("");				 //TODO: get video file
-		vidFile.setFile(vidDir);
-		add (vidFile, "span, growx");
-		vidFile.setEnabled(false);
+		_vidFile = new FileBrowseField(false);
+		add(_vidFile, "span, growx");
+		_vidFile.setEnabled(false);
 		
+		JPanel p = new JPanel(new MigLayout("insets 0, fill"));
 		_startButton = new JButton("Start");
 		_startButton.addActionListener(new StartUpdater());
-		add(_startButton);
+		p.add(_startButton, "center");
+		add(p, "span, center, growx");
+		
+		_fUpdater.update();
 	}
 	  
 	@Override
 	public TOJTrial getTrial() {
 			
-		Playable playable = SoundClip.findPlayable(_audFile.getFile().toString(), getSession().getExpectedAudioSubDir()); // TODO: fix sound clip duration
-		
+		Playable playable = SoundClip.findPlayable(_audFile.getFile().toString(), 
+				getSession().getExpectedAudioSubDir(), getSession().getPlaybackGain());
 		try {
 			AnimationSequence aniSeq = AnimationParser.parseFile(_visFile.getFile());
 			Object val = _delayText.getValue();
@@ -219,7 +232,8 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
             testFrame.getContentPane().add(view, BorderLayout.CENTER);
             
             testFrame.pack();
-            testFrame.setLocationRelativeTo(null);
+            Window w = getParentWindow();
+            testFrame.setLocation(w.getLocation().x + w.getWidth(), w.getLocation().y);
             testFrame.setVisible(true);
     	}
 	}
@@ -231,13 +245,22 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			String audFileName = new String(_pitches.getSelectedItem().toString().toLowerCase() +"_" + _aDurations.getSelectedItem().toString().toLowerCase().charAt(0) + ".wav");
-			File audDir = new File(getSession().getExpectedAudioSubDir(), audFileName);
-			_audFile.setFile(audDir);
+			update();
+		}
+		
+		public void update() {
+			String file = _frequency.getSelectedItem() + "-" +
+							_spectrum.getSelectedItem() + "-" +
+							_envDuration.getSelectedItem() + ".wav";
+			_audFile.setFile(new File(getSession().getExpectedAudioSubDir(), file));
 
-			String visFileName = new String(_pitches.getSelectedItem().toString().toLowerCase() + _vDurations.getSelectedItem().toString().toLowerCase().charAt(0) + "_.txt"); 
-			File visDir = new File(getSession().getExpectedVisualSubDir(), visFileName);
-			_visFile.setFile(visDir);
+			file = _pitches.getSelectedItem().toString().toLowerCase() + 
+						((DurationEnum) _vDurations.getSelectedItem()).codeString() + 
+						"_.txt";
+			_visFile.setFile(new File(getSession().getExpectedVisualSubDir(), file));
+			
+			/*File vidDir = new File("");				 //TODO: get video file
+			_vidFile.setFile(vidDir);*/
 		}
 	}
 	

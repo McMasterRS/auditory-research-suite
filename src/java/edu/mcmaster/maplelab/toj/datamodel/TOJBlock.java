@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 //import java.nio.file;
 
+import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.AVBlock;
 import edu.mcmaster.maplelab.common.sound.NotesEnum;
 import edu.mcmaster.maplelab.common.sound.Playable;
@@ -19,8 +20,10 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 
 	ArrayList<TOJTrial> _trials = null;
 	
-	protected TOJBlock(TOJSession session, int blockNum, AVBlockType type, List<NotesEnum> pitches,
-			List<String> tones, List<String> strikes, List<Long> offsets, List<Integer> numPoints) {
+	protected TOJBlock(TOJSession session, int blockNum, AVBlockType type, List<String> strikes, 
+			List<NotesEnum> pitches, List<String> frequencies, List<String> spectrums, 
+			List<String> envDurations, List<Long> offsets, List<Integer> numPoints) {
+		
 		super(session, blockNum, type);
 		
 		_trials = new ArrayList<TOJTrial>();
@@ -28,61 +31,52 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 		// create trials from session
 	
 		if (type == AVBlockType.AUDIO_VIDEO) {
-			for (NotesEnum p : pitches) {
-				for (String td : tones) {
-					// pitch and tone duration will give filename
-					// parse file and get animation sequence
-
-					String filename = p.toString().toLowerCase() + "_" +  td.toString().toLowerCase() + ".wav"; // path or file name?
+			for (String strikeDur : strikes) {
+				for (NotesEnum pitch : pitches) {
+					String filename = pitch.toString().toLowerCase() + strikeDur.toLowerCase() + "_.txt";
+					File dir = session.getExpectedVisualSubDir();
+					AnimationSequence aniSeq = null;
+					try {
+						aniSeq = AnimationParser.parseFile(new File(dir, filename));
+					}
+					catch (FileNotFoundException fne) {
+						LogContext.getLogger().warning(String.format("Animation file %s not found.", filename));
+					}
 					
-					File dir = session.getExpectedAudioSubDir();
-
-					Playable audio = SoundClip.findPlayable(filename, dir);
-					
-					for (String sd : strikes) {
-						filename = p.toString().toLowerCase() + sd.toString().toLowerCase() + "_.txt";
-						dir = session.getExpectedVisualSubDir();
-						
-						try {
-							AnimationSequence aniSeq = AnimationParser.parseFile(new File(dir, filename));
-							for (Long so : offsets) {
-								// look into sound objects
-								for (int pts : numPoints) {
-									TOJTrial trial = new TOJTrial(aniSeq, false, audio, so, pts, DISK_RADIUS);
-									_trials.add(trial);
+					for (String freq : frequencies) {
+						for (String spec : spectrums) {
+							for (String envDur : envDurations) {
+								filename = String.format("%s-%s-%s.wav", freq, spec, envDur);
+								dir = session.getExpectedAudioSubDir();
+								Playable audio = SoundClip.findPlayable(filename, dir, session.getPlaybackGain());
+								
+								for (Long so : offsets) {
+									// look into sound objects
+									for (int pts : numPoints) {
+										TOJTrial trial = new TOJTrial(aniSeq, false, audio, so, pts, DISK_RADIUS);
+										_trials.add(trial);
+									}
 								}
 							}
 						}
-						catch (FileNotFoundException ex) {
-							ex.printStackTrace();
-						}								
 					}
 				}
 			}
 		}
-		
 		else if (type == AVBlockType.AUDIO_ONLY) {
-			for (NotesEnum p : pitches) {
-				for (String td : tones) {
-					
-					String filename = p.toString() + "_" +  td.toString() + ".wav"; // path or file name?
-					File dir = session.getExpectedAudioSubDir();
-					
-					Playable audio = SoundClip.findPlayable(filename, dir);
-					
-					for (String sd : strikes) {
-						filename = p.toString() + sd.toString() + "_.txt";
-						dir = session.getExpectedVisualSubDir();
+			for (String freq : frequencies) {
+				for (String spec : spectrums) {
+					for (String envDur : envDurations) {
+						String filename = String.format("%s-%s-%s.wav", freq, spec, envDur);
+						File dir = session.getExpectedAudioSubDir();
+						Playable audio = SoundClip.findPlayable(filename, dir, session.getPlaybackGain());
 						
-						try {
-							AnimationSequence aniSeq = AnimationParser.parseFile(new File(dir, filename));
-
-							TOJTrial trial = new TOJTrial(aniSeq, false, audio, (long) 0, 0, DISK_RADIUS);
-							_trials.add(trial);
-
-						}
-						catch (FileNotFoundException ex) {
-							ex.printStackTrace();
+						for (Long so : offsets) {
+							// look into sound objects
+							for (int pts : numPoints) {
+								TOJTrial trial = new TOJTrial(null, false, audio, so, pts, DISK_RADIUS);
+								_trials.add(trial);
+							}
 						}
 					}
 				}
@@ -90,26 +84,30 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 		}
 		// TODO: support true video?
 		else if (type == AVBlockType.VIDEO_ONLY) {
-			for (NotesEnum p : pitches) {
-
-				for (String sd : strikes) {
-					String filename = p.toString() + sd.toString() + "_.txt";
+			for (String strikeDur : strikes) {
+				for (NotesEnum pitch : pitches) {
+					String filename = pitch.toString().toLowerCase() + strikeDur.toLowerCase() + "_.txt";
 					File dir = session.getExpectedVisualSubDir();
-
+					AnimationSequence aniSeq = null;
 					try {
-						AnimationSequence aniSeq = AnimationParser.parseFile(new File(dir, filename));
+						aniSeq = AnimationParser.parseFile(new File(dir, filename));
+					}
+					catch (FileNotFoundException fne) {
+						LogContext.getLogger().warning(String.format("Animation file %s not found.", filename));
+					}
+					
+					for (Long so : offsets) {
+						// look into sound objects
 						for (int pts : numPoints) {
-							TOJTrial trial = new TOJTrial(aniSeq, false, null, (long) 0, pts, DISK_RADIUS); // can audio be null?
+							TOJTrial trial = new TOJTrial(aniSeq, false, null, so, pts, DISK_RADIUS);
 							_trials.add(trial);
 						}
 					}
-					catch (FileNotFoundException ex) {
-						ex.printStackTrace();
-					}								
 				}
 			}
 		}
 		
+		// randomize and number trials
 		if (getSession().randomizeTrials()) Collections.shuffle(_trials);
 		
 		for (int i = 0; i < _trials.size(); i++) {
