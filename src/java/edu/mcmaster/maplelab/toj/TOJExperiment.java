@@ -32,8 +32,8 @@ public class TOJExperiment extends JPanel {
 			buildDate
 		}
 		
-		private static String _buildVersion;
-		private static String _buildDate;
+		private static String _buildVersion = null;
+		private static String _buildDate = null;
 		private final TOJSession _session;
 	    private JPanel _contentCard;
 
@@ -52,6 +52,7 @@ public class TOJExperiment extends JPanel {
 	     * Load build information from the given properties.
 	     */
 		private static void loadBuildInfo(Properties props) {
+	        if (props.isEmpty()) return;
 			_buildVersion = props.getProperty(VersionProps.buildVersion.name(), "-1");
 			_buildDate = props.getProperty(VersionProps.buildDate.name(), "00000000");
 		}
@@ -90,15 +91,17 @@ public class TOJExperiment extends JPanel {
 	    /**
 	     * Initialize build information.
 	     */
-	    protected void initializeBuildInfo(File dataDir) throws IOException {
+	    protected static void initializeBuildInfo(File dataDir) throws IOException {
+	    	if (_buildDate != null && _buildVersion != null) return;
+	    	
 	    	String name = EXPERIMENT_BASENAME.toLowerCase() + ".version.properties";
-	        File f = new File(dataDir, name);
+	        File f = dataDir != null ? new File(dataDir, name) : null;
 	        InputStream is = null;
-	        if (f.exists()) {
+	        if (f != null && f.exists()) {
 	            is = new FileInputStream(f);            
 	        }
 	        else {
-	            is = getClass().getResourceAsStream(name);
+	            is = TOJExperiment.class.getResourceAsStream(name);
 	        }
 	        
 	        Properties props = new Properties();
@@ -131,12 +134,14 @@ public class TOJExperiment extends JPanel {
 	    				f.setTitle(String.format("TOJ Experiment - Build %s", TOJExperiment.getBuildVersion()));
 	    				f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	    				f.pack();
-    					f.setLocationRelativeTo(null);
-	    				if (!f.isDemo()) {
-	    					f.setSize(800, 800);
-	    				}
+    					if (!f.isDemo()) {
+	    					f.setExperimentSize(800, 800);
+	    					f.setLocationRelativeTo(null);
+		    			}
 	    				else {
-	    					// adjust the window left to make room for the animation window
+	    					// center window first
+	    					f.setLocationRelativeTo(null);
+		    				// adjust the window left to make room for the animation window
 	    					f.setLocation(f.getLocation().x - 300, f.getLocation().y);
 	    				}
 	    				f.setVisible(true);

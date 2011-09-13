@@ -13,7 +13,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.regex.MatchResult;
@@ -32,10 +34,16 @@ public class AnimationParser {
 	private static final String COLOR_DATA_KEY = "colorData";
 	private static final String SIZE_DATA_KEY = "sizeData";
 	private static final String LUMINANCE_DATA_KEY = "luminanceData";
+	
+	private static Map<String, AnimationSequence> _animationCache = new HashMap<String, AnimationSequence>();
 
 	public static AnimationSequence parseFile(File file) throws FileNotFoundException {
 		// method accepts a file  and returns AnimationSequence
 		// assign frames from file contents
+		
+		String filename = file.getName();
+		AnimationSequence retval = _animationCache.get(filename);
+		if (retval != null) return retval;
 
 		BufferedReader reader = null;
 
@@ -58,6 +66,7 @@ public class AnimationParser {
 				// parse data keys
 				if (!scanner.hasNextFloat()){					// skip over time data (first column)
 					String property = scanner.next();
+					if (property.startsWith("#")) continue;
 					if (property.contains(SIZE_DATA_KEY)) {
 						try {
 							String val = property.substring(property.indexOf("=") + 1);
@@ -216,7 +225,8 @@ public class AnimationParser {
 			}
 		}
 
-		AnimationSequence aniSeq = new AnimationSequence(file.getName(), frameList);
+		AnimationSequence aniSeq = new AnimationSequence(filename, frameList);
+		_animationCache.put(filename, aniSeq);
 
 		return aniSeq;
 	}

@@ -306,6 +306,7 @@ public class TOJTrial extends Trial<Response> {
 				_renderer = renderer;
 				_delay = delay;
 				_refTime = refTime;
+				_renderer.setTrial(TOJTrial.this);
 			}
 			
 			public void run() {
@@ -320,7 +321,6 @@ public class TOJTrial extends Trial<Response> {
 				LogContext.getLogger().fine(String.format(
 						"Animation starts at time %d", System.currentTimeMillis() - _refTime));
 				
-				_renderer.setTrial(TOJTrial.this);
 	    		_renderer.setStartTime(_animationStart = System.currentTimeMillis()); 
 	    		
 				LogContext.getLogger().fine(String.format(

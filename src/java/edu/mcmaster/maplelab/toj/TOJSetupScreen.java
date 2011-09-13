@@ -7,9 +7,8 @@
  */
 package edu.mcmaster.maplelab.toj;
 
+import java.io.IOException;
 import java.util.prefs.Preferences;
-
-import javax.swing.JFormattedTextField;
 
 import edu.mcmaster.maplelab.common.gui.SimpleSetupScreen;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
@@ -23,6 +22,10 @@ public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 	
 	public TOJSetupScreen() {
 		super(TOJExperiment.EXPERIMENT_BASENAME.replace(" ", "").toLowerCase(), true, false);
+		try {
+			TOJExperiment.initializeBuildInfo(null);
+		} 
+		catch (IOException e) { }
 	}
 
 	@Override
@@ -39,5 +42,10 @@ public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 
 	@Override
 	protected void loadExperimentPrefs(Preferences prefs) {
+	}
+
+	@Override
+	protected String getTitlePrefix() {
+		return String.format("TOJ Experiment - Build %s", TOJExperiment.getBuildVersion());
 	}
 }

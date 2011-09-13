@@ -56,13 +56,6 @@ public class SoundClip implements Playable {
         return _name;
     }
     
-    /**
-     * Get the underlying clip object.
-     */
-    private Clip getClip() {
-    	return _clip;
-    }
-    
     @Override
     public void setVolume(float volume) {
     	FloatControl c = null;
@@ -161,7 +154,7 @@ public class SoundClip implements Playable {
 	}
 	
 	/**
-	 * Class that plays a sound clip once silently at load time . Intended to avoid 
+	 * Class that plays a sound clip once silently at load time. Intended to avoid 
 	 * initialization "pop" on first play.  This is a bit of a hack and somewhat 
 	 * imperfect - it would be better to find another way to deal w/ this issue.  
 	 * Using this method, there is still a large "pop" before the first trial, 

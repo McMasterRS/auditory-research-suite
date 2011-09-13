@@ -126,6 +126,11 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
     }
     
     /**
+     * Get a title prefix specific to the experiment.
+     */
+    protected abstract String getTitlePrefix();
+    
+    /**
      * Method (in conjunction with {@link #addField(JComponent)}) for
      * adding form controls to the setup screen. This should be called
      * first, then {@link #addField(JComponent)}. 
@@ -284,7 +289,8 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
      * Display the screen in a dialog, blocking until OK pressed.
      */
     public void display() {
-        final JDialog d = new JDialog((Frame)null, "Experiment Setup", true);
+        final JDialog d = new JDialog((Frame)null, true);
+        d.setTitle(getTitlePrefix() + " - Setup");
         d.getContentPane().add(this);
         
         // TODO: refactor into CloseButton

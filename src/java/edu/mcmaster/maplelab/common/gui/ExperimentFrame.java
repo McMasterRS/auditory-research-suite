@@ -19,6 +19,9 @@ import java.util.logging.Logger;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import net.miginfocom.swing.MigLayout;
 
 import edu.mcmaster.maplelab.common.*;
 import edu.mcmaster.maplelab.common.datamodel.*;
@@ -45,6 +48,7 @@ public abstract class ExperimentFrame
     private T _session;
     private DebugConsole _console;
     private boolean _isFullScreen;
+    private Container _rootContainer;
     
     /**
      * This is the default constructor
@@ -98,7 +102,7 @@ public abstract class ExperimentFrame
             // If the console sits on a different monitor and we are in full screen mode,
             // then attempt to make the console full screen too.
             if(_isFullScreen && this.getGraphicsConfiguration() != _console.getGraphicsConfiguration()) {
-                setFullScreen(_console, true, null);
+            	setFullScreen(_console, true, null, getFullScreenBackGround(), true);
             }
             else {
                 _console.setVisible(true);
@@ -115,9 +119,9 @@ public abstract class ExperimentFrame
                 logger.warning(ex.toString());
             }
         }        
-        Container c = createContent(_session); // MUST be called!s
+        Container c = createContent(_session); // MUST be called!
         if (_session.isDemo()) {
-    	   setContentPane(_session.getExperimentDemoPanel());
+        	setContentPane(_session.getExperimentDemoPanel());
         }
         else {
         	setContentPane(c);
@@ -131,9 +135,21 @@ public abstract class ExperimentFrame
        
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
-        if(_isFullScreen) {
-            setFullScreen(this, true, null /*new Dimension(1024, 768)*/);
+        if (_isFullScreen) {
+        	_rootContainer = getContentPane();
+            setFullScreen(this, true, null, getFullScreenBackGround(), false);
         }
+        else {
+        	_rootContainer = this;
+        }
+    }
+    
+    /**
+     * Set the experiment view size.
+     */
+    public void setExperimentSize(int width, int height) {
+    	_rootContainer.setSize(width, height);
+    	_rootContainer.setPreferredSize(new Dimension(width, height));
     }
     
     /**
@@ -159,11 +175,26 @@ public abstract class ExperimentFrame
         }
     }
     
+    public boolean isFullScreen() {
+    	return _isFullScreen;
+    }
+    
     public boolean isDemo() {
     	return _session.isDemo();
     }
     
-    private static void setFullScreen(final Window win, boolean state, final Dimension size) {
+    /**
+     * 
+     * @param win window to make fullscreen
+     * @param state fullscreen state
+     * @param size "fullscreen" size
+     * @param background background color for area w/ no content
+     * @param expandContents expand the contents to fill the entire screen (rather than 
+     * 						 using just the initial size of the contents)
+     */
+    private static void setFullScreen(final Window win, boolean state, final Dimension size, 
+    		Color background, boolean expandContents) {
+    	
         GraphicsConfiguration config = win.getGraphicsConfiguration();
         
         boolean hasFullScreen = false;
@@ -176,6 +207,16 @@ public abstract class ExperimentFrame
             JFrame f = (JFrame) win;
             f.setUndecorated(state && hasFullScreen);
             f.setResizable(!(state && hasFullScreen));
+            
+            if (!expandContents) {
+                // set an intermediate panel as the content pane so that
+                // we can control background color and size
+                Container c = f.getContentPane();
+                JPanel p = new JPanel(new MigLayout("insets 0, fill", "[center]", "[center]"));
+                p.setBackground(background);
+                f.setContentPane(p);
+                p.add(c);
+            }
         }
         
         if (hasFullScreen) {
@@ -192,7 +233,7 @@ public abstract class ExperimentFrame
               bounds = new Rectangle(bounds.x, bounds.y, size.width, size.height);
             }
             
-            win.setBounds(bounds);
+            win.setBounds(config.getBounds());
             win.validate();
         } 
     }
@@ -240,6 +281,11 @@ public abstract class ExperimentFrame
      * @return Container to add to applet.
      */
     protected abstract Container createContent(T session);
+    
+    /**
+     * Get the background color in fullscreen mode.
+     */
+    protected abstract Color getFullScreenBackGround();
 
     /**
      * Delegate for creating a new session.

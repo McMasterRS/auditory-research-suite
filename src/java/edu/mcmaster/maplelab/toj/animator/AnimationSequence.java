@@ -6,6 +6,7 @@
  * See LICENSE.TXT that came with this file.
  */
 package edu.mcmaster.maplelab.toj.animator;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 import javax.vecmath.*;
@@ -16,14 +17,20 @@ import javax.vecmath.*;
  *
  */
 public class AnimationSequence {
+	/** Animation extents buffer (each of the 4 sides). */
+	private static final float EXTENT_BUFFER = 0.75f;
 	/** Frames. */
 	private final List<AnimationFrame> _aniFrames;
 	/** Source file name. */
 	private final String _fileName;
+	/** Cached values. */
+	private AnimationFrame _lowestFrame = null;
+	private Rectangle2D.Float _extent = null;
 	
 	public AnimationSequence(String sourceFileName, List<AnimationFrame> aniFrames) {
 		_fileName = sourceFileName;
 		_aniFrames = aniFrames;	
+		calculateExtents();
 	}
 	
 	public String getSourceFileName() {
@@ -166,24 +173,82 @@ public class AnimationSequence {
 	}
 	
 	/**
-	 * 
-	 * @return the time stamp of the frame at which the strike occurs.
-	 * This method assumes that the mallet head is always the first dot in the file,
-	 * 	and the strike occurs when the mallet head is at its lowest point.
+	 * Get the time stamp of the frame at which the strike occurs.
 	 */
 	public long getStrikeTime() {
-		if (_aniFrames.size() == 0) return 0;
+		if (_lowestFrame == null) calculateExtents();
+		return _lowestFrame != null ? _lowestFrame.getTimeInMillis() : 0;
+	}
+	
+	/**
+	 * Get the extent (bounds) of the animation sequence.  IMPORTANT: The
+	 * (x,y) coords of the returned rectangle correspond to the LOWER LEFT
+	 * corner of the rectangle.
+	 */
+	public Rectangle2D.Float getExtents() {
+		if (_extent == null) calculateExtents();
+		return _extent != null ? 
+				new Rectangle2D.Float(_extent.x, _extent.y, _extent.width, _extent.height) : null;
+	}
+	
+	/**
+	 * Calculate the extent (bounds) of the animation sequence, and
+	 * the lowest location/frame of the mallet head, assumed to be the
+	 * "strike" of the mallet.  The mallet head is assumed to be the 
+	 * first dot.
+	 */
+	private void calculateExtents() {
+		if (_aniFrames.size() == 0) return;
 		
-		AnimationFrame lowestFrame = _aniFrames.get(0);
-		double	lowestPt = lowestFrame.getJointLocations().get(0).getLocation().y;
+		_extent = new Rectangle2D.Float(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, 
+				Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY);
 		
-		for (AnimationFrame frame: _aniFrames) {
-			AnimationDot malletDot = frame.getJointLocations().get(0);
-			if (malletDot.getLocation().y < lowestPt) {
-				lowestFrame = frame;
-				lowestPt = lowestFrame.getJointLocations().get(0).getLocation().y;
+		for (AnimationFrame frame : _aniFrames) {
+			List<AnimationDot> dots = frame.getJointLocations();
+			for (int i = 0; i < dots.size(); i++) {
+				AnimationDot dot = dots.get(i);
+				Point2d loc = dot.getLocation();
+				if (loc == null) continue;
+				
+				if (loc.x < _extent.x) {
+					_extent.x = (float) loc.x;
+				}
+				if (loc.y < _extent.y) {
+					// only consider first dot for lowest frame
+					if (i == 0) _lowestFrame = frame;
+					_extent.y = (float) loc.y;
+				}
+				if (loc.x > _extent.width) {
+					_extent.width = (float) loc.x;
+				}
+				if (loc.y > _extent.height) {
+					_extent.height = (float) loc.y;
+				}
 			}
 		}
-		return lowestFrame.getTimeInMillis();
+		
+		// width and height initially store absolute coordinates,
+		// but they should be relative values
+		_extent.width = _extent.width - _extent.x;
+		_extent.height = _extent.height - _extent.y;
+		
+		// make the rectangle square by choosing max
+		// of the two dimensions and re-centering
+		if (_extent.width > _extent.height) {
+			float halfDiff = (_extent.width - _extent.height) * .5f;
+			_extent.height = _extent.width;
+			_extent.y -= halfDiff;
+		}
+		else {
+			float halfDiff = (_extent.height - _extent.width) * .5f;
+			_extent.width = _extent.height;
+			_extent.x -= halfDiff;
+		}
+		
+		// add buffers and re-center
+		_extent.width += 2*EXTENT_BUFFER;
+		_extent.height += 2*EXTENT_BUFFER;
+		_extent.x -= EXTENT_BUFFER;
+		_extent.y -= EXTENT_BUFFER;
 	}
 }

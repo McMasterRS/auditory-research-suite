@@ -11,7 +11,6 @@ import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.io.File;
 
@@ -21,7 +20,6 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
-import javax.swing.UIManager;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -104,39 +102,6 @@ public class AnimatorPanel extends JPanel {
         	ex.printStackTrace();
         }
     } 
-
-    /**     
-     * {@inheritDoc} 
-     * @see java.awt.Component#repaint()
-     */
-    @Override
-    public void repaint() {
-        super.repaint();
-        // Force a repaint on GLCanvas.
-        if(_canvas != null) {
-            // NB: canvas might be null during component instantiation due
-            // to some brain dead code in swing.
-            _canvas.repaint();
-        }
-    }
-
-    public void repaintLater() {
-        //invalidate();
-        EventQueue.invokeLater(new Runnable() {
-           public void run() {
-               repaint();
-           }
-        });
-    }
-    
-    /**
-     * Overridden to provide appropriate printing behavior.
-     */
-    @Override
-    public void print(Graphics g) {
-        _canvas.display();
-        super.print(g);
-    }
     
     /**
      * Example panel. Animate an example file (E short) and play a tone (D long).

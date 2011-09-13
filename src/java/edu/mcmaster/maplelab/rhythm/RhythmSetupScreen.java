@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.prefs.Preferences;
 
 import javax.swing.JButton;
@@ -25,6 +26,10 @@ public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> {
 
 	public RhythmSetupScreen() {
 		super(RhythmExperiment.EXPERIMENT_BASENAME.replace(" ", "").toLowerCase(), false, true);
+		try {
+			RhythmExperiment.initializeBuildInfo(null);
+		}
+		catch (IOException e) { }
 	}
 
 	@Override
@@ -66,6 +71,11 @@ public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> {
 	protected void loadExperimentPrefs(Preferences prefs) {
 		int midiDevID = prefs.getInt(RhythmSession.ConfigKeys.midiDevID.name(), 0);
 		_midiDev.setValue(new Integer(midiDevID));
+	}
+
+	@Override
+	protected String getTitlePrefix() {
+		return String.format("Rhythm Experiment - Build %s", RhythmExperiment.getBuildVersion());
 	}
 
 }

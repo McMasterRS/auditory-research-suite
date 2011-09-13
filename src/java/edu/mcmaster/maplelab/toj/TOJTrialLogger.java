@@ -121,12 +121,11 @@ public class TOJTrialLogger extends FileTrialLogger<TOJSession, TOJBlock, TOJTri
         fields.put(Keys.visFile, as != null ? as.getSourceFileName() : "N/A");
         fields.put(Keys.audioOffset, String.valueOf(trial.getOffset()));
         fields.put(Keys.numDots, String.valueOf(trial.getNumPoints()));
-        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss:SSS a");
         Long start = trial.getLastAnimationStart();
-        fields.put(Keys.animationStart, start != null ? sdf.format(new Date(start)) : "N/A");
+        fields.put(Keys.animationStart, start != null ? String.valueOf(start) : "N/A");
         fields.put(Keys.aniStrikeDelay, String.valueOf(trial.getAnimationStrikeTime()));
         start = trial.getLastAudioStart();
-        fields.put(Keys.audioStart, start != null ? sdf.format(new Date(start)) : "N/A");
+        fields.put(Keys.audioStart, start != null ? String.valueOf(start) : "N/A");
         fields.put(Keys.audioToneDelay, String.valueOf(trial.getAudioToneOnset()));
         
         // Output subject response information

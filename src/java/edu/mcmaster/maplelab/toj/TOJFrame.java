@@ -7,6 +7,7 @@
  */
 package edu.mcmaster.maplelab.toj;
 
+import java.awt.Color;
 import java.awt.Container;
 import java.io.File;
 import java.io.FileInputStream;
@@ -72,5 +73,9 @@ public class TOJFrame extends ExperimentFrame<TOJSession, TOJBlock, TOJTrial, TO
             return null;
         }  
     }
+	@Override
+	protected Color getFullScreenBackGround() {
+		return Color.DARK_GRAY;
+	}
     
 }

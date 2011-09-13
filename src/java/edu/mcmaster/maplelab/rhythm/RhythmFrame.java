@@ -1,5 +1,6 @@
 package edu.mcmaster.maplelab.rhythm;
 
+import java.awt.Color;
 import java.awt.Container;
 import java.io.File;
 import java.io.FileInputStream;
@@ -66,5 +67,10 @@ public class RhythmFrame extends ExperimentFrame<RhythmSession, RhythmBlock, Rhy
             return null;
         }  
     }
+
+	@Override
+	protected Color getFullScreenBackGround() {
+		return Color.DARK_GRAY;
+	}
     
 };

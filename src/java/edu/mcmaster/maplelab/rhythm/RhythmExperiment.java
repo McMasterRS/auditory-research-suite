@@ -21,6 +21,7 @@ import javax.swing.*;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.gui.*;
 import edu.mcmaster.maplelab.rhythm.datamodel.*;
+import edu.mcmaster.maplelab.toj.TOJExperiment;
 
 /**
  * Main container and configuration for the rhythm experiment.
@@ -94,15 +95,17 @@ public class RhythmExperiment extends JPanel {
     /**
      * Initialize build information.
      */
-    protected void initializeBuildInfo(File dataDir) throws IOException {
+    protected static void initializeBuildInfo(File dataDir) throws IOException {
+    	if (_buildDate != null && _buildVersion != null) return;
+    	
     	String name = EXPERIMENT_BASENAME.toLowerCase() + ".version.properties";
-        File f = new File(dataDir, name);
+        File f = dataDir != null ? new File(dataDir, name) : null;
         InputStream is = null;
-        if (f.exists()) {
+        if (f != null && f.exists()) {
             is = new FileInputStream(f);            
         }
         else {
-            is = getClass().getResourceAsStream(name);
+            is = TOJExperiment.class.getResourceAsStream(name);
         }
         
         Properties props = new Properties();
