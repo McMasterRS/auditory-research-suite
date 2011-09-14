@@ -89,14 +89,14 @@ public class AnimationRenderer implements GLEventListener {
 		gl.glMatrixMode(GL_MODELVIEW);                          // Make sure we're in the correct matrix mode
 		gl.glLoadIdentity();                                    //Reset The View
 		
-		int totalFrames = _trial.getAnimationSequence().getNumFrames();
-
+		AnimationSequence as = _trial.getAnimationSequence();
+		int totalFrames = as.getNumFrames();
 		long currentTime = (System.currentTimeMillis() - getStartTime());			// animate only once
 		
-		if (currentTime > _trial.getAnimationSequence().getFrameAtIndex(totalFrames - 1).getTimeInMillis()) {
+		if (currentTime > as.getFrameAtIndex(totalFrames - 1).getTimeInMillis()) {
 			_animatedOnce = true;
 		}
-		displayFrame(gl, _trial.getAnimationSequence().getFrameAtTime(currentTime));
+		displayFrame(gl, as.getFrameAtTime(currentTime));
 		
 		if (_animatedOnce && _listeners != null) {
 			for (AnimationListener al : _listeners) {
@@ -107,15 +107,14 @@ public class AnimationRenderer implements GLEventListener {
 
 	// display 1 frame
 	private void displayFrame(GL gl, AnimationFrame frame) {
+		if (frame == null) return;
 
 		// TODO: Can the disk can be instantiated in the init method?
 		GLU glu = new GLU();
-		GLUquadric circle = glu.gluNewQuadric();
-		glu.gluQuadricDrawStyle(circle, GLU.GLU_FILL);
-		glu.gluQuadricNormals(circle, GLU.GLU_FLAT);
-		glu.gluQuadricOrientation(circle, GLU.GLU_OUTSIDE);
+		AnimationShapeDrawable.initialize(gl, glu);
 
-		List<AnimationDot> jointLocations = frame.getJointLocations();
+		Double luminance = frame.getLuminance();
+		List<AnimationPoint> jointLocations = frame.getJointLocations();
 		
 		// draw connecting lines
 		gl.glColor3f(1f, 1f, 1f);
@@ -126,7 +125,7 @@ public class AnimationRenderer implements GLEventListener {
 
 			for (int j = 0; j < jointLocations.size(); j++) {
 				if (j < _trial.getNumPoints()) {
-					AnimationDot dot = jointLocations.get(j);
+					AnimationPoint dot = jointLocations.get(j);
 					
 					if (dot.getLocation() != null) {			
 						gl.glVertex2d(dot.getLocation().x, dot.getLocation().y);
@@ -140,45 +139,17 @@ public class AnimationRenderer implements GLEventListener {
 		for (int i = 0; i < jointLocations.size(); i++) {
 			
 			if (i < _trial.getNumPoints()) {
-				AnimationDot dot = jointLocations.get(i);
+				AnimationPoint dot = jointLocations.get(i);
 				
 				if (dot.getLocation() == null) {
 					continue;
 				}
 				
-				gl.glPushMatrix();
-				
-				if (dot.getLocation() != null) {			
-					gl.glTranslated(dot.getLocation().x, dot.getLocation().y, 0);						
-				}
-				
-				// color each dot individually
-				if (dot.getColor() != null) {
-					if (dot.getLuminance() != null) {
-						double lum = dot.getLuminance();
-						gl.glColor3d(lum*dot.getColor().x, lum*dot.getColor().y, lum*dot.getColor().z);
-					}
-					else {
-						gl.glColor3d(dot.getColor().x, dot.getColor().y, dot.getColor().z);
-					}
-				}
-				
-				// get size of each dot
-				Double rad = 1.0;
-				if (dot.getSize() != null) {
-					rad = dot.getSize();
-					gl.glScaled(rad, rad, rad);
-				}
-
-				final int slices = 32;
-				final int stacks = 32;
-									
-				// draw sphere
-				glu.gluSphere(circle, 0.1, slices, stacks); 
-				gl.glPopMatrix(); 
+				dot.getShape().draw(gl, glu, dot, luminance);
 			}
 		}			        
-		glu.gluDeleteQuadric(circle);
+		
+		AnimationShapeDrawable.cleanup(gl, glu);
 	}
 
 	@Override

@@ -39,7 +39,7 @@ import edu.mcmaster.maplelab.common.gui.StepManager;
 import edu.mcmaster.maplelab.common.sound.Playable;
 import edu.mcmaster.maplelab.toj.animator.AnimationRenderer;
 import edu.mcmaster.maplelab.toj.animator.AnimationSequence;
-import edu.mcmaster.maplelab.toj.animator.AnimatorPanel;
+import edu.mcmaster.maplelab.toj.animator.AnimationPanel;
 import edu.mcmaster.maplelab.toj.datamodel.TOJBlock;
 import edu.mcmaster.maplelab.toj.datamodel.TOJResponseParameters;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
@@ -82,7 +82,7 @@ public class TOJStimulusResponseScreen extends BasicStep {
 
     private final TOJSession _session;
 	private final boolean _isWarmup;
-	private final AnimatorPanel _aniPanel;
+	private final AnimationPanel _aniPanel;
 	private final AnimationRenderer _renderer;
 	private final ResponseKeyListener _keyListener;
 
@@ -103,7 +103,7 @@ public class TOJStimulusResponseScreen extends BasicStep {
                 null));
         
         Dimension dim = new Dimension(_session.getScreenWidth(), _session.getScreenHeight());
-        _aniPanel = new AnimatorPanel(_renderer);
+        _aniPanel = new AnimationPanel(_renderer);
         _aniPanel.setAnimationSize(dim);
         
         JPanel bottom = new JPanel(new MigLayout("insets 0, fill", "[]0px[]", "[]"));

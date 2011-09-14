@@ -45,115 +45,98 @@ public class AnimationSequence {
 	}
 
 	/**
-	 * 
+	 * Get a frame for the given time, interpolating if necessary.
 	 * @param 
 	 * @return a new frame using interpolation. time in ms.
 	 */
 	public AnimationFrame getFrameAtTime(long time) {
-//		System.out.printf("getting frame at time %f\n", time);
-
-		if (time <= getFrameAtIndex(0).getTimeInMillis()) {
-			return getFrameAtIndex(0);
-		}
-		if (time >= getFrameAtIndex(getNumFrames() - 1).getTimeInMillis()) {
-			return getFrameAtIndex(getNumFrames() - 1);
+		if (time < getFrameAtIndex(0).getTimeInMillis() || 
+				time > getFrameAtIndex(getNumFrames()-1).getTimeInMillis()) {
+			return null;
 		}
 		
 		// get frames
-		AnimationFrame frame1 = getFrameAtIndex(0);
-		AnimationFrame frame2 = getFrameAtIndex(1);
-		for (int i = 0; i < getNumFrames(); i++) {
-			double t = getFrameAtIndex(i).getTimeInMillis();
-			if (t >= time) {
-				if (t == time) {
-//					System.out.printf("animating frame %d\n", i);
-					return getFrameAtIndex(i);
-				}
-				else {
-					frame2 = getFrameAtIndex(i);
-					frame1 = getFrameAtIndex(i-1);
-//					System.out.printf("interpolating b/t frames %d and %d\n", i-1, i);
-					break;
-				}
-			}
+		AnimationFrame frame1 = null;
+		AnimationFrame frame2 = getFrameAtIndex(0);
+		for (int i = 1; i < getNumFrames() && time > frame2.getTimeInMillis(); i++) {
+			frame1 = getFrameAtIndex(i-1);
+			frame2 = getFrameAtIndex(i);
 		}
-		double alpha = (time - frame1.getTimeInMillis()) / (frame2.getTimeInMillis() - frame1.getTimeInMillis());
+		if (frame2.getTimeInMillis() == time) return frame2;
 		
-		ArrayList<AnimationDot> dotList = new ArrayList<AnimationDot>();
+		return interpolate(frame1, frame2, time);
 		
+	}
+	
+	/**
+	 * Interpolate between the two given frames to produce a new frame at the given time.
+	 * @param frame1 the first-occurring frame to interpolate
+	 * @param frame2 the second-occurring frame to interpolate
+	 * @param time the time for which to interpolate a frame (should fall between the two
+	 *             given frames' times)
+	 * @return a new, interpolate frame
+	 */
+	private AnimationFrame interpolate(AnimationFrame frame1, AnimationFrame frame2, long time) {
+		double alpha = (time - frame1.getTimeInMillis()) / 
+				(frame2.getTimeInMillis() - frame1.getTimeInMillis());
+		
+		ArrayList<AnimationPoint> dotList = new ArrayList<AnimationPoint>();
+		
+		// determine luminance
+		Double lum = frame1.getLuminance();
+		Double lum2 = frame2.getLuminance();
+		if (lum == null || lum2 == null) {
+			if (alpha > 0.5) lum = lum2;
+		}
+		else {
+			lum = alpha*lum2 + (1 - alpha)*lum;
+		}
+		
+		// interpolate each animation point
 		for (int i = 0; i < frame1.getJointLocations().size(); i++) {
-			AnimationDot dot1 = frame1.getJointLocations().get(i);
-			AnimationDot dot2 = frame2.getJointLocations().get(i);
+			AnimationPoint dot1 = frame1.getJointLocations().get(i);
+			AnimationPoint dot2 = frame2.getJointLocations().get(i);
 			
-			// get location
-			Point2d pt1 = dot1.getLocation();
+			// determine location
+			Point2d pt = dot1.getLocation();
 			Point2d pt2 = dot2.getLocation();
-			Point2d pt = pt1;
-			if ((pt1 == null) || (pt2 == null)) {
-				pt = null;
+			if (pt == null || pt2 == null) {
+				if (alpha > 0.5) pt = pt2;
 			}
 			else {
 				pt.interpolate(pt2, alpha);
 			}
 			
-			// get color
-			Vector3d col1 = dot1.getColor();
+			// determine color
+			Vector3d col = dot1.getColor();
 			Vector3d col2 = dot2.getColor();
-			Vector3d col;
-
-			if ((col1 == null) || (col2 == null)) {
-				if (alpha < 0.5) {
-					col = col1;
-				}
-				else {
-					col = col2;
-				}
+			if (col == null || col2 == null) {
+				if (alpha > 0.5) col = col2;
 			}
 			else {
-				col = col1;
 				col.interpolate(col2, alpha);
 			}
 			
-			// get size
-			Double size1 = dot1.getSize();
+			// determine size
+			Double size = dot1.getSize();
 			Double size2 = dot2.getSize();
-			Double size;
-			
-			if ((size1 == null) || (size2 == null)) {
-				if (alpha < 0.5) {
-					size = size1;
-				}
-				else {
-					size = size2;
-				}
+			if (size == null || size2 == null) {
+				if (alpha > 0.5) size = size2;
 			}
 			else {
-				size = alpha*size2 + (1 - alpha)*size1;
+				size = alpha*size2 + (1 - alpha)*size;
 			}
 			
-			// get luminance
-			Double lum1 = dot1.getLuminance();
-			Double lum2 = dot2.getLuminance();
-			Double lum;
-			
-			if ((lum1 == null) || (lum2 == null)) {
-				if (alpha < 0.5) {
-					lum = lum1;
-				}
-				else {
-					lum = lum2;
-				}
-			}
-			else {
-				lum = alpha*lum2 + (1 - alpha)*lum1;
+			// determine shape
+			AnimationShapeDrawable shape = dot1.getShape();
+			if (shape != dot2.getShape() && alpha >= 0.5) {
+				shape = dot2.getShape();
 			}
 			
-			AnimationDot dot = new AnimationDot(pt, col, size, lum);
-//			dot.printDescription();
-			dotList.add(dot);
+			dotList.add(new AnimationPoint(pt, col, size, shape));
 		}
-		AnimationFrame frame = new AnimationFrame(time, dotList);
-		return frame;
+		
+		return new AnimationFrame(time, dotList, lum);
 	}
 
 	public int getNumFrames() {
@@ -204,9 +187,9 @@ public class AnimationSequence {
 				Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY);
 		
 		for (AnimationFrame frame : _aniFrames) {
-			List<AnimationDot> dots = frame.getJointLocations();
+			List<AnimationPoint> dots = frame.getJointLocations();
 			for (int i = 0; i < dots.size(); i++) {
-				AnimationDot dot = dots.get(i);
+				AnimationPoint dot = dots.get(i);
 				Point2d loc = dot.getLocation();
 				if (loc == null) continue;
 				

@@ -17,23 +17,32 @@ import java.util.List;
 public class AnimationFrame {
 	// each frame contains one of the rows in the data file
 
-	private List<AnimationDot> _pointList;
+	private List<AnimationPoint> _pointList;
 	private final long _time;
+	private final Double _luminance;
 
-	public AnimationFrame(double timeInSeconds, List<AnimationDot> pointList) {
+	public AnimationFrame(double timeInSeconds, List<AnimationPoint> pointList, Double luminance) {
 		_time = (long) (1000*timeInSeconds);				// time to animate the frame (in ms)
 		_pointList = pointList;
+		_luminance = luminance;
 	}
 
 	/** Provides an unmodifiable ordered list of joint locations. */
-	public List<AnimationDot> getJointLocations() {	
+	public List<AnimationPoint> getJointLocations() {	
 		return Collections.unmodifiableList(_pointList);
 	}
 
 	/**
-	 * @return The time frame should be rendered after start of animation.
+	 * Get the time frame should be rendered after start of animation.
 	 */
 	public long getTimeInMillis() {
 		return _time;
+	}
+	
+	/**
+	 * Get the luminance value.
+	 */
+	public Double getLuminance () {
+		return _luminance;
 	}
 }

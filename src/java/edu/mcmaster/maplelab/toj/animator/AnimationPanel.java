@@ -10,8 +10,6 @@ package edu.mcmaster.maplelab.toj.animator;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.EventQueue;
-import java.awt.Graphics;
 import java.io.File;
 
 import javax.media.opengl.GLCapabilities;
@@ -36,7 +34,7 @@ import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
  * Creates a panel to be used for animation rendering.
  * @author Catherine Elder <cje@datamininglab.com>
  */
-public class AnimatorPanel extends JPanel {
+public class AnimationPanel extends JPanel {
 	private final GLJPanel _canvas;
 	private final AnimationRenderer _animator;
     
@@ -50,7 +48,7 @@ public class AnimatorPanel extends JPanel {
         ToolTipManager.sharedInstance().setLightWeightPopupEnabled(false);
     }
     
-    public AnimatorPanel(AnimationRenderer animator) {
+    public AnimationPanel(AnimationRenderer animator) {
 
         super(new MigLayout("insets 0, nogrid, center, fill", "center", "center"));
 
@@ -108,11 +106,11 @@ public class AnimatorPanel extends JPanel {
      */
     public static void main(String[] args) {
         try {
-            JFrame f = new JFrame(AnimatorPanel.class.getName());
+            JFrame f = new JFrame(AnimationPanel.class.getName());
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             AnimationRenderer ani = new AnimationRenderer(true); // connect the dots
             
-            final AnimatorPanel view = new AnimatorPanel(ani);
+            final AnimationPanel view = new AnimationPanel(ani);
 
             f.getContentPane().add(view, BorderLayout.CENTER);
             f.pack();

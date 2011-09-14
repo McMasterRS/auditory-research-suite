@@ -40,7 +40,7 @@ import edu.mcmaster.maplelab.common.sound.SoundClip;
 import edu.mcmaster.maplelab.toj.animator.AnimationParser;
 import edu.mcmaster.maplelab.toj.animator.AnimationRenderer;
 import edu.mcmaster.maplelab.toj.animator.AnimationSequence;
-import edu.mcmaster.maplelab.toj.animator.AnimatorPanel;
+import edu.mcmaster.maplelab.toj.animator.AnimationPanel;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrialPlaybackListener;
@@ -222,11 +222,11 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 	 */
 	private void prepareDemoScreen() {
 		if (_renderer == null) {
-    		JFrame testFrame = new JFrame(AnimatorPanel.class.getName());
+    		JFrame testFrame = new JFrame(AnimationPanel.class.getName());
             testFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             
             _renderer = new AnimationRenderer(true); // connect the dots
-        	AnimatorPanel view = new AnimatorPanel(_renderer);
+        	AnimationPanel view = new AnimationPanel(_renderer);
 
         	testFrame.getContentPane().removeAll();
             testFrame.getContentPane().add(view, BorderLayout.CENTER);

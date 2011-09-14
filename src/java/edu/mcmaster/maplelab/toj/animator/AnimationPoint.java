@@ -10,24 +10,25 @@ package edu.mcmaster.maplelab.toj.animator;
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector3d;
 /**
- * AnimationDot represents one dot (joint) in the image.
+ * This class represents one animation point (joint, in most cases) in the image.
  * @author Catherine Elder <cje@datamininglab.com>
  */
-public class AnimationDot {
-	private Point2d _location;
-	private Vector3d _color;
-	private Double _size;
-	private Double _luminance;
+public class AnimationPoint {
+	private final Point2d _location;
+	private final Vector3d _color;
+	private final Double _size;
+	private final AnimationShapeDrawable _shape;
 	
-	public AnimationDot(Point2d location, Vector3d color, Double size, Double luminance) {
+	public AnimationPoint(Point2d location, Vector3d color, Double size) {
+		this(location, color, size, AnimationShapeDrawable.DOT);
+	}
+	
+	public AnimationPoint(Point2d location, Vector3d color, Double size, 
+			AnimationShapeDrawable shape) {
 		_location = location;
 		_color = color;
 		_size = size;
-		_luminance = luminance;
-	}
-	
-	public AnimationDot(Point2d location) {
-		this(location, new Vector3d (1, 1, 1), 0.3, 1d);
+		_shape = shape != null ? shape : AnimationShapeDrawable.DOT;
 	}
 	
 	public Point2d getLocation () {
@@ -42,20 +43,21 @@ public class AnimationDot {
 		return _size;
 	}
 	
-	public Double getLuminance () {
-		return _luminance;
+	public AnimationShapeDrawable getShape () {
+		return _shape;
 	}
 	
 	/**
-	 * Prints a detailed description of the dot.
+	 * Get a detailed description of the point.
 	 */
-	public void printDescription() {
+	public String getDescription() {
 		String loc = getLocation() != null ? String.format("(%.2f,%.2f)", getLocation().x, getLocation().y) : "null";
 		String col = getColor() != null ? String.format("(%.2f, %.2f, %.2f)", getColor().x, getColor().y, getColor().z) : "null";
 		String size = getSize() != null ? String.format("%.2f", getSize()) : "null";
-		String lum = getLuminance() != null? String.format("%.2f", getLuminance()) : "null";
+		String shape = getShape().name();
 		
-		System.out.printf("\t AnimationDot:  location: %s, color: %s, size: %s, luminance: %s\n", 
-				loc, col, size, lum);
+		return String.format("\t AnimationPoint:  location: %s, color: %s, " +
+				"size: %s, shape: %s\n", 
+				loc, col, size, shape);
 	}
 }
