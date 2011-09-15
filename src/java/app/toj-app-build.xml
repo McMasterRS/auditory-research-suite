@@ -39,7 +39,7 @@
     			<include name="lib/gluegen-rt.jar"/>
     		</jarfileset>
 	        <resourcefileset dir="../www/toj" includes="toj.properties"/>
-	        <javafileset dir="../lib/jogl" includes="*.jnilib"/>
+	        <javafileset dir="../lib/natives" includes="*.jnilib"/>
    		</jarbundler>
 		
 		<delete dir="tmp" quiet="true" />
