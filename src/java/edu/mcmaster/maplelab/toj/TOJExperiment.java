@@ -82,7 +82,7 @@ public class TOJExperiment extends JPanel {
 	            }   
 	            _contentCard.add(new PreTrialsInstructions(sMgr, _session),  "pretrials");            
 	            _contentCard.add(new TOJStimulusResponseScreen(sMgr, _session, false), "test");            
-	            _contentCard.add(new Completion(sMgr, _session), "complete");            
+	            _contentCard.add(new TOJCompletion(sMgr, _session), "complete");            
 	            _contentCard.add(new JLabel(), "Blank");
 	        }
 	        return _contentCard;

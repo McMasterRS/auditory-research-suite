@@ -30,7 +30,7 @@ public class Completion extends Instructions {
     private TrialLogger<?, ?> _logger;
     
     public Completion(StepManager mgr, Session<?,?,?> session) {
-        this(mgr, session, true);
+        this(mgr, session, false);
     }
     
     public Completion(StepManager mgr, Session<?,?,?> session, boolean showPrevNext) {
