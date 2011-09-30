@@ -58,7 +58,7 @@ public class ResponseInputs extends JPanel {
     }
     
     /**
-     * Default constructor sets the question asked and labels for the two
+     * Default constructor sets the question asked and labels for the
      * possible choices as indicated.
      */
     public ResponseInputs(ResponseParameters<?> interpreter, boolean vertical) {
@@ -66,6 +66,7 @@ public class ResponseInputs extends JPanel {
         _responseParams = interpreter;
         
         setSize(300, 200);
+        
         MigLayout layout = vertical ? 
         		new MigLayout("insets 0, fill") : new MigLayout("insets 0, fill", "[]0px[]", "");
         setLayout(layout);
@@ -97,11 +98,20 @@ public class ResponseInputs extends JPanel {
      */
     private JPanel getTop() {
         if (_top == null) {
+            
+            // check answer size and adjust intelligently
+        	boolean vertical = false;
+        	int insetAdjust = 20;
+            List<JRadioButton> answerButtons = getAnswerButtons();
+        	for (JRadioButton b : answerButtons) {
+        		vertical = vertical || b.getPreferredSize().width + insetAdjust > answerButtons.size();
+        	}
+        	
             _top = new JPanel();
-            _top.setLayout(new FlowLayout(FlowLayout.LEFT));
+            _top.setLayout(vertical ? new MigLayout("flowy") : new FlowLayout(FlowLayout.LEFT));
             _top.setBorder(BorderFactory.createTitledBorder(_responseParams.getQuestion()));
-            for (JRadioButton b : getAnswerButtons()) {
-                _top.add(b);
+            for (JRadioButton b : answerButtons) {
+                _top.add(b, vertical ? "north" : "");
             }
         }
         return _top;
@@ -169,6 +179,29 @@ public class ResponseInputs extends JPanel {
     public void setAnswerSelection(int index) {
     	if (_answerButtons.size() > index) {
     		_answerButtons.get(index).setSelected(true);
+    	}
+    }
+    
+    /**
+     * Set the first answer that starts with the given character (upper or lower)
+     * to be the selected value.  Or, if the given character is a digit, the corresponding
+     * confidence value is set to be the selected value.
+     */
+    public void setSelection(char character) {
+    	if (Character.isDigit(character)) {
+    		int index = _confButtons.size() - Character.getNumericValue(character);
+    		setConfidenceSelection(index);
+    		return;
+    	}
+    	
+    	for (JRadioButton b : _answerButtons) {
+    		Answer a = (Answer) b.getClientProperty(Answer.class);
+    		String answerString = a.toString().toLowerCase();
+    		String charString = String.valueOf(character).toLowerCase();
+    		if (answerString.startsWith(charString)) {
+    			b.setSelected(true);
+    			return;
+    		}
     	}
     }
     

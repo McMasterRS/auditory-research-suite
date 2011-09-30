@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src/java"/>
+	<classpathentry kind="src" path="src/java">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="auditory-research-suite/src/java/lib/natives"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="src/java/lib/miglayout-4.0.jar"/>
 	<classpathentry kind="lib" path="src/java/lib/gluegen-rt.jar"/>
-	<classpathentry kind="lib" path="src/java/lib/jogl.jar"/>
+	<classpathentry kind="lib" path="src/java/lib/joal.jar"/>
+	<classpathentry kind="lib" path="src/java/lib/miglayout-4.0.jar"/>
+	<classpathentry kind="lib" path="src/java/lib/jogl.all.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

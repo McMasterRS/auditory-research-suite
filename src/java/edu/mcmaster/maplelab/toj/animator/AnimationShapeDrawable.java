@@ -1,8 +1,8 @@
 package edu.mcmaster.maplelab.toj.animator;
 
-import static javax.media.opengl.GL.*;
+import static javax.media.opengl.GL2.*;
 
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
 
@@ -29,14 +29,14 @@ public enum AnimationShapeDrawable {
 	DOT {
 		private GLUquadric _circle;
 		@Override
-		protected void init(GL gl, GLU glu) {
+		protected void init(GL2 gl, GLU glu) {
 			_circle = glu.gluNewQuadric();
 			glu.gluQuadricDrawStyle(_circle, GLU.GLU_FILL);
 			glu.gluQuadricNormals(_circle, GLU.GLU_FLAT);
 			glu.gluQuadricOrientation(_circle, GLU.GLU_OUTSIDE);
 		}
 		@Override
-		public void drawShape(GL gl, GLU glu, AnimationPoint ap) {
+		public void drawShape(GL2 gl, GLU glu, AnimationPoint ap) {
 			final int slices = 32;
 			final int stacks = 32;
 								
@@ -44,16 +44,16 @@ public enum AnimationShapeDrawable {
 			glu.gluSphere(_circle, RADIUS, slices, stacks); 
 		}
 		@Override
-		protected void clear(GL gl, GLU glu) {
+		protected void clear(GL2 gl, GLU glu) {
 			glu.gluDeleteQuadric(_circle);
 		}
 	},
 	CROSS {
 		@Override
-		protected void init(GL gl, GLU glu) {
+		protected void init(GL2 gl, GLU glu) {
 		}
 		@Override
-		public void drawShape(GL gl, GLU glu, AnimationPoint ap) {
+		public void drawShape(GL2 gl, GLU glu, AnimationPoint ap) {
 			gl.glBegin(GL_LINES);
 
 			gl.glVertex2d(0, RADIUS);
@@ -64,15 +64,15 @@ public enum AnimationShapeDrawable {
 			gl.glEnd();
 		}
 		@Override
-		protected void clear(GL gl, GLU glu) {
+		protected void clear(GL2 gl, GLU glu) {
 		}
 	},
 	SQUARE {
 		@Override
-		protected void init(GL gl, GLU glu) {
+		protected void init(GL2 gl, GLU glu) {
 		}
 		@Override
-		public void drawShape(GL gl, GLU glu, AnimationPoint ap) {
+		public void drawShape(GL2 gl, GLU glu, AnimationPoint ap) {
 			gl.glBegin(GL_QUADS);
 
 			gl.glVertex2d(-RADIUS, -RADIUS);
@@ -83,15 +83,15 @@ public enum AnimationShapeDrawable {
 			gl.glEnd();
 		}
 		@Override
-		protected void clear(GL gl, GLU glu) {
+		protected void clear(GL2 gl, GLU glu) {
 		}
 	},
 	DIAMOND {
 		@Override
-		protected void init(GL gl, GLU glu) {
+		protected void init(GL2 gl, GLU glu) {
 		}
 		@Override
-		public void drawShape(GL gl, GLU glu, AnimationPoint ap) {
+		public void drawShape(GL2 gl, GLU glu, AnimationPoint ap) {
 			gl.glBegin(GL_QUADS);
 
 			gl.glVertex2d(0, -RADIUS);
@@ -102,13 +102,17 @@ public enum AnimationShapeDrawable {
 			gl.glEnd();
 		}
 		@Override
-		protected void clear(GL gl, GLU glu) {
+		protected void clear(GL2 gl, GLU glu) {
 		}
 	};
 	
 	private static final double RADIUS = 0.1;
 	
-	public void draw(GL gl, GLU glu, AnimationPoint dot, Double lum) {
+	public void draw(GL2 gl, GLU glu, AnimationPoint dot, Double lum) {
+		draw(gl, glu, dot, lum, 1.0f);
+	}
+	
+	public void draw(GL2 gl, GLU glu, AnimationPoint dot, Double lum, float aspect) {
 		gl.glPushMatrix();
 		
 		if (dot.getLocation() != null) {			
@@ -126,11 +130,8 @@ public enum AnimationShapeDrawable {
 		}
 		
 		// get size of each dot
-		Double rad = 1.0;
-		if (dot.getSize() != null) {
-			rad = dot.getSize();
-			gl.glScaled(rad, rad, rad);
-		}
+		Double rad = dot.getSize() != null ? dot.getSize() : 1.0f;
+		gl.glScaled(rad/aspect, rad, rad);
 
 		// draw the specific shape
 		drawShape(gl, glu, dot);
@@ -139,17 +140,17 @@ public enum AnimationShapeDrawable {
 	}
 	
 	// abstract methods
-	protected abstract void init(GL gl, GLU glu);
-	protected abstract void drawShape(GL gl, GLU glu, AnimationPoint ap);
-	protected abstract void clear(GL gl, GLU glu);
+	protected abstract void init(GL2 gl, GLU glu);
+	protected abstract void drawShape(GL2 gl, GLU glu, AnimationPoint ap);
+	protected abstract void clear(GL2 gl, GLU glu);
 	
 	// static methods
-	public static void initialize(GL gl, GLU glu) {
+	public static void initialize(GL2 gl, GLU glu) {
 		for (AnimationShapeDrawable as : values()) {
 			as.init(gl, glu);
 		}
 	}
-	public static void cleanup(GL gl, GLU glu) {
+	public static void cleanup(GL2 gl, GLU glu) {
 		for (AnimationShapeDrawable as : values()) {
 			as.clear(gl, glu);
 		}

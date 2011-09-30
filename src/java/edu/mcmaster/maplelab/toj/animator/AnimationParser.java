@@ -35,12 +35,17 @@ public class AnimationParser {
 	private static final String SIZE_DATA_KEY = "sizeData";
 	private static final String LUMINANCE_DATA_KEY = "luminanceData";
 	private static final String SHAPE_DATA_KEY = "shapeData";
+	private static final String ASPECT_RATIO_KEY = "pointAspectRatio";
 	private static final String COLOR_PATTERN = "\\(({0,1}\\d{1,3}),\\s*(\\d{1,3}),\\s*(\\d{1,3})\\){0,1}";
 	private static final String SIZE_PATTERN = "size\\s*(\\d*\\.{0,1}\\d*)";
 	
 	private static Map<String, AnimationSequence> _animationCache = new HashMap<String, AnimationSequence>();
 
 	public static AnimationSequence parseFile(File file) throws FileNotFoundException {
+		return parseFile(file, null);
+	}
+	
+	public static AnimationSequence parseFile(File file, Float aspectRatio) throws FileNotFoundException {
 		// method accepts a file  and returns AnimationSequence
 		// assign frames from file contents
 		
@@ -56,6 +61,7 @@ public class AnimationParser {
 		boolean sizeData = false;
 		boolean luminanceData = false;
 		boolean shapeData = false;
+		float aspect = aspectRatio != null && aspectRatio > 0 ? aspectRatio : 1.0f;
 		
 		try {
 			reader = new BufferedReader(new FileReader(file));	
@@ -115,6 +121,18 @@ public class AnimationParser {
 							continue;
 						}
 					}
+					else if ((aspectRatio == null || aspectRatio <= 0) && 
+							property.contains(ASPECT_RATIO_KEY)) {
+						
+						try {
+							String val = property.substring(property.indexOf("=") + 1);
+							aspect = Float.valueOf(val.trim());
+						} 
+						catch (Exception ex) {
+							ex.printStackTrace();
+							continue;
+						}
+					}
 					
 					// if no float (time) and no property key, line is not valid
 					scanner.close();
@@ -144,7 +162,7 @@ public class AnimationParser {
 						try {
 							// attempt to get the point location
 							point = new Point2d(Double.parseDouble(xString), 
-									Double.parseDouble(yString));
+									Double.parseDouble(yString)/aspect);
 							
 							// now attempt to gather, then match any secondary properties
 							// for the animation point
@@ -337,7 +355,7 @@ public class AnimationParser {
 			}
 		}
 
-		AnimationSequence aniSeq = new AnimationSequence(filename, frameList);
+		AnimationSequence aniSeq = new AnimationSequence(filename, frameList, aspect);
 		_animationCache.put(filename, aniSeq);
 
 		return aniSeq;

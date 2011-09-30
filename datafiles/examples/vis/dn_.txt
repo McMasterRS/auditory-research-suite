@@ -1,7 +1,8 @@
 colorData=True																						
 sizeData=t					
 shapeData=t																	
-luminanceData=false																						
+luminanceData=false		
+pointAspectRatio=1.5																				
 	Mallet Head				Hand				Elbow				Elbow				Shoulder				Pitch	Vis
 t	x	y			x	y			x	y			x	y			x	y				
 0	4.81	1.85	-	-	dot	3.64	2.4	(0,0,255)	size.25	diamond	3.42	4.69	(0, 255, 0)	square	size 3.5	-	-	-	-	-	3.68	6.71	-	(255,0,0)	size1.5	d	l

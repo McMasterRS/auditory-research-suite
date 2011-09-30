@@ -65,6 +65,7 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 	
 	private JFormattedTextField _delayText;
 	private JSpinner _numPts;
+	private JCheckBox _connect;
 	private JCheckBox _loop;
 	private JCheckBox _useVideo;
 	
@@ -87,7 +88,7 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 		_frequency.setSelectedIndex(0);
 		_frequency.addActionListener(_fUpdater);
 
-		add(new JLabel("Frequency"), "right");
+		add(new JLabel("<html>&nbsp;&nbsp;&nbsp;Frequency"), "right");
 		add(_frequency, "left, growx");
 		
 		_spectrum = new JComboBox(new String[]{"Puretone"});
@@ -108,7 +109,7 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 		add(new JLabel("Delay (ms)", 2), "right");
 		_delayText = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		_delayText.setValue(new Long(0)); // new
-		_delayText.setColumns(2);
+		_delayText.setColumns(5);
 		
 		add(_delayText, "left, wrap");
 		
@@ -139,11 +140,15 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 		_loop = new JCheckBox();
 		add(_loop, "left");
 		
-		add(new JLabel("Use Video"), "right");
+		add(new JLabel("Use video"), "right");
 		_useVideo = new JCheckBox();
+		add(_useVideo, "left");
 		_useVideo.setEnabled(false);
-		add(_useVideo, "left, wrap");
-		_useVideo.setEnabled(false);
+		
+		add(new JLabel("Connect dots w/ lines"), "right");
+		_connect = new JCheckBox();
+		add(_connect, "left, wrap");
+		_connect.setSelected(true);
 
 		// files 
 		add(new JLabel("Files"), "split, span, gaptop 10");
@@ -174,13 +179,16 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 	@Override
 	public TOJTrial getTrial() {
 			
+		TOJSession session = getSession();
 		Playable playable = SoundClip.findPlayable(_audFile.getFile().toString(), 
-				getSession().getExpectedAudioSubDir(), getSession().getPlaybackGain());
+				session.getExpectedAudioSubDir(), session.getPlaybackGain());
 		try {
-			AnimationSequence aniSeq = AnimationParser.parseFile(_visFile.getFile());
+			AnimationSequence aniSeq = AnimationParser.parseFile(
+					_visFile.getFile(), session.getAnimationPointAspect());
 			Object val = _delayText.getValue();
 			Long delay = Long.valueOf(val instanceof String ? (String) val : ((Number) val).toString());
-			return new TOJTrial(aniSeq, _useVideo.isSelected(), playable, delay, (Integer)_numPts.getValue(), 0.3f);
+			return new TOJTrial(aniSeq, _useVideo.isSelected(), playable, delay, 
+					(Integer)_numPts.getValue(), 0.3f, _connect.isSelected());
 		}
 		catch (FileNotFoundException ex) {
 			Runnable r = new Runnable() {
@@ -225,7 +233,7 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
     		JFrame testFrame = new JFrame(AnimationPanel.class.getName());
             testFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             
-            _renderer = new AnimationRenderer(true); // connect the dots
+            _renderer = new AnimationRenderer();
         	AnimationPanel view = new AnimationPanel(_renderer);
 
         	testFrame.getContentPane().removeAll();

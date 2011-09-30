@@ -27,9 +27,12 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 		super(session, blockNum, type);
 		
 		_trials = new ArrayList<TOJTrial>();
+		
+		float animationAspect = session.getAnimationPointAspect();
+		
+		List<String> audioFileNames = generateAudioFileNames(frequencies, spectrums, envDurations);
 
 		// create trials from session
-	
 		if (type == AVBlockType.AUDIO_VIDEO) {
 			for (String strikeDur : strikes) {
 				for (NotesEnum pitch : pitches) {
@@ -37,26 +40,22 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 					File dir = session.getExpectedVisualSubDir();
 					AnimationSequence aniSeq = null;
 					try {
-						aniSeq = AnimationParser.parseFile(new File(dir, filename));
+						aniSeq = AnimationParser.parseFile(new File(dir, filename), animationAspect);
 					}
 					catch (FileNotFoundException fne) {
 						LogContext.getLogger().warning(String.format("Animation file %s not found.", filename));
 					}
 					
-					for (String freq : frequencies) {
-						for (String spec : spectrums) {
-							for (String envDur : envDurations) {
-								filename = String.format("%s-%s-%s.wav", freq, spec, envDur);
-								dir = session.getExpectedAudioSubDir();
-								Playable audio = SoundClip.findPlayable(filename, dir, session.getPlaybackGain());
-								
-								for (Long so : offsets) {
-									// look into sound objects
-									for (int pts : numPoints) {
-										TOJTrial trial = new TOJTrial(aniSeq, false, audio, so, pts, DISK_RADIUS);
-										_trials.add(trial);
-									}
-								}
+					for (String audioName : audioFileNames) {
+						dir = session.getExpectedAudioSubDir();
+						Playable audio = SoundClip.findPlayable(audioName, dir, session.getPlaybackGain());
+						
+						for (Long so : offsets) {
+							// look into sound objects
+							for (int pts : numPoints) {
+								TOJTrial trial = new TOJTrial(aniSeq, false, audio, so, pts, 
+										DISK_RADIUS, session.connectDots());
+								_trials.add(trial);
 							}
 						}
 					}
@@ -64,21 +63,15 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 			}
 		}
 		else if (type == AVBlockType.AUDIO_ONLY) {
-			for (String freq : frequencies) {
-				for (String spec : spectrums) {
-					for (String envDur : envDurations) {
-						String filename = String.format("%s-%s-%s.wav", freq, spec, envDur);
-						File dir = session.getExpectedAudioSubDir();
-						Playable audio = SoundClip.findPlayable(filename, dir, session.getPlaybackGain());
-						
-						for (Long so : offsets) {
-							// look into sound objects
-							for (int pts : numPoints) {
-								TOJTrial trial = new TOJTrial(null, false, audio, so, pts, DISK_RADIUS);
-								_trials.add(trial);
-							}
-						}
-					}
+			for (String filename : audioFileNames) {
+				File dir = session.getExpectedAudioSubDir();
+				Playable audio = SoundClip.findPlayable(filename, dir, session.getPlaybackGain());
+				
+				for (Long so : offsets) {
+					// look into sound objects
+					TOJTrial trial = new TOJTrial(null, false, audio, so, 0, 
+							DISK_RADIUS, session.connectDots());
+					_trials.add(trial);
 				}
 			}
 		}
@@ -90,7 +83,7 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 					File dir = session.getExpectedVisualSubDir();
 					AnimationSequence aniSeq = null;
 					try {
-						aniSeq = AnimationParser.parseFile(new File(dir, filename));
+						aniSeq = AnimationParser.parseFile(new File(dir, filename), animationAspect);
 					}
 					catch (FileNotFoundException fne) {
 						LogContext.getLogger().warning(String.format("Animation file %s not found.", filename));
@@ -98,21 +91,45 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 					
 					for (Long so : offsets) {
 						// look into sound objects
-						for (int pts : numPoints) {
-							TOJTrial trial = new TOJTrial(aniSeq, false, null, so, pts, DISK_RADIUS);
-							_trials.add(trial);
-						}
+						TOJTrial trial = new TOJTrial(aniSeq, false, null, so, 0, 
+								DISK_RADIUS, session.connectDots());
+						_trials.add(trial);
 					}
 				}
 			}
 		}
 		
 		// randomize and number trials
-		if (getSession().randomizeTrials()) Collections.shuffle(_trials);
-		
+		if (session.randomizeTrials()) Collections.shuffle(_trials);
 		for (int i = 0; i < _trials.size(); i++) {
 			_trials.get(i).setNum(i+1);
 		}
+	}
+	
+	/**
+	 * Generate a list of audio file names to be used in the trials.
+	 */
+	private List<String> generateAudioFileNames(List<String> frequencies, List<String> spectrums, 
+			List<String> envDurations) {
+		List<String> retval = new ArrayList<String>();
+		for (String freq : frequencies) {
+			for (String spec : spectrums) {
+				for (String envDur : envDurations) {
+					retval.add(String.format("%s-%s-%s.wav", freq, spec, envDur));
+				}
+			}
+		}
+		
+		return retval;
+	}
+	
+	public void logTrials() {
+		LogContext.getLogger().fine(String.format("\n----- Block %d : %d trials -----", 
+				getNum(), _trials.size()));
+		for (TOJTrial t : _trials) {
+			LogContext.getLogger().fine(t.getDescription());
+		}
+		LogContext.getLogger().fine(String.format("-----------------------------------\n", _trials.size()));
 	}
 
 

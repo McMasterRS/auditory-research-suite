@@ -13,7 +13,8 @@ import java.awt.Dimension;
 import java.io.File;
 
 import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLJPanel;
+import javax.media.opengl.awt.GLJPanel;
+import javax.media.opengl.GLProfile;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -21,7 +22,8 @@ import javax.swing.ToolTipManager;
 
 import net.miginfocom.swing.MigLayout;
 
-import com.sun.opengl.util.Animator;
+import com.jogamp.opengl.util.Animator;
+//import com.sun.opengl.util.Animator;
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
@@ -37,6 +39,7 @@ import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
 public class AnimationPanel extends JPanel {
 	private final GLJPanel _canvas;
 	private final AnimationRenderer _animator;
+	private final Animator _glTrigger;
     
     static {
         // Put JOGL version information into system properties to 
@@ -49,22 +52,40 @@ public class AnimationPanel extends JPanel {
     }
     
     public AnimationPanel(AnimationRenderer animator) {
+    	this(animator, null);
+    }
+    
+    public AnimationPanel(AnimationRenderer animator, Dimension dim) {
 
         super(new MigLayout("insets 0, nogrid, center, fill", "center", "center"));
 
-        GLCapabilities caps = new GLCapabilities();
+        GLCapabilities caps = new GLCapabilities(GLProfile.get(GLProfile.GL2));
 
         _canvas = new GLJPanel(caps);
         _canvas.setName("glCanvas");
         _animator = animator;
         _canvas.addGLEventListener(_animator);
         
- 		Animator trigger = new Animator(_canvas);
- 		trigger.setPrintExceptions(true);
- 		trigger.start();
+        _glTrigger = new Animator(_canvas);
+        _glTrigger.setPrintExceptions(true);
+        _glTrigger.start();
  		
         add(_canvas);
-        _canvas.setPreferredSize(new Dimension(640, 480));
+        _canvas.setPreferredSize(dim != null ? dim : new Dimension(640, 480));
+    }
+    
+    /**
+     * Start processing animation events.
+     */
+    public synchronized void start() {
+    	_glTrigger.start();
+    }
+    
+    /**
+     * Stop processing animation events.
+     */
+    public synchronized void stop() {
+    	_glTrigger.stop();
     }
     
     /**
@@ -108,7 +129,7 @@ public class AnimationPanel extends JPanel {
         try {
             JFrame f = new JFrame(AnimationPanel.class.getName());
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            AnimationRenderer ani = new AnimationRenderer(true); // connect the dots
+            AnimationRenderer ani = new AnimationRenderer();
             
             final AnimationPanel view = new AnimationPanel(ani);
 
@@ -136,7 +157,7 @@ public class AnimationPanel extends JPanel {
 			} ;
 			
             TOJTrial trial = new TOJTrial(animation, 
-					true, audio, (long) 1, 5, 0.3f);
+					true, audio, (long) 1, 5, 0.3f, true);
 
     		long currentTime = System.currentTimeMillis();
             ani.setTrial(trial);

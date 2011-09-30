@@ -33,6 +33,7 @@ public class TOJTrial extends Trial<Response> {
 	private final long _offset;
 	private final int _numPoints;
 	private final float _diskRadius;
+	private final boolean _connectDots;
 	private final AnimationSequence _animationSequence;
 	private TrialRunner _trialRunner = null;
 	private ArrayList<TOJTrialPlaybackListener> _listeners;
@@ -42,7 +43,7 @@ public class TOJTrial extends Trial<Response> {
 	private Long _audioTone = null;
 
 	public TOJTrial(AnimationSequence animationSequence, boolean isVideo, Playable audio, 
-			Long timingOffset, int animationPoints, float diskRadius) {
+			Long timingOffset, int animationPoints, float diskRadius, boolean connectDots) {
 		
 		_animationSequence = animationSequence;
 		_isVideo = isVideo;
@@ -51,6 +52,7 @@ public class TOJTrial extends Trial<Response> {
 		_audio = audio;
 		
 		_diskRadius = diskRadius;
+		_connectDots = connectDots;
 	}
 
 	public boolean isVideo() {
@@ -63,6 +65,10 @@ public class TOJTrial extends Trial<Response> {
 	
 	public int getNumPoints() {
 		return _numPoints;
+	}
+	
+	public boolean isConnected() {
+		return _connectDots;
 	}
 	
 	/**
@@ -114,12 +120,19 @@ public class TOJTrial extends Trial<Response> {
 	 * Get a human-readable string description of TOJTrial
 	 */
 	public String getDescription() {
-		String frames = (_animationSequence != null ? 
-				String.valueOf(_animationSequence.getNumFrames()) : "N/A") + " frames";
+		String ani = _animationSequence != null ? _animationSequence.getSourceFileName() : "N/A";
+		String frames = _animationSequence != null ? 
+				String.valueOf(_animationSequence.getNumFrames()) : "N/A";
+		String hits = _animationSequence != null ? String.valueOf(getAnimationStrikeTime()) : "N/A";
+		String aspect = _animationSequence != null ? 
+				String.valueOf(_animationSequence.getPointAspect()) : "N/A";
 		String audio = _audio != null ? _audio.name() : "N/A";
-		return String.format("TOJTrial:	%s, isVideo: %b, " +
-				"Playable name: %s, timingOffset: %f, animationPoints: %d, diskRadius: %f\n",
-				frames, _isVideo, audio, _offset, _numPoints, _diskRadius);
+		String audioOnset = _audioTone != null ? _audioTone.toString() : "0";
+		String format = "Trial %d:\n\tAudio file: %s\n\tOffset: %d\n\tTone onset delay: %s\n" +
+				"\tAnimation file: %s\n\tFrame count: %s\n\tAnimation points: %d\n" +
+				"\tAnimation hit point(s): %s\n\tConnect points: %b\n\tPoint aspect: %s";
+		return String.format(format, getNum(), audio, _offset, audioOnset, ani, frames, _numPoints, 
+				hits, _connectDots, aspect);
 	}
 	
 	/**
@@ -213,15 +226,15 @@ public class TOJTrial extends Trial<Response> {
 			//				2. how much to delay 2nd stimulus
 			long offset = getOffset();
 			boolean animationFirst = aniStrike > _audioTone - offset;
-			long aniDelay = animationFirst ? 0 : _audioTone - aniStrike - offset;
-			long audDelay = animationFirst ? aniStrike - _audioTone + offset : 0;
-			
-			LogContext.getLogger().fine(String.format(
-					"Calculated events: audio tone delay=%d, animation strike delay=%d", _audioTone, aniStrike));
-			LogContext.getLogger().fine(String.format(
-					"Will play with animation delay = %d", (int) aniDelay));
-			LogContext.getLogger().fine(String.format(
-					"Will play with audio delay = %d", (int) audDelay));
+			long aniDelay = 0, audDelay = 0;
+			if (animationFirst) {
+				audDelay = aniStrike - _audioTone + offset;
+				LogContext.getLogger().fine(String.format("-> Delay audio start by %d", audDelay));
+			}
+			else {
+				aniDelay = _audioTone - aniStrike - offset;
+				LogContext.getLogger().fine(String.format("-> Delay animation start by %d", aniDelay));
+			}
 			
 			long currTime = System.currentTimeMillis();
 			_aniRunner = new AnimationRunnable(_renderer, aniDelay, currTime);
@@ -319,13 +332,12 @@ public class TOJTrial extends Trial<Response> {
 				
 				// render
 				LogContext.getLogger().fine(String.format(
-						"Animation starts at time %d", System.currentTimeMillis() - _refTime));
+						"--> Animation started at time %d", System.currentTimeMillis() - _refTime));
 				
 	    		_renderer.setStartTime(_animationStart = System.currentTimeMillis()); 
 	    		
-				LogContext.getLogger().fine(String.format(
-						"Animation ends at time %d", System.currentTimeMillis() - _refTime));
-				
+				/*LogContext.getLogger().fine(String.format(
+						"Animation ends at time %d", System.currentTimeMillis() - _refTime));*/
 			}
 		}
 		
@@ -353,14 +365,13 @@ public class TOJTrial extends Trial<Response> {
 				
 				// play
 				LogContext.getLogger().fine(String.format(
-						"Sound starts at time %d", System.currentTimeMillis() - _refTime));
+						"--> Sound started at time %d", System.currentTimeMillis() - _refTime));
 				
 				_audioStart = System.currentTimeMillis();
 				_audio.play();
 				
-				LogContext.getLogger().fine(String.format(
-						"Sound ends at time %d", System.currentTimeMillis() - _refTime));
-				
+				/*LogContext.getLogger().fine(String.format(
+						"Sound ends at time %d", System.currentTimeMillis() - _refTime));*/
 			}
 		}
 		

@@ -265,7 +265,7 @@ public class StimulusResponseScreen extends BasicStep {
         currTrial.setTimeStamp(new Date());
         
         LogContext.getLogger().fine(
-            String.format("-> %s: %s", currBlock, currTrial));
+            String.format("\n--------------------\n-> %s: %s", currBlock, currTrial));
         
 
         _session.execute(new PrepareRunnable(currTrial));
@@ -364,8 +364,7 @@ public class StimulusResponseScreen extends BasicStep {
                             ConfigKeys.withTapText : ConfigKeys.withoutTapText, null));
                         
                         if(_tapTarget != null) {
-                            boolean focusRequest = _tapTarget.requestFocusInWindow();
-                            LogContext.getLogger().fine("Result from focus request: " + focusRequest);
+                        	_tapTarget.requestFocusInWindow();
                         }
                     }
                 });

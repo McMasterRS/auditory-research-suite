@@ -7,24 +7,16 @@
  */
 package edu.mcmaster.maplelab.toj.animator;
 
-import static javax.media.opengl.GL.*;
-import static javax.media.opengl.GL.GL_DEPTH_BUFFER_BIT;
-import static javax.media.opengl.GL.GL_DEPTH_TEST;
-import static javax.media.opengl.GL.GL_LEQUAL;
-import static javax.media.opengl.GL.GL_LINE_STRIP;
-import static javax.media.opengl.GL.GL_MODELVIEW;
-import static javax.media.opengl.GL.GL_PROJECTION;
-import static javax.media.opengl.GL.GL_SMOOTH;
+import static javax.media.opengl.GL2.*;
 
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
-import javax.media.opengl.glu.GLUquadric;
 import javax.vecmath.Point2f;
 
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
@@ -35,7 +27,6 @@ import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
  */
 public class AnimationRenderer implements GLEventListener { 
 	private TOJTrial _trial = null;
-	private boolean _connectTheDots = true;
 	
 	private long _startTime;				// ms
 	private boolean _animatedOnce = true; // set to true when 1 stroke is animated
@@ -45,8 +36,7 @@ public class AnimationRenderer implements GLEventListener {
 	/**
 	 * Constructor.
 	 */
-	public AnimationRenderer(boolean connectTheDots) {
-		_connectTheDots = connectTheDots;
+	public AnimationRenderer() {
 	}
 
 	/** Set the current trial to animate. Doing so implies starting at the first frame. */
@@ -61,7 +51,7 @@ public class AnimationRenderer implements GLEventListener {
 			throw new IllegalArgumentException("canvas must be type GLAutoDrawable");
 		}
 
-		GL gl = canvas.getGL();
+		GL2 gl = (GL2) canvas.getGL();
 
 		gl.glShadeModel(GL_SMOOTH);                            //Enables Smooth Color Shading
 		gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);               //This Will Clear The Background Color To Black
@@ -78,7 +68,7 @@ public class AnimationRenderer implements GLEventListener {
 	@Override
 	public void display(GLAutoDrawable d) {
 		
-		GL gl = d.getGL();
+		GL2 gl = (GL2) d.getGL();
 		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);       //Clear The Screen And The Depth Buffer
 		gl.glDisable(GL_DEPTH_TEST);
 		
@@ -106,7 +96,7 @@ public class AnimationRenderer implements GLEventListener {
 	} 
 
 	// display 1 frame
-	private void displayFrame(GL gl, AnimationFrame frame) {
+	private void displayFrame(GL2 gl, AnimationFrame frame) {
 		if (frame == null) return;
 
 		// TODO: Can the disk can be instantiated in the init method?
@@ -119,7 +109,7 @@ public class AnimationRenderer implements GLEventListener {
 		// draw connecting lines
 		gl.glColor3f(1f, 1f, 1f);
 		
-		if (_connectTheDots) {
+		if (_trial.isConnected()) {
 			gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			gl.glBegin(GL_LINE_STRIP);
 
@@ -153,15 +143,11 @@ public class AnimationRenderer implements GLEventListener {
 	}
 
 	@Override
-	public void displayChanged(GLAutoDrawable arg0, boolean arg1, boolean arg2) {
-	}
-
-	@Override
 	public void reshape(GLAutoDrawable canvas, int x, int y, int width,
 			int height) {
 		if (height==0) height=1; // fix 0 val
 		
-		GL gl = canvas.getGL();
+		GL2 gl = (GL2) canvas.getGL();
 		GLU glu = new GLU();
 		
 		// set viewport
@@ -231,5 +217,11 @@ public class AnimationRenderer implements GLEventListener {
 	 */
 	public void removeAnimationListener(AnimationListener listener) {
 		if (_listeners != null) _listeners.remove(listener);
+	}
+
+	@Override
+	public void dispose(GLAutoDrawable arg0) {
+		// TODO Auto-generated method stub
+		
 	}
 }

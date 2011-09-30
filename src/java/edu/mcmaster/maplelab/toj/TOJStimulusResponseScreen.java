@@ -36,9 +36,7 @@ import edu.mcmaster.maplelab.common.gui.BasicStep;
 import edu.mcmaster.maplelab.common.gui.InvokeOnAWTQueueRunnable;
 import edu.mcmaster.maplelab.common.gui.ResponseInputs;
 import edu.mcmaster.maplelab.common.gui.StepManager;
-import edu.mcmaster.maplelab.common.sound.Playable;
 import edu.mcmaster.maplelab.toj.animator.AnimationRenderer;
-import edu.mcmaster.maplelab.toj.animator.AnimationSequence;
 import edu.mcmaster.maplelab.toj.animator.AnimationPanel;
 import edu.mcmaster.maplelab.toj.datamodel.TOJBlock;
 import edu.mcmaster.maplelab.toj.datamodel.TOJResponseParameters;
@@ -82,7 +80,7 @@ public class TOJStimulusResponseScreen extends BasicStep {
 
     private final TOJSession _session;
 	private final boolean _isWarmup;
-	private final AnimationPanel _aniPanel;
+	private AnimationPanel _aniPanel;
 	private final AnimationRenderer _renderer;
 	private final ResponseKeyListener _keyListener;
 
@@ -92,7 +90,7 @@ public class TOJStimulusResponseScreen extends BasicStep {
 		
 		_session = session;
 		_isWarmup = isWarmup;
-		_renderer = new AnimationRenderer(_session.connectDots());
+		_renderer = new AnimationRenderer();
 		_keyListener = new ResponseKeyListener();
 		
 		setTitleText(_session.getString(
@@ -101,10 +99,6 @@ public class TOJStimulusResponseScreen extends BasicStep {
         setInstructionText(_session.getString(
             isWarmup ? ConfigKeys.warmupScreenTrialText : ConfigKeys.testScreenTrialText, 
                 null));
-        
-        Dimension dim = new Dimension(_session.getScreenWidth(), _session.getScreenHeight());
-        _aniPanel = new AnimationPanel(_renderer);
-        _aniPanel.setAnimationSize(dim);
         
         JPanel bottom = new JPanel(new MigLayout("insets 0, fill", "[]0px[]", "[]"));
         getContentPanel().add(bottom, BorderLayout.SOUTH);
@@ -139,9 +133,12 @@ public class TOJStimulusResponseScreen extends BasicStep {
         
         _response.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                updateEnabledState();
+                updatePrevNextState();
             }
         });
+        
+        // initialize w/ response controls disabled
+        setEnabled(false);
     }
     
     /**
@@ -166,6 +163,7 @@ public class TOJStimulusResponseScreen extends BasicStep {
         }
         else {
             _blocks = _session.generateBlocks();
+            LogContext.getLogger().fine(_session.getCombinatorialDescription());
         }
         
     }
@@ -177,15 +175,15 @@ public class TOJStimulusResponseScreen extends BasicStep {
      */
     @Override
     public void setEnabled(boolean enabled) {
-        updateEnabledState();
+    	super.setEnabled(enabled && _response.isResponseComplete());
         _response.setEnabled(enabled);
     }
     
     /**
      * Update the "next" button to be enabled only when full response selected.
      */
-    private void updateEnabledState() {
-        super.setEnabled(_response.isResponseComplete());
+    private void updatePrevNextState() {
+        getPrevNextButtons().setEnabled(_response.isResponseComplete());
     }
     
     /** 
@@ -196,7 +194,7 @@ public class TOJStimulusResponseScreen extends BasicStep {
     @Override
     protected void doNext() {
     	// block user input and allow response collection code to re-enable
-    	getPrevNextButtons().setEnabled(false);
+    	setEnabled(false);
     	
     	recordResponse();
         if (!isDone()) {
@@ -238,7 +236,8 @@ public class TOJStimulusResponseScreen extends BasicStep {
         
         if (_blockIndex < _blocks.size()) {
             TOJBlock block = currBlock();
-            LogContext.getLogger().fine("* New block: " + block);
+            LogContext.getLogger().fine(String.format("> New block: %s: %d trials", 
+            		block, block.getNumTrials()));
         }
         else if (!_isWarmup) {
         	_session.incrementRepetition();
@@ -258,7 +257,8 @@ public class TOJStimulusResponseScreen extends BasicStep {
         if (currTrial == null) return;
         currTrial.setTimeStamp(new Date());
         
-        LogContext.getLogger().fine(String.format("-> %s: %s", currBlock, currTrial));
+        LogContext.getLogger().fine(String.format("\n--------------------\n-> %s: %s", 
+        		currBlock, currTrial.getDescription()));
 
         _session.execute(new PrepareRunnable(currTrial));
         _session.execute(new PlaybackRunnable(currTrial));
@@ -276,7 +276,7 @@ public class TOJStimulusResponseScreen extends BasicStep {
         t.setResponse(_response.getResponse());
         
         LogContext.getLogger().fine(
-            String.format("---> response: %s" , t.getResponse()));
+            String.format("-> %s" , t.getResponse()));
         
         if (!_isWarmup) {
             try {
@@ -347,27 +347,26 @@ public class TOJStimulusResponseScreen extends BasicStep {
                     }
                 });
             	
-            	AnimationSequence as = _trial.getAnimationSequence();
-            	Playable p = _trial.getPlayable();
-            	LogContext.getLogger().fine("Trial data:");
-            	LogContext.getLogger().fine(String.format("--animation file: %s", 
-            			as != null ? as.getSourceFileName() : "n/a"));
-            	LogContext.getLogger().fine(String.format("--audio file: %s", 
-            			p != null ? p.name() : "n/a"));
-            	LogContext.getLogger().fine(String.format(
-            			"--audio offset: %s", String.valueOf(_trial.getOffset())));
-            	LogContext.getLogger().fine(String.format("--num animation points: %d", 
-            			_trial.getNumPoints()));
-            	
             	// actual delay until next trial
             	Thread.sleep(_session.getTrialDelay());
                 
                 SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
                     	TOJBlock block = currBlock();
-                    	getContentPanel().remove(_aniPanel);
+
                     	if (block.getType() == AVBlockType.AUDIO_VIDEO) {
-                    		getContentPanel().add(_aniPanel, BorderLayout.CENTER);
+                        	// create and add animation panel if not done
+                        	if (_aniPanel == null) {
+                                _aniPanel = new AnimationPanel(_renderer, 
+                                		new Dimension(_session.getScreenWidth(), _session.getScreenHeight()));
+
+                                getContentPanel().add(_aniPanel, BorderLayout.CENTER);
+                        	}
+                    		_aniPanel.start();
+                    	}
+                    	else {
+                    		getContentPanel().remove(_aniPanel);
+                    		_aniPanel = null;
                     	}
                         _statusText.setText(_session.getString(ConfigKeys.duringTrialText, ""));
                     }
@@ -422,11 +421,11 @@ public class TOJStimulusResponseScreen extends BasicStep {
         private synchronized void trialPlaybackDone() {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
+                	if (_aniPanel != null) _aniPanel.stop();
                 	_trial.removePlaybackListener(_listener);
                     _statusText.setText(_session.getString(ConfigKeys.enterResponseText, null));
                     setEnabled(true);
-                    boolean focusRequest = _response.requestFocusInWindow();
-                    LogContext.getLogger().fine("Result from focus request: " + focusRequest);
+                    _response.requestFocusInWindow();
                     Toolkit.getDefaultToolkit().addAWTEventListener(_keyListener, 
                     		AWTEvent.KEY_EVENT_MASK);
                 }
@@ -442,29 +441,8 @@ public class TOJStimulusResponseScreen extends BasicStep {
 		public void eventDispatched(AWTEvent event) {
 			switch(event.getID()) {
 		        case KeyEvent.KEY_PRESSED:
-		            int key = ((KeyEvent) event).getKeyCode();
-		            if (key == KeyEvent.VK_D) {
-		            	_response.setAnswerSelection(0);
-		            }
-		            else if (key == KeyEvent.VK_T) {
-		            	_response.setAnswerSelection(1);
-		            }
-		            else if (key == KeyEvent.VK_5 || key == KeyEvent.VK_NUMPAD5) {
-		            	_response.setConfidenceSelection(0);
-		            }
-		            else if (key == KeyEvent.VK_4 || key == KeyEvent.VK_NUMPAD4) {
-		            	_response.setConfidenceSelection(1);
-		            }
-		            else if (key == KeyEvent.VK_3 || key == KeyEvent.VK_NUMPAD3) {
-		            	_response.setConfidenceSelection(2);
-		            }
-		            else if (key == KeyEvent.VK_2 || key == KeyEvent.VK_NUMPAD2) {
-		            	_response.setConfidenceSelection(3);
-		            }
-		            else if (key == KeyEvent.VK_1 || key == KeyEvent.VK_NUMPAD1) {
-		            	_response.setConfidenceSelection(4);
-		            }
-		            updateEnabledState();
+		            _response.setSelection(((KeyEvent) event).getKeyChar());
+		            updatePrevNextState();
 		            break;
 		        case KeyEvent.KEY_RELEASED:
 		            return; //nothing

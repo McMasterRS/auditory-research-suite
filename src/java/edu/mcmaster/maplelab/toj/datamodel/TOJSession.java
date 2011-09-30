@@ -27,6 +27,7 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 	public enum ConfigKeys {
 		screenWidth,
 		screenHeight,
+		animationPointAspect,
 		dataFileName,
 		pitches,
 		frequencies,
@@ -46,6 +47,12 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 	
 	public TOJSession(Properties props) {
 		super(props);
+		
+		int count = 0;
+		count += includeAudioBlock() ? 1 : 0;
+		count += includeVideoBlock() ? 1 : 0;
+		count += includeAudioVideoBlock() ? 1 : 0;
+		setNumBlocks(count);
 	}
 
 	@Override
@@ -98,6 +105,13 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
 	 */
 	public int getScreenHeight() {
 		return getInteger(ConfigKeys.screenHeight, 480);
+	}
+	
+	/**
+	 * Get the aspect ratio multiplier, if set.
+	 */
+	public float getAnimationPointAspect() {
+		return getFloat(ConfigKeys.animationPointAspect, 1.0f);
 	}
 	
 	public String getDataFileName() {
@@ -209,6 +223,75 @@ public class TOJSession extends Session<TOJBlock, TOJTrial, TOJTrialLogger> {
             retval = ((Long)val).longValue();
         }
         return retval;
+	}
+	
+	/**
+	 * Get a description of all of the parameters that will contribute to block and
+	 * trial combinatorial generation.
+	 */
+	public String getCombinatorialDescription() {
+		// blocks
+		String blockTypes = "";
+		blockTypes += includeAudioBlock() ? 
+				"\t\t\t" + AVBlockType.AUDIO_ONLY.getUIName() + " block\n" : "";
+		blockTypes += includeVideoBlock() ? 
+				"\t\t\t" + AVBlockType.VIDEO_ONLY.getUIName() + " block\n" : "";
+		blockTypes += includeAudioVideoBlock() ? 
+				"\t\t\t" + AVBlockType.AUDIO_VIDEO.getUIName() + " block\n" : "";
+		blockTypes = String.format("\t%d block(s), repeated %d time(s), includes:\n", 
+						getNumBlocks(), getBlockSetRepetitions()) + blockTypes;
+		
+		// parameters
+		List<String> strikes = getStrikeDurations();
+		List<NotesEnum> pitches = getPitches();
+		List<String> freq = getFrequencies();
+		List<String> spec = getSpectrums();
+		List<String> envDur = getEnvelopeDurations();
+		List<Long> offsets = getSoundOffsets();
+		List<Integer> points = getNumAnimationPoints();
+		
+		// trial counts
+		int audioOnly = freq.size() * spec.size() * envDur.size() * offsets.size();
+		int animation = strikes.size() * pitches.size() * points.size() * audioOnly;
+		int video = 0; //TODO: video trials?
+		if (!includeAudioBlock()) audioOnly = 0;
+		if (!includeAudioVideoBlock()) animation = 0;
+		
+		return String.format("\n********** Experiment Session Trial Details **********\n%s\n" +
+				(includeAudioBlock() ? 
+						String.format("\tAudio-only trial count: %d\n", audioOnly) : "") +
+				(includeAudioVideoBlock() ? 
+						String.format("\tAudio and animation trial count: %d\n", animation) : "") +
+				(includeVideoBlock() ? 
+						String.format("\tVideo trial count: %d\n", video) : "") +
+				String.format("\tTotal trials: %d\n\n", audioOnly + animation + video) +
+				"\tAuditory offsets: %s\n\tAudio data:\n" +
+				"\t\tFrequencies: %s\n\t\tSpectra: %s\n" +
+				"\t\tEnvelope/Durations: %s\n\tAnimation data:\n" +
+				"\t\tDurations: %s\n\t\tPitches: %s\n" +
+				"\t\tAnimation points: %s\n" +
+				"**************************************************\n\n", blockTypes,
+				listString(offsets), listString(freq), listString(spec),
+				listString(envDur, 3, 2), listString(strikes), listString(pitches), 
+				listString(points));
+	}
+	
+	private static String listString(List<?> list) {
+		return listString(list, -1, 0);
+	}
+	
+	private static String listString(List<?> list, int breakAfter, int tabs) {
+		String retval = "[";
+		for (int i = 0; i < list.size(); i++) {
+			if (breakAfter > 0 && i > 0 && i % breakAfter == 0) {
+				retval += "\n";
+				for (int j = 0; j <= tabs; j++) {
+					retval += "\t";
+				}
+			}
+			retval += list.get(i).toString() + ", ";
+		}
+		return retval.substring(0, retval.length()-2) + "]";
 	}
 	
 	/**

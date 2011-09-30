@@ -5,9 +5,20 @@ import edu.mcmaster.maplelab.common.datamodel.Response;
 import edu.mcmaster.maplelab.common.datamodel.ResponseParameters;
 
 public class TOJResponseParameters extends ResponseParameters<TOJSession> {
+	
+	private enum ConfigLabels {
+		dotLabel,
+		toneLabel
+	}
+	
+	private final String _dotLabel;
+	private final String _toneLabel;
 
 	public TOJResponseParameters(TOJSession session) {
 		super(session);
+		
+		_dotLabel = session.getString(ConfigLabels.dotLabel, "Dot");
+		_toneLabel = session.getString(ConfigLabels.toneLabel, "Tone");
 	}
 
 	@Override
@@ -17,7 +28,7 @@ public class TOJResponseParameters extends ResponseParameters<TOJSession> {
 
 	@Override
 	public Answer[] getAnswers() {
-		return Answer.values("Dot", "Tone");
+		return Answer.values(_dotLabel, _toneLabel);
 	}
 
 	public static boolean isDotFirst(Response response) {

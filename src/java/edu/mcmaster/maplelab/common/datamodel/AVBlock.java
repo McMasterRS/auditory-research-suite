@@ -5,9 +5,22 @@ import java.util.List;
 public abstract class AVBlock<S extends Session<?,?,?>, T extends Trial<?>> extends Block<S, T> {
 	
 	public enum AVBlockType {
-		AUDIO_ONLY,
-		VIDEO_ONLY,
-		AUDIO_VIDEO
+		AUDIO_ONLY("Audio only"),
+		VIDEO_ONLY("Video"),
+		AUDIO_VIDEO("Audio and animation");
+		
+		private final String _uiName;
+		
+		private AVBlockType(String uiName) {
+			_uiName = uiName;
+		}
+		
+		/**
+		 * Get the human-readable version of this block type.
+		 */
+		public String getUIName() {
+			return _uiName;
+		}
 	}
 	
 	private final AVBlockType _type;

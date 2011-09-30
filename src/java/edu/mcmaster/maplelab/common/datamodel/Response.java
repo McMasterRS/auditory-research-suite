@@ -39,7 +39,7 @@ public class Response {
     
     @Override
     public String toString() {
-        return String.format("Response[answer=%s,confidence=%s]", 
+        return String.format("Response: answer=\"%s\", confidence=\"%s\"", 
         		getAnswer(), getConfidence());
     }
 }

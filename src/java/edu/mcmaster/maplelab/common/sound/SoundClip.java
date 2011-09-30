@@ -3,11 +3,17 @@ package edu.mcmaster.maplelab.common.sound;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
 import javax.sound.sampled.*;
+
+import com.jogamp.openal.sound3d.AudioSystem3D;
+import com.jogamp.openal.sound3d.Buffer;
+import com.jogamp.openal.sound3d.Source;
+import com.jogamp.openal.util.ALut;
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.ResourceLoader;
@@ -18,14 +24,29 @@ import edu.mcmaster.maplelab.common.datamodel.Session;
  *
  */
 public class SoundClip implements Playable {
+	static {
+		AudioSystem3D.init();
+        ALut.alutInit();
+	}
+	
     private static Map<String, Playable> _soundCache = new HashMap<String, Playable>();
     private final Clip _clip;
+    private final Source _source;
+    private float _sourceVol = 1.0f;
     private final String _name;
     private int _desiredDur = -1;
+    private ArrayList<PlayableListener> _listeners = new ArrayList<PlayableListener>();
+    
+    public SoundClip(String name, Source source) {
+    	_name = name;
+    	_source = source;
+    	_clip = null;
+    }
 
     public SoundClip(String name, Clip clip) {
         _name = name;
         _clip = clip;
+        _source = null;
     }
 
     public void setDesiredDuration(int desiredDur) {
@@ -33,6 +54,21 @@ public class SoundClip implements Playable {
     }
 
     public int getClipDuration() {
+    	if (_source != null) {
+        	/* Frequency is in terms of samples/second.
+        	 * Size is in terms of bytes.
+        	 * Bit-depth is sample size in bits (bits/sample).
+        	 * We want bytes * bits/byte * sample/bits * seconds/sample * milliseconds/second
+        	 */
+    		Buffer b = _source.getBuffer();
+    		double bytes = b.getSize();
+    		double bitsPerByte = 8;
+    		double samplePerBits = 1d / (double) b.getBitDepth();
+    		double secondsPerSample = 1d / (double) b.getFrequency();
+    		double millisPerSec = 1000;
+    		return (int) (bytes * samplePerBits * bitsPerByte * millisPerSec * secondsPerSample);
+    	}
+    	
         long dur = _clip.getMicrosecondLength();
         return dur != AudioSystem.NOT_SPECIFIED ? (int) (dur / 1000) : 0;
     }
@@ -43,13 +79,32 @@ public class SoundClip implements Playable {
     }
 
     public void play() {
-        _clip.setFramePosition(0);
-        _clip.start();
+    	if (_source != null) {
+    		_source.rewind();
+    		_source.play();
+    	}
+    	else {
+            _clip.setFramePosition(0);
+            _clip.start();
+    	}
+    	
         
         // The call _clip.drain() below takes too long, messing up synchronization.
         // Just using Thread.sleep() gives us the accuracy we want. Required
         // to support blocking semantics of method.
         Session.sleep(duration());
+        
+        // if desired duration was less than actual, we have to stop early
+        if (_source != null) _source.stop();
+        else _clip.stop();
+        
+        synchronized (_listeners) {
+            if (!_listeners.isEmpty()) {
+            	for (PlayableListener pl : _listeners) {
+            		pl.playableEnded(null);
+            	}
+            }
+        }
     }
 
     public String name() {
@@ -58,6 +113,11 @@ public class SoundClip implements Playable {
     
     @Override
     public void setVolume(float volume) {
+    	if (_source != null) {
+    		_source.setGain(volume);
+    		return;
+    	}
+    	
     	FloatControl c = null;
     	try {
     		c = (FloatControl) _clip.getControl(FloatControl.Type.VOLUME);
@@ -76,6 +136,17 @@ public class SoundClip implements Playable {
     
     @Override
     public void setMute(boolean mute) {
+    	if (_source != null) {
+    		if (mute) {
+        		_sourceVol = _source.getGain();
+        		_source.setGain(0);
+    		}
+    		else {
+    			_source.setGain(_sourceVol);
+    		}
+    		return;
+    	}
+    	
     	BooleanControl b = null;
     	try {
     		b = (BooleanControl) _clip.getControl(BooleanControl.Type.MUTE);
@@ -104,23 +175,43 @@ public class SoundClip implements Playable {
         if (p == null) {
             if (filename != null) {
                 Clip clip = null;
+                Source source = null;
                 try {
                     InputStream input = ResourceLoader.findAudioData(directory, filename);
                     if(input == null) {
                         throw new FileNotFoundException("Couldn't find " + filename);
                     }
-                    AudioInputStream stream = AudioSystem.getAudioInputStream(input);
-                    AudioFormat format = stream.getFormat();
-                    LogContext.getLogger().fine(String.format("%s -> %s", format, filename));
-                    clip = (Clip) AudioSystem.getLine(new DataLine.Info(Clip.class, format));
-                    clip.open(stream);
+                    
+                    // load the source
+                    source = AudioSystem3D.loadSource(input);
+                    
+                    if (source == null) {
+                    	// if source load failed, try clip
+                    	input = ResourceLoader.findAudioData(directory, filename);
+                        AudioInputStream stream = AudioSystem.getAudioInputStream(input);
+                        AudioFormat format = stream.getFormat();
+                        LogContext.getLogger().fine(String.format("%s -> %s", format, filename));
+                        clip = (Clip) AudioSystem.getLine(new DataLine.Info(Clip.class, format));
+                        clip.open(stream);
+                    }
                 }
                 catch (Exception ex) {
                     LogContext.getLogger().log(Level.SEVERE, "Couldn't load audio resource " + filename, ex);
                     return null;
                 }
-
-                if(clip != null)  {
+                
+                if (source != null) {
+                	p = new SoundClip(filename, source);
+                    if (desiredDur > 0) {
+                        ((SoundClip) p).setDesiredDuration(desiredDur);
+                    }
+                    
+                    // don't change the volume unless necessary
+                    if (Float.compare(1.0f, volume) != 0) p.setVolume(volume);
+                    
+                    _soundCache.put(filename, p);
+                }
+                else if (clip != null)  {
                     p = new SoundClip(filename, clip);
                     if (desiredDur > 0) {
                         ((SoundClip) p).setDesiredDuration(desiredDur);
@@ -145,12 +236,18 @@ public class SoundClip implements Playable {
 
 	@Override
 	public void addListener(PlayableListener listener) {
-		_clip.addLineListener(listener);
+		synchronized (_listeners) {
+			if (_source != null) _listeners.add(listener);
+			else _clip.addLineListener(listener);
+		}
 	}
 
 	@Override
 	public void removeListener(PlayableListener listener) {
-		_clip.removeLineListener(listener);
+		synchronized (_listeners) {
+			if (_source != null) _listeners.remove(listener);
+			else _clip.removeLineListener(listener);
+		}
 	}
 	
 	/**

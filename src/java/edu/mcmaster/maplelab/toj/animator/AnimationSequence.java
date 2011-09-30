@@ -23,18 +23,25 @@ public class AnimationSequence {
 	private final List<AnimationFrame> _aniFrames;
 	/** Source file name. */
 	private final String _fileName;
+	/** Aspect ratio of points - for reporting only. */
+	private final float _aspect;
 	/** Cached values. */
 	private AnimationFrame _lowestFrame = null;
 	private Rectangle2D.Float _extent = null;
 	
-	public AnimationSequence(String sourceFileName, List<AnimationFrame> aniFrames) {
+	public AnimationSequence(String sourceFileName, List<AnimationFrame> aniFrames, float aspect) {
 		_fileName = sourceFileName;
 		_aniFrames = aniFrames;	
+		_aspect = aspect;
 		calculateExtents();
 	}
 	
 	public String getSourceFileName() {
 		return _fileName;
+	}
+	
+	public float getPointAspect() {
+		return _aspect;
 	}
 
 	public AnimationFrame getFrameAtIndex(int currentFrame) { 
