@@ -35,7 +35,8 @@
     		<jarfileset dir="..">
     			<include name="www/toj/toj.jar"/>
     			<include name="lib/miglayout-4.0.jar"/>
-    			<include name="lib/jogl.jar"/>
+    			<include name="lib/jogl.all.jar"/>
+    			<include name="lib/joal.jar"/>
     			<include name="lib/gluegen-rt.jar"/>
     		</jarfileset>
 	        <resourcefileset dir="../www/toj" includes="toj.properties"/>

@@ -36,7 +36,8 @@
         <fileset dir="lib">
 	        <include name="junit-4.1.jar" />
         	<include name="miglayout-4.0.jar" />
-        	<include name="jogl.jar" />
+        	<include name="jogl.all.jar" />
+        	<include name="joal.jar" />
         	<include name="gluegen-rt.jar" />
         </fileset>
     </path>	
