@@ -16,6 +16,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
@@ -123,7 +124,14 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
         _dataDir.setFile(new File(home));
         
         restore();
+        
+        try {
+        	initializeBuildInfo();
+        }
+        catch (IOException ioe) { }
     }
+    
+    protected abstract void initializeBuildInfo() throws IOException;
     
     /**
      * Get a title prefix specific to the experiment.
@@ -201,8 +209,15 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
     private Preferences prefs() {
         Preferences prefs = Preferences.userNodeForPackage(getClass());
         // Create a new node.
-        prefs = prefs.node(_prefsPrefix + ".setup");
+        prefs = prefs.node(getPrefsPrefix() + ".setup");
         return prefs; 
+    }
+    
+    /**
+     * Get the preferences prefix string.
+     */
+    protected String getPrefsPrefix() {
+    	return _prefsPrefix;
     }
     
     /**

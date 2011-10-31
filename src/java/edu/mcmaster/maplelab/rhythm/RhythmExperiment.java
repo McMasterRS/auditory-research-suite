@@ -12,16 +12,14 @@
 package edu.mcmaster.maplelab.rhythm;
 
 import java.awt.*;
-import java.io.*;
-import java.util.Properties;
 import java.util.logging.Level;
 
 import javax.swing.*;
 
+import edu.mcmaster.maplelab.common.Experiment;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.gui.*;
 import edu.mcmaster.maplelab.rhythm.datamodel.*;
-import edu.mcmaster.maplelab.toj.TOJExperiment;
 
 /**
  * Main container and configuration for the rhythm experiment.
@@ -29,97 +27,30 @@ import edu.mcmaster.maplelab.toj.TOJExperiment;
  * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since   Nov 7, 2006
  */
-public class RhythmExperiment extends JPanel {
+public class RhythmExperiment extends Experiment<RhythmSession> {
     public static final String EXPERIMENT_BASENAME = "Rhythm";
-    
-    private enum VersionProps {
-		buildVersion,
-		buildDate
-	}
-	
-	private static String _buildVersion;
-	private static String _buildDate;
-	private final RhythmSession _session;
-    private JPanel _contentCard;
 
     public RhythmExperiment(RhythmSession session) {
-        super(new BorderLayout());
-        _session = session;
-        
-        LogContext.getLogger().finest("baseIOIs: " + _session.getBaseIOIs());
-        
-        add(getContent(), BorderLayout.CENTER);
+        super(session);
         
         setPreferredSize(new Dimension(640, 480));
     }
     
-    /**
-     * Load build information from the given properties.
-     */
-	private static void loadBuildInfo(Properties props) {
-		_buildVersion = props.getProperty(VersionProps.buildVersion.name(), "-1");
-		_buildDate = props.getProperty(VersionProps.buildDate.name(), "00000000");
-	}
-	
-	public static String getBuildVersion() {
-		return _buildVersion;
-	}
-	
-	public static String getBuildDate() {
-		return _buildDate;
-	}
-    
-    /**
-     * This method initializes jContentPane
-     * 
-     * @return javax.swing.JPanel
-     */
-    private JPanel getContent() {
-        if (_contentCard == null) {
-            _contentCard = new JPanel();
-            _contentCard.setLayout(new CardLayout());
-            CardLayoutStepManager sMgr = new CardLayoutStepManager(_contentCard);
-            _contentCard.add(new Introduction(sMgr, _session), "intro");   
-            if(_session.getNumWarmupTrials() > 0) {
-                _contentCard.add(new PreWarmupInstructions(sMgr, _session),  "prewarmup");
-                _contentCard.add(new StimulusResponseScreen(sMgr, _session, true), "warmup");
+    @Override
+    protected void loadContent(JPanel contentCard) {
+    	RhythmSession session = getSession();
+        if (contentCard != null) {
+            CardLayoutStepManager sMgr = new CardLayoutStepManager(contentCard);
+            contentCard.add(new Introduction(sMgr, session), "intro");   
+            if(session.getNumWarmupTrials() > 0) {
+                contentCard.add(new PreWarmupInstructions(sMgr, session),  "prewarmup");
+                contentCard.add(new StimulusResponseScreen(sMgr, session, true), "warmup");
             }   
-            _contentCard.add(new PreTrialsInstructions(sMgr, _session),  "pretrials");            
-            _contentCard.add(new StimulusResponseScreen(sMgr, _session, false), "test");            
-            _contentCard.add(new Completion(sMgr, _session), "complete");            
-            _contentCard.add(new JLabel(), "Blank");
+            contentCard.add(new PreTrialsInstructions(sMgr, session),  "pretrials");            
+            contentCard.add(new StimulusResponseScreen(sMgr, session, false), "test");            
+            contentCard.add(new Completion(sMgr, session), "complete");            
+            contentCard.add(new JLabel(), "Blank");
         }
-        return _contentCard;
-    }
-    
-    /**
-     * Initialize build information.
-     */
-    protected static void initializeBuildInfo(File dataDir) throws IOException {
-    	if (_buildDate != null && _buildVersion != null) return;
-    	
-    	String name = EXPERIMENT_BASENAME.toLowerCase() + ".version.properties";
-        File f = dataDir != null ? new File(dataDir, name) : null;
-        InputStream is = null;
-        if (f != null && f.exists()) {
-            is = new FileInputStream(f);            
-        }
-        else {
-            is = TOJExperiment.class.getResourceAsStream(name);
-        }
-        
-        Properties props = new Properties();
-        try {
-            props.load(is);
-        }
-        catch (Exception ex) {
-        	LogContext.getLogger().log(Level.SEVERE, "Error reading version file", ex);
-        }
-        finally {
-            if(is != null)  try { is.close(); } catch (IOException e) {}
-        }
-        
-        loadBuildInfo(props);
     }
     
     

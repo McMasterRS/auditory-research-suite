@@ -42,6 +42,20 @@ public class ConfidenceLevel {
 		return levels.toArray(retval);
 	}
 	
+	/**
+	 * Generate a generic set of ConfidenceLevel values.
+	 */
+	public static ConfidenceLevel[] values(int min, int count) {
+		ArrayList<ConfidenceLevel> levels = new ArrayList<ConfidenceLevel>();
+		int currCount = 0;
+		for (int i = min; currCount < count; i++) {
+			levels.add(new ConfidenceLevel(i, String.valueOf(i)));
+			currCount++;
+		}
+		ConfidenceLevel[] retval = new ConfidenceLevel[levels.size()];
+		return levels.toArray(retval);
+	}
+	
 	private final int _ordinal;
 	private final String _description;
 	

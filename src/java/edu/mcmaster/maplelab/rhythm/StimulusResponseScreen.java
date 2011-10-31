@@ -26,6 +26,7 @@ import javax.sound.midi.*;
 import javax.swing.*;
 
 import edu.mcmaster.maplelab.common.LogContext;
+import edu.mcmaster.maplelab.common.datamodel.AnswerConfidenceResponseInputs;
 import edu.mcmaster.maplelab.common.gui.*;
 import edu.mcmaster.maplelab.common.sound.MidiInterpreter;
 import edu.mcmaster.maplelab.common.sound.Note;
@@ -64,7 +65,7 @@ public class StimulusResponseScreen extends BasicStep {
     }
     
     private final RhythmSession _session;
-    private ResponseInputs _response;
+    private AnswerConfidenceResponseInputs _response;
     private List<RhythmBlock> _blocks;
     private int _blockIndex = 0;
     private final boolean _isWarmup;
@@ -108,7 +109,7 @@ public class StimulusResponseScreen extends BasicStep {
         
         updateResultsText();
         
-        _response = new ResponseInputs(new RhythmResponseParameters(_session));
+        _response = new AnswerConfidenceResponseInputs(new RhythmResponseParameters(_session));
         bottom.add(_response);
         
         _response.addActionListener(new ActionListener() {

@@ -31,19 +31,19 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
+import edu.mcmaster.maplelab.av.animation.AnimationPanel;
+import edu.mcmaster.maplelab.av.animation.AnimationParser;
+import edu.mcmaster.maplelab.av.animation.AnimationRenderer;
+import edu.mcmaster.maplelab.av.animation.AnimationSequence;
+import edu.mcmaster.maplelab.av.datamodel.TrialPlaybackListener;
+import edu.mcmaster.maplelab.av.media.PlayableMedia;
+import edu.mcmaster.maplelab.av.media.PlayableMedia.MediaType;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.gui.FileBrowseField;
 import edu.mcmaster.maplelab.common.sound.NotesEnum;
-import edu.mcmaster.maplelab.common.sound.Playable;
-import edu.mcmaster.maplelab.common.sound.SoundClip;
-import edu.mcmaster.maplelab.toj.animator.AnimationParser;
-import edu.mcmaster.maplelab.toj.animator.AnimationRenderer;
-import edu.mcmaster.maplelab.toj.animator.AnimationSequence;
-import edu.mcmaster.maplelab.toj.animator.AnimationPanel;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
-import edu.mcmaster.maplelab.toj.datamodel.TOJTrialPlaybackListener;
 
 /**
  * This class creates a TOJDemoGUIPanel, which allows the user to run a TOJ demo without the setup screen.
@@ -124,7 +124,7 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 	    add(new JLabel("Pitch"), "right");
 		add(_pitches, "left, growx");
 	
-		_vDurations = new JComboBox(DurationEnum.values());
+		_vDurations = new JComboBox(DurationEnum.unDampedValues());
 		_vDurations.setSelectedItem(DurationEnum.NORMAL);
 		_vDurations.addActionListener(_fUpdater);
 		
@@ -180,15 +180,18 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 	public TOJTrial getTrial() {
 			
 		TOJSession session = getSession();
-		Playable playable = SoundClip.findPlayable(_audFile.getFile().toString(), 
-				session.getExpectedAudioSubDir(), session.getPlaybackGain());
+		final boolean vid = _useVideo.isSelected();
+		float volume = session.getPlaybackGain();
+		PlayableMedia media = vid ? MediaType.VIDEO.createDemoMedia(_vidFile.getFile(), volume) :
+				MediaType.AUDIO.createDemoMedia(_audFile.getFile(), volume);
 		try {
 			AnimationSequence aniSeq = AnimationParser.parseFile(
 					_visFile.getFile(), session.getAnimationPointAspect());
 			Object val = _delayText.getValue();
 			Long delay = Long.valueOf(val instanceof String ? (String) val : ((Number) val).toString());
-			return new TOJTrial(aniSeq, _useVideo.isSelected(), playable, delay, 
-					(Integer)_numPts.getValue(), 0.3f, _connect.isSelected());
+			return new TOJTrial(aniSeq, vid, media, delay, 
+					(Integer)_numPts.getValue(), session.getBaseAnimationPointSize(), 
+					_connect.isSelected());
 		}
 		catch (FileNotFoundException ex) {
 			Runnable r = new Runnable() {
@@ -257,15 +260,15 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 		}
 		
 		public void update() {
-			String file = _frequency.getSelectedItem() + "-" +
-							_spectrum.getSelectedItem() + "-" +
-							_envDuration.getSelectedItem() + ".wav";
-			_audFile.setFile(new File(getSession().getExpectedAudioSubDir(), file));
-
-			file = _pitches.getSelectedItem().toString().toLowerCase() + 
+			File f = MediaType.AUDIO.getExpectedFile(getSession(), _frequency.getSelectedItem(), 
+					_spectrum.getSelectedItem(), _envDuration.getSelectedItem());
+			_audFile.setFile(f);
+			
+			String aniName = _pitches.getSelectedItem().toString().toLowerCase() + 
 						((DurationEnum) _vDurations.getSelectedItem()).codeString() + 
 						"_.txt";
-			_visFile.setFile(new File(getSession().getExpectedVisualSubDir(), file));
+			f = new File(getSession().getExpectedAnimationSubDir(), aniName);
+			_visFile.setFile(f);
 			
 			/*File vidDir = new File("");				 //TODO: get video file
 			_vidFile.setFile(vidDir);*/
@@ -291,7 +294,7 @@ public class TOJDemoGUIPanel extends DemoGUIPanel<TOJSession, TOJTrial>{
 		}
 	}
 	
-	private class LoopListener implements TOJTrialPlaybackListener {
+	private class LoopListener implements TrialPlaybackListener {
 		@Override
 		public void playbackEnded() {
 			SwingUtilities.invokeLater(new Runnable() {

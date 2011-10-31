@@ -4,12 +4,37 @@ public enum DurationEnum {
 	SHORT("Short"),
     LONG("Long"),
     NORMAL("Normal"),
+    DAMPED("Damped") {
+		@Override
+		public String codeString() {
+	    	return "p";
+	    }
+	},
     NONE("None") {
 		@Override
 		public String codeString() {
-	    	return "";
+	    	return "x";
 	    }
 	};
+	
+	public static DurationEnum fromCodeString(String code) {
+		for (DurationEnum dur : values()) {
+			if (dur.codeString().equals(code.toLowerCase().trim())) return dur;
+		}
+		return null;
+	}
+	
+	public static DurationEnum[] unDampedValues() {
+		DurationEnum[] vals = values();
+		DurationEnum[] retval = new DurationEnum[vals.length-1];
+		int count = 0;
+		for (int i = 0; i < vals.length; i++) {
+			if (vals[i] == DAMPED) continue;
+			retval[count] = vals[i];
+			count++;
+		}
+		return retval;
+	}
         
     private final String _displayName;
     private DurationEnum(String displayName) {

@@ -11,6 +11,7 @@ import java.util.ArrayList;
  * @author <a href="mailto:ben.guseman@mseedsoft.com">Ben Guseman</a>
  */
 public class Answer {
+	public static final Answer NEUTRAL = new Answer(-1, "neutral");
 	
 	/**
 	 * Get all valid Answer values.

@@ -10,6 +10,8 @@ package edu.mcmaster.maplelab.common;
 
 import java.io.*;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.logging.Level;
 
@@ -60,6 +62,34 @@ public class ResourceLoader {
         if (retval == null) {
             throw new FileNotFoundException(String.format(
                 "Could not find audio file with name '%s'", fileName));
+        }
+
+        return retval;
+    }
+    
+    public static File findResource(File dir, String fileName) throws FileNotFoundException {
+    	File retval = null;
+        File f = dir != null ? new File(dir, fileName) : null;
+        if (f != null && f.exists()) {
+            retval = f;
+        }
+        else {
+            URL loc = findResource(fileName);
+            if (loc != null) {
+                try {
+                    retval = new File(loc.toURI());
+                }
+                catch (URISyntaxException e) {
+                	LogContext.getLogger().log(Level.WARNING, "Couldn't open file", e);
+                    // Just handle generically below.
+				}
+                LogContext.getLogger().finest(String.format("Found %s here: %s", fileName, loc));
+            }
+        }
+
+        if (retval == null) {
+            throw new FileNotFoundException(String.format(
+                "Could not find file with name '%s'", fileName));
         }
 
         return retval;

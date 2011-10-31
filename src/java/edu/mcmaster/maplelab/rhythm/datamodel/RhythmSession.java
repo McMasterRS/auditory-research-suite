@@ -11,17 +11,13 @@
 */
 package edu.mcmaster.maplelab.rhythm.datamodel;
 
-import java.io.File;
 import java.util.*;
 
-import edu.mcmaster.maplelab.common.datamodel.ConfidenceLevel;
-import edu.mcmaster.maplelab.common.datamodel.ResponseParameters;
 import edu.mcmaster.maplelab.common.datamodel.Session;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.sound.Pitch;
 import edu.mcmaster.maplelab.rhythm.RhythmExperiment;
 import edu.mcmaster.maplelab.rhythm.RhythmTrialLogger;
-import edu.mcmaster.maplelab.rhythm.RhythmTrialLogger.FileType;
 
 /**
  * Context data for the experiment session.
@@ -49,7 +45,6 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
         playbackMeasures,
         beatsPerMeasure,
         silenceMultiplier, 
-        speedMode,
         midiDevID,
         tapTestSound,
         computerKeyInput,
@@ -76,11 +71,6 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
     public String getExperimentBaseName() {
     	return RhythmExperiment.EXPERIMENT_BASENAME;
     }
-    
-    @Override
-	public File getDebugLogFile()  {
-    	return getTrialLogger().getOutputFile(FileType.DEBUG);
-    }
 
     /**
      * Get the experiment identifier (database key.
@@ -89,19 +79,6 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
     public int getExperimentDBKey() {
         return getSubject() * 10000 + getSession();
     }     
-    
-     /**
-     * Flag to indicate dividing IOIs by 10 to speed through stimulus for
-     * testing.
-     */
-    public boolean isSpeedMode() {
-        boolean retval = false;
-        Object val = getProperty(ConfigKeys.speedMode);
-        if(val instanceof String) {
-            retval = Boolean.parseBoolean((String)val);
-        }
-        return retval;
-    }
     
     /**
      * Flag to indicate that tones will be played in the
@@ -249,34 +226,36 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
         setProperty(ConfigKeys.midiDevID, id);
     }
     
-     /**
-      * Generate the experiment blocks. The number of blocks is a multiple of 
-      * the number of modulus widths.
-      */
-     public List<RhythmBlock> generateBlocks() {
-
-         List<RhythmBlock> retval = new ArrayList<RhythmBlock>();
-         
-         List<Integer> baseIOIs = getBaseIOIs();
-         
-         for (Integer ioi : baseIOIs) {
-        	 // just set generic id - we will renumber
-             retval.add(new RhythmBlock(this, 0, true, ioi)); 
-             retval.add(new RhythmBlock(this, 0, false, ioi)); 
-         }
-         
-         // Shuffle and renumber blocks
-         if (randomizeBlocks()) Collections.shuffle(retval);
-         for (int i = 0; i < retval.size(); i++) {
-        	 retval.get(i).setNum(i+1);
-         }
-         
-         return retval;
-     }
-     
+	 /**
+	  * Generate the experiment blocks. The number of blocks is a multiple of 
+	  * the number of modulus widths.
+	  */
+	@Override
+	 public List<RhythmBlock> generateBlocks() {
+	
+	     List<RhythmBlock> retval = new ArrayList<RhythmBlock>();
+	     
+	     List<Integer> baseIOIs = getBaseIOIs();
+	     
+	     for (Integer ioi : baseIOIs) {
+	    	 // just set generic id - we will renumber
+	         retval.add(new RhythmBlock(this, 0, true, ioi)); 
+	         retval.add(new RhythmBlock(this, 0, false, ioi)); 
+	     }
+	     
+	     // Shuffle and renumber blocks
+	     if (randomizeBlocks()) Collections.shuffle(retval);
+	     for (int i = 0; i < retval.size(); i++) {
+	    	 retval.get(i).setNum(i+1);
+	     }
+	     
+	     return retval;
+	 }
+	 
      /**
       * Generate a warmup block.
       */
+     @Override
      public RhythmBlock generateWarmup() {
          RhythmBlock warmup = new RhythmBlock(this, 1, true, getBaseIOIs().get(0));
          warmup.clipTrials(getNumWarmupTrials());

@@ -11,6 +11,11 @@ public class RhythmResponseParameters extends ResponseParameters<RhythmSession> 
 	}
 
 	@Override
+	public boolean isDiscrete() {
+		return true;
+	}
+
+	@Override
 	public String getQuestion() {
 		return "Accurate timing";
 	}

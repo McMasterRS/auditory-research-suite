@@ -25,6 +25,7 @@ import net.miginfocom.swing.MigLayout;
 
 import edu.mcmaster.maplelab.common.*;
 import edu.mcmaster.maplelab.common.datamodel.*;
+import edu.mcmaster.maplelab.toj.TOJExperiment;
 
 
 /**
@@ -60,7 +61,7 @@ public abstract class ExperimentFrame
         Logger logger = LogContext.getLogger();
         logger.setLevel(Level.WARNING);
         
-        Properties props = initProperties(setup.getDataDir());
+        Properties props = initProperties(setup);
         if(props == null) return;
         
         _session = createSession(props);
@@ -291,11 +292,6 @@ public abstract class ExperimentFrame
      * Delegate for creating a new session.
      */
     protected abstract T createSession(Properties props);
-    
-    /**
-     * Get the file to the configuration data.
-     */
-    protected abstract InputStream getConfigData(File dataDir) throws IOException;
 
     @SuppressWarnings("unchecked") // for SortedSet.addAll()
     private void writeProperties(Logger logger, Properties properties) {
@@ -311,12 +307,18 @@ public abstract class ExperimentFrame
         }
     }      
 
-    private Properties initProperties(File dataDir) {
+    private Properties initProperties(SimpleSetupScreen<T> setup) {
         Properties props = new Properties();
-        
         InputStream in = null;
         try {
-            in = getConfigData(dataDir);
+        	String name = setup.getPrefsPrefix() + ".properties";
+            File f = new File(setup.getDataDir(), name);
+            if (f.exists()) {
+                in = new FileInputStream(f);              
+            }
+            else {
+                in = getClass().getResourceAsStream(name);
+            }
             props.load(in);
         }
         catch (Exception ex) {

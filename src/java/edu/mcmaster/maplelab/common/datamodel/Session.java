@@ -63,7 +63,9 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         defaultFontSize,
         buildVersion,
         buildDate,
-        playbackGain
+        playbackGain,
+        speedMode,
+        propertyPrefix
     }
 
     /**
@@ -131,9 +133,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      * Set the initialized trial logger.
      * @uml.property  name="trialLogger"
      */
-    public final void setTrialLogger(L trialLogger) 
-    
-    {
+    public final void setTrialLogger(L trialLogger) {
         _trialLogger = trialLogger;
     }
     
@@ -141,9 +141,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      * Get the trial logger.
      * @uml.property  name="trialLogger"
      */
-    public final L getTrialLogger() 
-    
-    {
+    public final L getTrialLogger() {
         return _trialLogger;
     }
     
@@ -161,9 +159,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      * Get the applet if experiment is running inside an applet container.
      * @uml.property  name="applet"
      */
-    public Applet getApplet() 
-    
-    {
+    public Applet getApplet() {
         return _applet;
     }
     
@@ -180,7 +176,21 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
     /**
      * Get the file to which the debug log file should be written.
      */
-    public abstract File getDebugLogFile();
+    public File getDebugLogFile() {
+    	return FileTrialLogger.getOutputFile(this, FileType.get(FileTrialLogger.DEBUG_FILE));
+    }
+    
+    /**
+    * Flag to indicate running the experiment in less time for testing purposes.
+    */
+   public boolean isSpeedMode() {
+       boolean retval = false;
+       Object val = getProperty(ConfigKeys.speedMode);
+       if(val instanceof String) {
+           retval = Boolean.parseBoolean((String)val);
+       }
+       return retval;
+   }
     
     /**
      * Get a string denoting the base name/type of experiment this session
@@ -244,6 +254,13 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
     public String getSubExperimentID() {
         return getString(ConfigKeys.subExperimentID, "-1");
     }    
+    
+    /**
+     * Get the properties prefix property.
+     */
+    public String getPropertiesPrefix() {
+        return getString(ConfigKeys.propertyPrefix, null);
+    } 
     
     /**
      * Flag to indicate if text feedback relating to subject
@@ -352,6 +369,16 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
       * @return
       */
      public abstract DemoGUIPanel<?, T> getExperimentDemoPanel(); 
+
+     /**
+      * Create a generic block for warmup.
+      */
+ 	public abstract B generateWarmup();
+ 	
+ 	/**
+     * Generate the experiment blocks.
+     */
+ 	public abstract List<B> generateBlocks();
      
      /**
       * Get the playback gain as a percentage of maximum [0.0, 1.0]
@@ -698,7 +725,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
     public final String getString(Enum<?> key, String def) {
     	String retval = def;
         Object val = getProperty(key);
-        if(val instanceof String) {
+        if (val instanceof String) {
             retval = ((String) val).trim();
         }
         return retval;
@@ -723,6 +750,10 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      * Retrieve a property with an enum key.
      */
     protected Object getProperty(Enum<?> key) {
+    	// necessary to avoid infinite loop
+    	if (key == ConfigKeys.propertyPrefix) {
+    		return getProperty(key.name(), false);
+    	}
         return getProperty(key.name());
     }
     
@@ -730,7 +761,20 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      * Retrieve a property with a string key.
      */
     protected Object getProperty(String key) {
-        return _properties.get(key);
+    	return getProperty(key, true);
+    }
+    
+    /**
+     * Retrieve a property with a string key.
+     */
+    protected Object getProperty(String key, boolean allowPrefix) {
+    	String pref = allowPrefix ? getPropertiesPrefix() : null;
+    	Object retval = null;
+    	if (pref != null && !pref.isEmpty()) {
+    		retval = _properties.get(pref + "." + key);
+    	}
+    	
+    	return retval != null ? retval : _properties.get(key);
     }
     
     /** 

@@ -12,6 +12,7 @@ import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JPanel;
 
+import edu.mcmaster.maplelab.common.Experiment;
 import edu.mcmaster.maplelab.common.gui.SimpleSetupScreen;
 import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession;
 
@@ -26,10 +27,11 @@ public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> {
 
 	public RhythmSetupScreen() {
 		super(RhythmExperiment.EXPERIMENT_BASENAME.replace(" ", "").toLowerCase(), false, true);
-		try {
-			RhythmExperiment.initializeBuildInfo(null);
-		}
-		catch (IOException e) { }
+	}
+
+	@Override
+	protected void initializeBuildInfo() throws IOException {
+		Experiment.initializeBuildInfo(RhythmExperiment.class, getPrefsPrefix());
 	}
 
 	@Override

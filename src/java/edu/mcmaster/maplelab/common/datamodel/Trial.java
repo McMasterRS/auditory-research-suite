@@ -87,4 +87,8 @@ public abstract class Trial<T> {
      */
     public abstract boolean isResponseCorrect();
     
+    /**
+     * Get a full, human-readable description of the trial.
+     */
+    public abstract String getDescription();
 }

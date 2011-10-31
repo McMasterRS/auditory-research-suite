@@ -11,6 +11,8 @@ public abstract class ResponseParameters<S extends Session<?, ?, ?>> {
 		return ConfidenceLevel.values(_session);
 	}
 	
+	public abstract boolean isDiscrete();
+	
 	public abstract String getQuestion();
 	
 	public abstract Answer[] getAnswers();

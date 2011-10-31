@@ -10,6 +10,7 @@ package edu.mcmaster.maplelab.toj;
 import java.io.IOException;
 import java.util.prefs.Preferences;
 
+import edu.mcmaster.maplelab.common.Experiment;
 import edu.mcmaster.maplelab.common.gui.SimpleSetupScreen;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
 
@@ -22,10 +23,11 @@ public class TOJSetupScreen extends SimpleSetupScreen<TOJSession> {
 	
 	public TOJSetupScreen() {
 		super(TOJExperiment.EXPERIMENT_BASENAME.replace(" ", "").toLowerCase(), true, false);
-		try {
-			TOJExperiment.initializeBuildInfo(null);
-		} 
-		catch (IOException e) { }
+	}
+
+	@Override
+	protected void initializeBuildInfo() throws IOException {
+		Experiment.initializeBuildInfo(TOJExperiment.class, getPrefsPrefix());
 	}
 
 	@Override

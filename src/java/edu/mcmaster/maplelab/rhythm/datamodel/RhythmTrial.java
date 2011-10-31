@@ -137,6 +137,12 @@ public class RhythmTrial extends Trial<Response> {
         }
         return false;
     }    
+	
+	@Override
+	public String getDescription() {
+		String format = "Trial %d:\n\tIOI: %s\n\tOffset: %d\n\tTap: %s";
+		return String.format(format, getNum(), getBaseIOI(), getOffsetDegree(), isWithTap());
+	}
 
     /**
      * {@inheritDoc} 

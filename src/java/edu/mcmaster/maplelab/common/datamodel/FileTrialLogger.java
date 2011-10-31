@@ -16,8 +16,7 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
 
-import javax.sound.midi.MidiEvent;
-
+import edu.mcmaster.maplelab.common.Experiment;
 import edu.mcmaster.maplelab.common.LogContext;
 
 
@@ -28,8 +27,37 @@ import edu.mcmaster.maplelab.common.LogContext;
  * @since  Nov 22, 2006
  */
 public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends 
-    Block<?, ?>, R extends Trial<?>> implements TrialLogger<Q, R> {
+    		Block<?, ?>, R extends Trial<?>> implements TrialLogger<Q, R> {
+	
+	protected static final String DEBUG_FILE = "debug";
+	protected static final String RESPONSE_FILE = "response";
+	protected static final String RESPONSE_ALL_FILE = "response_all";
+	
+	private static void loadFileTypes() {
+		FileType.create(DEBUG_FILE, "log", "debug", false, false);
+		FileType.create(RESPONSE_FILE, "txt", "responses", false, false);
+		FileType.create(RESPONSE_ALL_FILE, "txt", "responses", true, false);
+	}
+	
+	private enum SessionKeys {
+		exp_id,
+		sub_exp_id,
+		exp_build,
+    	exp_build_date,
+    	ra_id,
+    	subject, 
+        session
+	}
     
+	private enum CountKeys {
+		trial_num,
+        repetition_num,
+        trial_in_repetition,
+        block_num, 
+        trial_in_block,
+        time_stamp
+	}
+	
     private final T _session;
     private final File _file;
     private final boolean _deleteTempFile;
@@ -40,7 +68,10 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
     }
     
     public FileTrialLogger(T session, File workingDirectory, boolean separateOutput, boolean deleteTempFile) throws IOException {
-        _session = session;
+        loadFileTypes();
+        loadAdditionalFileTypes();
+    	
+    	_session = session;
         _deleteTempFile = deleteTempFile;
         
         if(!workingDirectory.isDirectory() || !workingDirectory.canWrite()) {
@@ -69,6 +100,14 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
     	return String.format("%1$ty%1$tm%1$td%1$tH%1$tM", new Date());
     }
     
+    /**
+     * Load any additional file types needed.
+     */
+    protected abstract void loadAdditionalFileTypes();
+    
+    /**
+     * Get the individual file file to which data should be written.
+     */
     protected abstract File createFile();
     
     /**
@@ -98,6 +137,85 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
      */
     protected T getSession() {
         return _session;
+    }
+    
+    /**
+     * Get the output file for the given file type.  Not valid for file types
+     * needing block and trial information to calculate a file name.
+     */
+    public File getOutputFile(FileType type) throws UnsupportedOperationException {
+    	return getOutputFile(getSession(), type, null, null);
+    }
+    
+    /**
+     * Get the output file for the given file type.  Not valid for file types
+     * needing block and trial information to calculate a file name.
+     */
+    public static File getOutputFile(Session<?, ?, ?> s, FileType type) throws UnsupportedOperationException {
+    	if (type.includesBlockTrialNums()) {
+    		throw new UnsupportedOperationException(
+    				String.format("File type %s needs block and trial information " +
+    						"to calculate a file name.", type));
+    	}
+    	return getOutputFile(s, type, null, null);
+    }
+    
+    public File getOutputFile(FileType type, Q block, R trial) {
+    	return getOutputFile(getSession(), type, block, trial);
+    }
+
+    /**
+     * Get the output file for the given file type.  Creates directories as
+     * needed.
+     */
+    public static File getOutputFile(Session<?, ?, ?> s, FileType type, Block<?, ?> block, Trial<?> trial) {
+    	String fName = null;
+    	if (type.isAggregateType()) {
+    		fName = String.format("ex%s-%s.%s", s.getExperimentID(), type.getSuffix(), 
+    				type.getExtension());
+    	}
+    	else if (type.includesBlockTrialNums()) {
+    		fName = String.format("sub%s-sess%s-ex%s-subex%s-b%s-t%s-%s-%s.%s", 
+    				s.getSubject(), s.getSession(), s.getExperimentID(), s.getSubExperimentID(), 
+    				block.getNum(), trial.getNum(), getTimeStamp(), type.getSuffix(), type.getExtension());
+    	}
+    	else {
+    		fName = String.format("sub%s-sess%s-ex%s-subex%s-%s-%s.%s", 
+    				s.getSubject(), s.getSession(), s.getExperimentID(), s.getSubExperimentID(), 
+    				getTimeStamp(), type.getSuffix(), type.getExtension());
+    	}
+    	return new File(getOutputDirectory(s, type), fName);
+    }
+    
+    /**
+     * Get the output sub-directory for the given file type, starting
+     * from the given base output directory.  Creates directories as
+     * needed.
+     */
+    private static File getOutputDirectory(Session<?, ?, ?> s, FileType type) {
+    	return type.isAggregateType() ? getCombinedFileDirectory(s) : getSingleFileDirectory(s);
+    }
+    
+    /**
+     * Get the directory in which single output files should be placed.
+     */
+    private static File getSingleFileDirectory(Session<?, ?, ?> s) {
+    	String dirName = String.format("%s-Individual" + File.separator + 
+    			"Experiment %s" + File.separator + "Subject %s", s.getExperimentBaseName(),
+    			s.getExperimentID(), s.getSubject());
+    	File dir = new File(getBaseOutputDirectory(), dirName);
+    	if (!dir.exists()) dir.mkdirs();
+    	return dir;
+    }
+    
+    /**
+     * Get the directory in which combined output files should be placed.
+     */
+    private static File getCombinedFileDirectory(Session<?, ?, ?> s) {
+    	File dir = new File(getBaseOutputDirectory(), 
+    			String.format("%s-Composite", s.getExperimentBaseName()));
+    	if (!dir.exists()) dir.mkdirs();
+    	return dir;
     }
 
     /**
@@ -153,7 +271,8 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
      */
     public void submit(Q block, R trial) throws IOException {
         
-        EnumMap<? extends Enum<?>,String> map = marshalToMap(block, trial, 0, null);
+    	List<Set<? extends Enum<?>>> hList = buildHeaderSets();
+        List<EnumMap<? extends Enum<?>,String>> list = buildDataSets(block, trial);
         
         File file = getFile();
         
@@ -163,10 +282,10 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
         try {
             out = new FileWriter(file, true);
             if(addHeader) {
-                writeHeader(map.keySet(), out);
+                writeHeader(hList, out);
             }
             
-            writeRow(map, out);
+            writeRow(list, out);
         }
         finally {
             if(out != null) out.close();
@@ -180,11 +299,12 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
      * @param out output to write to.
      * @throws IOException on output error.
      */
-    protected void writeRow(EnumMap<? extends Enum<?>, String> map, Writer out) throws IOException {
-        Set<? extends Enum<?>> keys = map.keySet();
-        
-        for(Enum<?> e : keys) {
-            out.write(String.format("%s\t", map.get(e)));
+    protected void writeRow(List<EnumMap<? extends Enum<?>, String>> maps, Writer out) throws IOException {
+    	for (EnumMap<? extends Enum<?>, String> map : maps) {
+        	if (map == null || map.isEmpty()) continue;
+        	for (Enum<?> e : map.keySet()) {
+        		out.write(String.format("%s\t", map.get(e)));
+            }
         }
         out.write(String.format("%n"));
     }
@@ -196,15 +316,107 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
      * @param out output to write to.
      * @throws IOException on output error.
      */
-    protected void writeHeader(Set<? extends Enum<?>> keys, FileWriter out) throws IOException {
-        for(Enum<?> e : keys) {
-            out.write(String.format("%s\t", e.name()));
+    protected void writeHeader(List<Set<? extends Enum<?>>> list, FileWriter out) throws IOException {
+        for (Set<? extends Enum<?>> set : list) {
+        	if (set == null || set.isEmpty()) continue;
+        	for (Enum<?> e : set) {
+                out.write(String.format("%s\t", e.name()));
+            }
         }
         out.write(String.format("%n"));
     }
- 
     
-    protected abstract EnumMap<? extends Enum<?>, String> marshalToMap(Q block, R trial, 
-    		int responseNum, MidiEvent event); 
+    /**
+     * Build the list of enum sets that will label each column.  Exposed for subclasses
+     * that need to override.
+     */
+    protected List<Set<? extends Enum<?>>> buildHeaderSets() {
+    	List<Set<? extends Enum<?>>> retval = new ArrayList<Set<? extends Enum<?>>>();
+    	
+    	retval.add(EnumSet.allOf(SessionKeys.class));
+    	retval.add(getGeneralDataHeaders());
+    	retval.add(EnumSet.allOf(CountKeys.class));
+    	retval.add(getTrialDataHeaders());
+    	
+    	return retval;
+    }
+    
+    /**
+     * Build the list of data sets that will combine for each row.  Exposed for subclasses
+     * that need to override.
+     */
+    protected List<EnumMap<? extends Enum<?>, String>> buildDataSets(Q block, R trial) {
+    	List<EnumMap<? extends Enum<?>, String>> retval = 
+    		new ArrayList<EnumMap<? extends Enum<?>, String>>();
+    	
+    	retval.add(marshalSessionDataToMap(block, trial));
+    	retval.add(marshalGeneralDataToMap(block, trial));
+    	retval.add(marshalTrialCountsToMap(block, trial));
+    	retval.add(marshalTrialDataToMap(block, trial));
+    	
+    	return retval;
+    }
+ 
+    /**
+     * Gather session data.
+     */
+    protected EnumMap<? extends Enum<?>, String> marshalSessionDataToMap(Q block, R trial) {
+    	Session<?, ?, ?> session = getSession();
+    	
+        EnumMap<SessionKeys, String> fields = new EnumMap<SessionKeys, String>(SessionKeys.class);
+
+        // Meta information
+        fields.put(SessionKeys.exp_id, session.getExperimentID());
+        fields.put(SessionKeys.sub_exp_id, session.getSubExperimentID());
+        fields.put(SessionKeys.exp_build, Experiment.getBuildVersion());
+        fields.put(SessionKeys.exp_build_date, Experiment.getBuildDate());
+        fields.put(SessionKeys.ra_id, session.getRAID());
+        fields.put(SessionKeys.subject, String.valueOf(session.getSubject()));
+        fields.put(SessionKeys.session, String.valueOf(session.getSession()));
+        
+        return fields;
+    }
+ 
+    /**
+     * Gather trial count data.
+     */
+    protected EnumMap<? extends Enum<?>, String> marshalTrialCountsToMap(Q block, R trial) {
+    	Session<?, ?, ?> session = getSession();
+    	
+        EnumMap<CountKeys, String> fields = new EnumMap<CountKeys, String>(CountKeys.class);
+
+        // Calculate trial numbers and parameters
+        int trial_in_rep = (block.getNum()-1)*block.getNumTrials() + trial.getNum();
+        int overall_trial = (session.getCurrentRepetition()-1)*session.getNumBlocks()*block.getNumTrials() + trial_in_rep;
+    	fields.put(CountKeys.trial_num, String.valueOf(overall_trial));
+        fields.put(CountKeys.repetition_num, String.valueOf(session.getCurrentRepetition()));
+        fields.put(CountKeys.trial_in_repetition, String.valueOf(trial_in_rep));
+        fields.put(CountKeys.block_num, String.valueOf(block.getNum()));
+        fields.put(CountKeys.trial_in_block, String.valueOf(trial.getNum()));
+        fields.put(CountKeys.time_stamp, trial.getTimeStamp());
+        
+        return fields;
+    }
+ 
+    /**
+     * Get a set of items responsible for enumerating the types of general data.
+     */
+    protected abstract Set<? extends Enum<?>> getGeneralDataHeaders();
+ 
+    /**
+     * Gather general data - intended for data specific to the experiment that is still
+     * general in the same way as the session data.
+     */
+    protected abstract EnumMap<? extends Enum<?>, String> marshalGeneralDataToMap(Q block, R trial);
+ 
+    /**
+     * Get a set of items responsible for enumerating the types of trial data.
+     */
+    protected abstract Set<? extends Enum<?>> getTrialDataHeaders();
+ 
+    /**
+     * Gather trial data.
+     */
+    protected abstract EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(Q block, R trial);
 
 }

@@ -22,6 +22,11 @@ public class TOJResponseParameters extends ResponseParameters<TOJSession> {
 	}
 
 	@Override
+	public boolean isDiscrete() {
+		return true;
+	}
+
+	@Override
 	public String getQuestion() {
 		return "Which came first?";
 	}

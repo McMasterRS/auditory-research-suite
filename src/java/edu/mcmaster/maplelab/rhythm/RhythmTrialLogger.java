@@ -14,11 +14,13 @@ package edu.mcmaster.maplelab.rhythm;
 import java.io.*;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.Set;
 
 import javax.sound.midi.*;
 import javax.sound.midi.MidiDevice.Info;
 
 import edu.mcmaster.maplelab.common.datamodel.FileTrialLogger;
+import edu.mcmaster.maplelab.common.datamodel.FileType;
 import edu.mcmaster.maplelab.common.datamodel.Response;
 import edu.mcmaster.maplelab.common.sound.MidiInterpreter;
 import edu.mcmaster.maplelab.rhythm.datamodel.*;
@@ -34,20 +36,7 @@ public class RhythmTrialLogger extends
     FileTrialLogger<RhythmSession, RhythmBlock, RhythmTrial> {
 
     public enum Keys {
-    	exp_id,
-		sub_exp_id,
-		exp_build,
-    	exp_build_date,
-    	ra_id,
-    	subject, 
-        session, 
-        trial_num,
-        repetition_num,
-        trial_in_repetition,
-        block_num, 
-        trial_in_block,
-        time_stamp, 
-        baseIOI, 
+    	baseIOI, 
         offsetDegree, 
         withTap, 
         confidence, 
@@ -60,28 +49,6 @@ public class RhythmTrialLogger extends
     	tap_computer, tap_subject, response
     }
 
-    public enum FileType {
-    	TAP_TEXT,
-    	TAP_MIDI,
-    	RESPONSE,
-    	DEBUG {
-    		@Override
-    		public boolean needsBlockTrialData() {
-    			return true;
-    		}
-    	},
-    	TAP_ALL,
-    	RESPONSE_ALL;
-    	
-    	/**
-    	 * Indicate if this file type needs block and trial data
-    	 * in order to calculate a file name.
-    	 */
-    	public boolean needsBlockTrialData() {
-    		return false;
-    	}
-    }
-
     /** Delegate for recording tapping data. */
     private final TapLogger _tapLogger;
 
@@ -90,43 +57,39 @@ public class RhythmTrialLogger extends
         
         _tapLogger = new TapLogger(session, workingDirectory);
     }
+
+	@Override
+	protected void loadAdditionalFileTypes() {
+		// none needed
+	}
     
     @Override
     protected File getCollectedOutputFile() {
-    	return getOutputFile(FileType.RESPONSE_ALL);
+    	return getOutputFile(FileType.get(RESPONSE_ALL_FILE));
     }
     
     @Override
     protected File createFile() {
-    	return getOutputFile(FileType.RESPONSE);
+    	return getOutputFile(FileType.get(RESPONSE_FILE));
     }
 
+	@Override
+	protected Set<? extends Enum<?>> getTrialDataHeaders() {
+		return EnumSet.allOf(Keys.class);
+	}
+
+	@Override
+	protected Set<? extends Enum<?>> getGeneralDataHeaders() {
+		return null;
+	}
+
     @Override
-    protected EnumMap<? extends Enum<?>, String> marshalToMap(
-        RhythmBlock block, RhythmTrial trial, int responseNum, MidiEvent event) {
-    	
-    	RhythmSession session = getSession();
+    protected EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(
+    		RhythmBlock block, RhythmTrial trial) {
     	
         EnumMap<Keys, String> fields = new EnumMap<Keys, String>(Keys.class);
-
-        // Meta information
-        fields.put(Keys.exp_id, session.getExperimentID());
-        fields.put(Keys.sub_exp_id, session.getSubExperimentID());
-        fields.put(Keys.exp_build, RhythmExperiment.getBuildVersion());
-        fields.put(Keys.exp_build_date, RhythmExperiment.getBuildDate());
-        fields.put(Keys.ra_id, session.getRAID());
-        fields.put(Keys.subject, String.valueOf(session.getSubject()));
-        fields.put(Keys.session, String.valueOf(session.getSession()));
         
-        // Calculate trial numbers and parameters
-        int trial_in_rep = (block.getNum()-1)*block.getNumTrials() + trial.getNum();
-        int overall_trial = (session.getCurrentRepetition()-1)*session.getNumBlocks()*block.getNumTrials() + trial_in_rep;
-    	fields.put(Keys.trial_num, String.valueOf(overall_trial));
-        fields.put(Keys.repetition_num, String.valueOf(session.getCurrentRepetition()));
-        fields.put(Keys.trial_in_repetition, String.valueOf(trial_in_rep));
-        fields.put(Keys.block_num, String.valueOf(block.getNum()));
-        fields.put(Keys.trial_in_block, String.valueOf(trial.getNum()));
-        fields.put(Keys.time_stamp, trial.getTimeStamp());
+        // Calculate trial parameters
         fields.put(Keys.baseIOI, String.valueOf(trial.getBaseIOI()));
         fields.put(Keys.offsetDegree, String.valueOf(trial.getOffsetDegree()));
         fields.put(Keys.withTap, String.valueOf(trial.isWithTap()));
@@ -141,105 +104,12 @@ public class RhythmTrialLogger extends
 
         return fields;
     }
-    
-    /**
-     * Get the output file for the given file type.  Not valid for file types
-     * needing block and trial information to calculate a file name.
-     */
-    public File getOutputFile(FileType type) throws UnsupportedOperationException {
-    	return getOutputFile(getSession(), type, null, null);
-    }
-    
-    /**
-     * Get the output file for the given file type.  Not valid for file types
-     * needing block and trial information to calculate a file name.
-     */
-    public static File getOutputFile(RhythmSession rs, FileType type) throws UnsupportedOperationException {
-    	if (type.needsBlockTrialData()) {
-    		throw new UnsupportedOperationException(
-    				String.format("File type %s needs block and trial information " +
-    						"to calculate a file name.", type));
-    	}
-    	return getOutputFile(rs, type, null, null);
-    }
-    
-    public File getOutputFile(FileType type, RhythmBlock block, RhythmTrial trial) {
-    	return getOutputFile(getSession(), type, block, trial);
-    }
 
-    /**
-     * Get the output file for the given file type.  Creates directories as
-     * needed.
-     */
-    public static File getOutputFile(RhythmSession rs, FileType type, RhythmBlock block, RhythmTrial trial) {
-    	String fName = null;
-    	switch(type) {
-	    	case TAP_ALL:
-	    		fName = String.format("ex%s-taps.txt", rs.getExperimentID());
-	    		break;
-	    	case RESPONSE_ALL:
-	    		fName = String.format("ex%s-responses.txt", rs.getExperimentID());
-	    		break;
-	    	case TAP_TEXT:
-	    		fName = String.format("sub%s-sess%s-ex%s-subex%s-%s-taps.txt", rs.getSubject(), rs.getSession(),
-	    				rs.getExperimentID(), rs.getSubExperimentID(), getTimeStamp());
-	    		break;
-	    	case TAP_MIDI:
-	    		fName = String.format("sub%s-sess%s-ex%s-subex%s-b%s-t%s-%s-taps.mid", rs.getSubject(), rs.getSession(),
-	    				rs.getExperimentID(), rs.getSubExperimentID(), block.getNum(), trial.getNum(), getTimeStamp());
-	    		break;
-	    	case RESPONSE:
-	    		fName = String.format("sub%s-sess%s-ex%s-subex%s-%s-responses.txt", rs.getSubject(), rs.getSession(),
-	    				rs.getExperimentID(), rs.getSubExperimentID(), getTimeStamp());
-	    		break;
-	    	case DEBUG: 
-	    		fName = String.format("sub%s-sess%s-ex%s-subex%s-%s-debug.log", rs.getSubject(), rs.getSession(),
-	    				rs.getExperimentID(), rs.getSubExperimentID(), getTimeStamp());
-	    		break;
-    	}
-    	return new File(getOutputDirectory(rs, type), fName);
-    }
-    
-    /**
-     * Get the output sub-directory for the given file type, starting
-     * from the given base output directory.  Creates directories as
-     * needed.
-     */
-    private static File getOutputDirectory(RhythmSession rs, FileType type) {
-    	switch(type) {
-	    	case TAP_ALL:
-	    	case RESPONSE_ALL:
-	    		return getCombinedFileDirectory(rs);
-	    	case TAP_TEXT:
-	    	case TAP_MIDI:
-	    	case RESPONSE:
-	    	case DEBUG: 
-	    	default:
-	    		return getSingleFileDirectory(rs);
-    	}
-    }
-    
-    /**
-     * Get the directory in which single output files should be placed.
-     */
-    private static File getSingleFileDirectory(RhythmSession rs) {
-    	String dirName = String.format("%s-Individual" + File.separator + 
-    			"Experiment %s" + File.separator + "Subject %s", rs.getExperimentBaseName(),
-    			rs.getExperimentID(), rs.getSubject());
-    	File dir = new File(getBaseOutputDirectory(), dirName);
-    	if (!dir.exists()) dir.mkdirs();
-    	return dir;
-    }
-    
-    /**
-     * Get the directory in which combined output files should be placed.
-     */
-    private static File getCombinedFileDirectory(RhythmSession rs) {
-    	File dir = new File(getBaseOutputDirectory(), 
-    			String.format("%s-Composite", rs.getExperimentBaseName()));
-    	if (!dir.exists()) dir.mkdirs();
-    	return dir;
-    }
+	@Override
+	protected EnumMap<? extends Enum<?>, String> marshalGeneralDataToMap(
+			RhythmBlock block, RhythmTrial trial) {
+		return null;
+	}
     
     @Override
     public void submit(RhythmBlock block, RhythmTrial trial) throws IOException {
@@ -258,25 +128,11 @@ public class RhythmTrialLogger extends
      * FileTrialLogger base class mostly out of convenience.
      */
     private static class TapLogger extends FileTrialLogger<RhythmSession, RhythmBlock, RhythmTrial> {
+    	private static final String TAP_TEXT_FILE = "tap_text";
+    	private static final String TAP_MIDI_FILE = "tap_midi";
+    	private static final String TAP_TEXT_ALL_FILE = "tap_all";
 
     	private enum TapKeys {
-    		exp_id,
-    		sub_exp_id,
-    		exp_build,
-        	exp_build_date,
-        	ra_id,
-        	subject,
-            session,
-            midi_dev_id,
-            midi_dev_name,
-            midi_dev_version,
-            midi_dev_vendor,
-            trial_num,
-            repetition_num,
-            trial_in_repetition,
-            block_num, 
-            trial_in_block, 
-            time_stamp,
             baseIOI, 
             offsetDegree,
             withTap,
@@ -289,6 +145,13 @@ public class RhythmTrialLogger extends
             tap,
             data_type
         }
+    	
+    	private enum MidiKeys {
+            midi_dev_id,
+            midi_dev_name,
+            midi_dev_version,
+            midi_dev_vendor,
+    	}
 
         private enum TapType {
             sync, critical, participant
@@ -299,67 +162,47 @@ public class RhythmTrialLogger extends
         }
 
         private TapType _type;
-        private int _tick;
+        private MidiEvent _currEvent;
 
         public TapLogger(RhythmSession session, File workingDirectory) throws IOException {
             super(session, workingDirectory);
         }
+
+		@Override
+		protected void loadAdditionalFileTypes() {
+			FileType.create(TAP_TEXT_FILE, "txt", "taps", false, false);
+			FileType.create(TAP_MIDI_FILE, "mid", "taps", false, true);
+			FileType.create(TAP_TEXT_ALL_FILE, "txt", "taps", true, false);
+		}
         
         @Override
         protected File getCollectedOutputFile() {
-        	return RhythmTrialLogger.getOutputFile(getSession(), FileType.TAP_ALL);
+        	return getOutputFile(getSession(), FileType.get(TAP_TEXT_ALL_FILE));
         }
         
         @Override
         protected File createFile() {
-        	return RhythmTrialLogger.getOutputFile(getSession(), FileType.TAP_TEXT);
+        	return getOutputFile(getSession(), FileType.get(TAP_TEXT_FILE));
         }
         
         /**
          * Create a file for midi output for the given block and trial.
          */
         private File createMidiFile(RhythmBlock block, RhythmTrial trial) {
-        	return RhythmTrialLogger.getOutputFile(getSession(), FileType.TAP_MIDI, block, trial);
+        	return getOutputFile(getSession(), FileType.get(TAP_MIDI_FILE), block, trial);
         }
         
         @Override
-        protected EnumMap<? extends Enum<?>, String> marshalToMap(
-            RhythmBlock block, RhythmTrial trial, int responseNum, MidiEvent event) {
-            EnumMap<TapKeys, String> fields = new EnumMap<TapKeys, String>(
-                TapKeys.class);
+        protected EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(
+        		RhythmBlock block, RhythmTrial trial) {
+        	
+            EnumMap<TapKeys, String> fields = new EnumMap<TapKeys, String>(TapKeys.class);
             
-            RhythmSession session = getSession();
-            
-            fields.put(TapKeys.exp_id, session.getExperimentID());
-            fields.put(TapKeys.sub_exp_id, session.getSubExperimentID());
-            fields.put(TapKeys.exp_build, RhythmExperiment.getBuildVersion());
-            fields.put(TapKeys.exp_build_date, RhythmExperiment.getBuildDate());
-            fields.put(TapKeys.ra_id, session.getRAID());
-            fields.put(TapKeys.subject, String.valueOf(session.getSubject()));
-            fields.put(TapKeys.session, String.valueOf(session.getSession()));
-            
-            int id = session.getMIDIInputDeviceID();
-            Info info = MidiSystem.getMidiDeviceInfo()[session.getMIDIInputDeviceID()];
-            
-            fields.put(TapKeys.midi_dev_id, String.valueOf(id));
-            fields.put(TapKeys.midi_dev_name, info.getName());
-            fields.put(TapKeys.midi_dev_version, info.getVersion());
-            fields.put(TapKeys.midi_dev_vendor, info.getVendor());
-         
-            // Calculate trial numbers
-            int trial_in_rep = (block.getNum()-1)*block.getNumTrials() + trial.getNum();
-            int overall_trial = (session.getCurrentRepetition()-1)*session.getNumBlocks()*block.getNumTrials() + trial_in_rep;
-        	fields.put(TapKeys.trial_num, String.valueOf(overall_trial));
-            fields.put(TapKeys.repetition_num, String.valueOf(session.getCurrentRepetition()));
-            fields.put(TapKeys.trial_in_repetition, String.valueOf(trial_in_rep));
-            fields.put(TapKeys.block_num, String.valueOf(block.getNum()));
-            fields.put(TapKeys.trial_in_block, String.valueOf(trial.getNum()));
-            fields.put(TapKeys.time_stamp, trial.getTimeStamp());
             fields.put(TapKeys.baseIOI, String.valueOf(trial.getBaseIOI()));
             fields.put(TapKeys.offsetDegree, String.valueOf(trial.getOffsetDegree()));
             fields.put(TapKeys.withTap, String.valueOf(trial.isWithTap()));
             
-            MidiMessage m = event.getMessage();
+            MidiMessage m = _currEvent.getMessage();
             OpType ot = MidiInterpreter.getOpcode(m) == ShortMessage.NOTE_ON ? 
             		OpType.note_on : OpType.note_off;
             
@@ -369,8 +212,9 @@ public class RhythmTrialLogger extends
             fields.put(TapKeys.velocity, String.valueOf(MidiInterpreter.getVelocity(m)));
             fields.put(TapKeys.type, _type.toString());
 
-            String beat = _type != TapType.participant ? String.valueOf(_tick) : "-";
-            String tap = _type == TapType.participant ? String.valueOf(_tick) : "-";
+            long tick = _currEvent.getTick();
+            String beat = _type != TapType.participant ? String.valueOf(tick) : "-";
+            String tap = _type == TapType.participant ? String.valueOf(tick) : "-";
             DataType data = _type == TapType.participant ? DataType.tap_subject :
                     DataType.tap_computer;
 
@@ -415,7 +259,7 @@ public class RhythmTrialLogger extends
             try {
                 out = new FileWriter(textFile, true);
                 if (addHeader) {
-                    writeHeader(EnumSet.allOf(TapKeys.class), out);
+                    writeHeader(buildHeaderSets(), out);
                 }
 
                 Track[] tracks = recording.getTracks();
@@ -426,14 +270,12 @@ public class RhythmTrialLogger extends
                         // Saving current event data as class members is a
                         // hack to allow us to reuse the marshalToMap
                         // method, just because it's conceptually clean
-                        MidiEvent currEvent = track.get(j);
+                    	_currEvent = track.get(j);
                         
-                        if (!MidiInterpreter.isNoteOnEvent(currEvent) && 
-                        		(!getSession().recordNoteOffEvents() || !MidiInterpreter.isNoteOffEvent(currEvent))) {
+                        if (!MidiInterpreter.isNoteOnEvent(_currEvent) && 
+                        		(!getSession().recordNoteOffEvents() || !MidiInterpreter.isNoteOffEvent(_currEvent))) {
                         	continue;
                     	}
-                        
-                        _tick = (int) currEvent.getTick();
                         
                         // Nasty hack to figure out if this might be the last
                         // note on event for beat.
@@ -441,9 +283,7 @@ public class RhythmTrialLogger extends
                             _type = TapType.critical;
                         }
 
-                        EnumMap<? extends Enum<?>, String> map = marshalToMap(
-                            block, trial, 0, currEvent);
-                        writeRow(map, out);
+                        writeRow(buildDataSets(block, trial), out);
                     }
                 }
             }
@@ -451,5 +291,33 @@ public class RhythmTrialLogger extends
                 if (out != null) out.close();
             }
         }
+
+		@Override
+		protected Set<? extends Enum<?>> getGeneralDataHeaders() {
+			return EnumSet.allOf(MidiKeys.class);
+		}
+
+		@Override
+		protected Set<? extends Enum<?>> getTrialDataHeaders() {
+			return EnumSet.allOf(TapKeys.class);
+		}
+
+		@Override
+		protected EnumMap<? extends Enum<?>, String> marshalGeneralDataToMap(
+				RhythmBlock block, RhythmTrial trial) {
+        	
+            EnumMap<MidiKeys, String> fields = new EnumMap<MidiKeys, String>(MidiKeys.class);
+            
+            RhythmSession session = getSession();
+            int id = session.getMIDIInputDeviceID();
+            Info info = MidiSystem.getMidiDeviceInfo()[session.getMIDIInputDeviceID()];
+            
+            fields.put(MidiKeys.midi_dev_id, String.valueOf(id));
+            fields.put(MidiKeys.midi_dev_name, info.getName());
+            fields.put(MidiKeys.midi_dev_version, info.getVersion());
+            fields.put(MidiKeys.midi_dev_vendor, info.getVendor());
+            
+            return fields;
+		}
     }
 }

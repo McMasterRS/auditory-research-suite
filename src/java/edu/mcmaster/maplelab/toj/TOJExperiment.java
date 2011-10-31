@@ -9,12 +9,11 @@ package edu.mcmaster.maplelab.toj;
 
 import javax.swing.JPanel;
 import java.awt.*;
-import java.io.*;
-import java.util.Properties;
 import java.util.logging.Level;
 
 import javax.swing.*;
 
+import edu.mcmaster.maplelab.common.Experiment;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.gui.*;
 import edu.mcmaster.maplelab.toj.datamodel.*;
@@ -23,100 +22,29 @@ import edu.mcmaster.maplelab.toj.datamodel.*;
  * TOJExperiment allows the user to set up and run one TOJTrial.
  * @author Catherine Elder <cje@datamininglab.com>
  */
-
-public class TOJExperiment extends JPanel {
+public class TOJExperiment extends Experiment<TOJSession> {
 		public static final String EXPERIMENT_BASENAME = "TOJ";
 
-	    private enum VersionProps {
-			buildVersion,
-			buildDate
-		}
-		
-		private static String _buildVersion = null;
-		private static String _buildDate = null;
-		private final TOJSession _session;
-	    private JPanel _contentCard;
-
 	    public TOJExperiment(TOJSession session) {
-	        super(new BorderLayout());
-	        _session = session;
-	        
-	        LogContext.getLogger().finest("offsets: " + _session.getSoundOffsets());
-	        
-	        add(getContent(), BorderLayout.CENTER);
-	        
-	        //setPreferredSize(new Dimension(720, 760));
+	        super(session);
 	    }
-	    
-	    /**
-	     * Load build information from the given properties.
-	     */
-		private static void loadBuildInfo(Properties props) {
-	        if (props.isEmpty()) return;
-			_buildVersion = props.getProperty(VersionProps.buildVersion.name(), "-1");
-			_buildDate = props.getProperty(VersionProps.buildDate.name(), "00000000");
-		}
-		
-		public static String getBuildVersion() {
-			return _buildVersion;
-		}
 
-		public static String getBuildDate() {
-			return _buildDate;
-		}
-	    
-	    /**
-	     * This method initializes jContentPane
-	     * 
-	     * @return javax.swing.JPanel
-	     */
-	    private JPanel getContent() {
-	        if (_contentCard == null) {
-	            _contentCard = new JPanel();
-	            _contentCard.setLayout(new CardLayout());
-	            CardLayoutStepManager sMgr = new CardLayoutStepManager(_contentCard);
-	            _contentCard.add(new Introduction(sMgr, _session), "intro");   
-	            if(_session.getNumWarmupTrials() > 0) {
-	                _contentCard.add(new PreWarmupInstructions(sMgr, _session),  "prewarmup");
-	                _contentCard.add(new TOJStimulusResponseScreen(sMgr, _session, true), "warmup");
+		@Override
+		protected void loadContent(JPanel contentCard) {
+			TOJSession session = getSession();
+	        if (contentCard != null) {
+	            CardLayoutStepManager sMgr = new CardLayoutStepManager(contentCard);
+	            contentCard.add(new Introduction(sMgr, session), "intro");   
+	            if(session.getNumWarmupTrials() > 0) {
+	                contentCard.add(new PreWarmupInstructions(sMgr, session),  "prewarmup");
+	                contentCard.add(new TOJStimulusResponseScreen(sMgr, session, true), "warmup");
 	            }   
-	            _contentCard.add(new PreTrialsInstructions(sMgr, _session),  "pretrials");            
-	            _contentCard.add(new TOJStimulusResponseScreen(sMgr, _session, false), "test");            
-	            _contentCard.add(new TOJCompletion(sMgr, _session), "complete");            
-	            _contentCard.add(new JLabel(), "Blank");
+	            contentCard.add(new PreTrialsInstructions(sMgr, session),  "pretrials");            
+	            contentCard.add(new TOJStimulusResponseScreen(sMgr, session, false), "test");            
+	            contentCard.add(new CloseCompletion(sMgr, session), "complete");            
+	            contentCard.add(new JLabel(), "Blank");
 	        }
-	        return _contentCard;
-	    }
-	    
-	    /**
-	     * Initialize build information.
-	     */
-	    protected static void initializeBuildInfo(File dataDir) throws IOException {
-	    	if (_buildDate != null && _buildVersion != null) return;
-	    	
-	    	String name = EXPERIMENT_BASENAME.toLowerCase() + ".version.properties";
-	        File f = dataDir != null ? new File(dataDir, name) : null;
-	        InputStream is = null;
-	        if (f != null && f.exists()) {
-	            is = new FileInputStream(f);            
-	        }
-	        else {
-	            is = TOJExperiment.class.getResourceAsStream(name);
-	        }
-	        
-	        Properties props = new Properties();
-	        try {
-	            props.load(is);
-	        }
-	        catch (Exception ex) {
-	        	LogContext.getLogger().log(Level.SEVERE, "Error reading version file", ex);
-	        }
-	        finally {
-	            if(is != null)  try { is.close(); } catch (IOException e) {}
-	        }
-	        
-	        loadBuildInfo(props);
-	    }
+		}
 	    
 	    public static void main(String[] args) {
 	    	System.setProperty("com.apple.mrj.application.apple.menu.about.name", "TOJ Experiment");
