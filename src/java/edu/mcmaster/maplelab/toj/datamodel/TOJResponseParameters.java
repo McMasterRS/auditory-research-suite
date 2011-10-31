@@ -1,10 +1,11 @@
 package edu.mcmaster.maplelab.toj.datamodel;
 
 import edu.mcmaster.maplelab.common.datamodel.Answer;
-import edu.mcmaster.maplelab.common.datamodel.Response;
+import edu.mcmaster.maplelab.common.datamodel.ConfidenceLevel;
+import edu.mcmaster.maplelab.common.datamodel.ConfidenceResponse;
 import edu.mcmaster.maplelab.common.datamodel.ResponseParameters;
 
-public class TOJResponseParameters extends ResponseParameters<TOJSession> {
+public class TOJResponseParameters extends ResponseParameters<TOJSession, ConfidenceLevel> {
 	
 	private enum ConfigLabels {
 		dotLabel,
@@ -22,6 +23,11 @@ public class TOJResponseParameters extends ResponseParameters<TOJSession> {
 	}
 
 	@Override
+	public ConfidenceLevel[] getDiscreteValues() {
+		return ConfidenceLevel.values(getSession());
+	}
+
+	@Override
 	public boolean isDiscrete() {
 		return true;
 	}
@@ -36,7 +42,7 @@ public class TOJResponseParameters extends ResponseParameters<TOJSession> {
 		return Answer.values(_dotLabel, _toneLabel);
 	}
 
-	public static boolean isDotFirst(Response response) {
+	public static boolean isDotFirst(ConfidenceResponse response) {
 		return response != null && response.getAnswer().ordinal() == 0;
 	}
 }

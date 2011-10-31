@@ -11,12 +11,9 @@ import edu.mcmaster.maplelab.common.sound.NotesEnum;
 public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 	
 	protected TOJBlock(TOJSession session, int blockNum, AVBlockType type, List<DurationEnum> visDuration, 
-			List<NotesEnum> pitches, List<String> frequencies, List<String> spectrums, 
-			List<String> envDurations, List<DurationEnum> audDurations, List<String> videoExtensions,
-			List<Long> offsets, List<Integer> numPoints) {
+			List<NotesEnum> pitches, List<Long> offsets, List<Integer> numPoints) {
 		
-		super(session, blockNum, type, visDuration, pitches, frequencies, spectrums, envDurations,
-				audDurations, videoExtensions, offsets, numPoints);
+		super(session, blockNum, type, visDuration, pitches, offsets, numPoints);
 	}
 
 	@Override

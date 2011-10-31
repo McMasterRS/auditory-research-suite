@@ -17,7 +17,7 @@ import edu.mcmaster.maplelab.av.animation.AnimationSequence;
 import edu.mcmaster.maplelab.av.media.Playable;
 import edu.mcmaster.maplelab.common.datamodel.FileTrialLogger;
 import edu.mcmaster.maplelab.common.datamodel.FileType;
-import edu.mcmaster.maplelab.common.datamodel.Response;
+import edu.mcmaster.maplelab.common.datamodel.ConfidenceResponse;
 import edu.mcmaster.maplelab.toj.datamodel.TOJBlock;
 import edu.mcmaster.maplelab.toj.datamodel.TOJResponseParameters;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
@@ -98,8 +98,8 @@ public class TOJTrialLogger extends FileTrialLogger<TOJSession, TOJBlock, TOJTri
         fields.put(Keys.audioToneDelay, String.valueOf(trial.getAudioToneOnset()));
         
         // Output subject response information
-        Response response = trial.getResponse();
-        fields.put(Keys.confidence, String.valueOf(response.getConfidence().ordinal()));
+        ConfidenceResponse response = trial.getResponse();
+        fields.put(Keys.confidence, String.valueOf(response.getValue().ordinal()));
         fields.put(Keys.subjResponse, TOJResponseParameters.isDotFirst(response) ? "Dot" : "Tone");
         fields.put(Keys.responseCorrect, trial.isResponseCorrect() ? "Correct" : "Incorrect");
 

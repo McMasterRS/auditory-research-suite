@@ -10,15 +10,10 @@ import edu.mcmaster.maplelab.common.sound.NotesEnum;
 
 public class SIBlock extends AVBlock<SISession, SITrial> {
 
-	protected SIBlock(SISession session, int blockNum,
-			edu.mcmaster.maplelab.av.datamodel.AVBlock.AVBlockType type,
+	protected SIBlock(SISession session, int blockNum, AVBlockType type,
 			List<DurationEnum> visDurations, List<NotesEnum> pitches,
-			List<String> frequencies, List<String> spectrums,
-			List<String> envDurations, List<DurationEnum> audDurations,
-			List<String> videoExtensions, List<Long> offsets,
-			List<Integer> numPoints) {
-		super(session, blockNum, type, visDurations, pitches, frequencies, spectrums,
-				envDurations, audDurations, videoExtensions, offsets, numPoints);
+			List<Long> offsets, List<Integer> numPoints) {
+		super(session, blockNum, type, visDurations, pitches, offsets, numPoints);
 	}
 
 	@Override

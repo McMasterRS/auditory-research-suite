@@ -35,18 +35,15 @@ public class TOJSession extends AVSession<TOJBlock, TOJTrial, TOJTrialLogger> {
         
         if (includeAudioBlock()) {
         	retval.add(new TOJBlock(this, 0, AVBlockType.AUDIO_ONLY, getVisualDurations(), getPitches(), 
-        			getFrequencies(), getSpectra(), getEnvelopeDurations(), getAudioDurations(), 
-        			getVideoFileExtensions(), getSoundOffsets(), getNumAnimationPoints()));
+        			getSoundOffsets(), getNumAnimationPoints()));
         }
         if (includeVideoBlock()) {
         	retval.add(new TOJBlock(this, 0, AVBlockType.VIDEO_ONLY, getVisualDurations(), getPitches(), 
-        			getFrequencies(), getSpectra(), getEnvelopeDurations(), getAudioDurations(), 
-        			getVideoFileExtensions(), getSoundOffsets(), getNumAnimationPoints()));
+        			getSoundOffsets(), getNumAnimationPoints()));
         }
         if (includeAudioAnimationBlock()) {
         	retval.add(new TOJBlock(this, 0, AVBlockType.AUDIO_ANIMATION, getVisualDurations(), getPitches(), 
-        			getFrequencies(), getSpectra(), getEnvelopeDurations(), getAudioDurations(), 
-        			getVideoFileExtensions(), getSoundOffsets(), getNumAnimationPoints()));
+        			getSoundOffsets(), getNumAnimationPoints()));
         }
         
         // Shuffle and renumber blocks
@@ -59,19 +56,16 @@ public class TOJSession extends AVSession<TOJBlock, TOJTrial, TOJTrialLogger> {
     }
 
     /**
-     * Create a single-trial, generic audio-video block for warmup.
+     * Create a generic audio-animation block for warmup.
      */
+
+	@Override
 	public TOJBlock generateWarmup() {
-		return new TOJBlock(this, 0, AVBlockType.AUDIO_ANIMATION, 
-				Arrays.asList(DurationEnum.NORMAL), 
-				Arrays.asList(NotesEnum.D), 
-				Arrays.asList("330Hz"),
-				Arrays.asList("Puretone"),
-				Arrays.asList("Flat-360ms"),
-				Arrays.asList(DurationEnum.NORMAL),
-				Arrays.asList("avi"),
-				Arrays.asList((long) 0), 
-				Arrays.asList(5));
+		TOJBlock warmup = new TOJBlock(this, 1, AVBlockType.AUDIO_ANIMATION, 
+        		Arrays.asList(DurationEnum.NORMAL), Arrays.asList(NotesEnum.D), 
+        		getSoundOffsets(), getNumAnimationPoints());
+        warmup.clipTrials(getNumWarmupTrials());
+        return warmup;
 	}
 
 	@Override

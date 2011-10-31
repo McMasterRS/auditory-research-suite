@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <project name="MapleLab" default="all">
+	<!-- TODO: Refactor these experiment builds into common file w/ simple target differentiation. -->
     <description>
 	     Create project deployment objects.
     </description>

@@ -10,13 +10,13 @@ package edu.mcmaster.maplelab.toj.datamodel;
 import edu.mcmaster.maplelab.av.animation.AnimationSequence;
 import edu.mcmaster.maplelab.av.datamodel.AVTrial;
 import edu.mcmaster.maplelab.av.media.PlayableMedia;
-import edu.mcmaster.maplelab.common.datamodel.Response;
+import edu.mcmaster.maplelab.common.datamodel.ConfidenceResponse;
 
 /**
  * TOJ specific implementation of Trial.
  * @author Catherine Elder <cje@datamininglab.com>
  */
-public class TOJTrial extends AVTrial<Response> {
+public class TOJTrial extends AVTrial<ConfidenceResponse> {
 
 	public TOJTrial(AnimationSequence animationSequence, boolean isVideo, PlayableMedia media, 
 			Long timingOffset, int animationPoints, float diskRadius, boolean connectDots) {
@@ -26,7 +26,7 @@ public class TOJTrial extends AVTrial<Response> {
 
 	@Override
 	public boolean isResponseCorrect() {
-		Response response = getResponse();
+		ConfidenceResponse response = getResponse();
         if (response != null) {
         	// if offset==0, either is correct
             if (TOJResponseParameters.isDotFirst(response)) {

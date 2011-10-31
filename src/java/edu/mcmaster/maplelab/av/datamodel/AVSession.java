@@ -9,6 +9,7 @@ import java.util.Properties;
 
 import edu.mcmaster.maplelab.av.datamodel.AVBlock.AVBlockType;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
+import edu.mcmaster.maplelab.common.datamodel.EnvelopeDuration;
 import edu.mcmaster.maplelab.common.datamodel.Session;
 import edu.mcmaster.maplelab.common.datamodel.TrialLogger;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
@@ -235,8 +236,12 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		return getStringList(ConfigKeys.spectra, "Puretone");
 	}
 	
-	public List<String> getEnvelopeDurations() {
-		return getStringList(ConfigKeys.envelopeDurations, "Flat-360ms");
+	public List<EnvelopeDuration> getEnvelopeDurations() {
+		List<EnvelopeDuration> retval = new ArrayList<EnvelopeDuration>();
+		for (String s : getStringList(ConfigKeys.envelopeDurations, "Flat-360ms")) {
+			retval.add(new EnvelopeDuration(s));
+		}
+		return retval;
 	}
 	
 	public List<DurationEnum> getVisualDurations() {
@@ -295,7 +300,7 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		List<NotesEnum> pitches = getPitches();
 		List<String> freq = getFrequencies();
 		List<String> spec = getSpectra();
-		List<String> envDur = getEnvelopeDurations();
+		List<EnvelopeDuration> envDur = getEnvelopeDurations();
 		List<DurationEnum> audDur = getAudioDurations();
 		List<String> vidExt = getVideoFileExtensions();
 		List<Long> offsets = getSoundOffsets();

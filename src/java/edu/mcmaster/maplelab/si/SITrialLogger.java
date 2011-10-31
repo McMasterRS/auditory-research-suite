@@ -3,14 +3,36 @@ package edu.mcmaster.maplelab.si;
 import java.io.File;
 import java.io.IOException;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.Set;
 
+import edu.mcmaster.maplelab.av.animation.AnimationSequence;
+import edu.mcmaster.maplelab.av.media.Playable;
 import edu.mcmaster.maplelab.common.datamodel.FileTrialLogger;
+import edu.mcmaster.maplelab.common.datamodel.FileType;
+import edu.mcmaster.maplelab.common.datamodel.IntegerResponse;
+import edu.mcmaster.maplelab.common.datamodel.MultiResponse;
 import edu.mcmaster.maplelab.si.datamodel.SIBlock;
 import edu.mcmaster.maplelab.si.datamodel.SISession;
 import edu.mcmaster.maplelab.si.datamodel.SITrial;
 
 public class SITrialLogger extends FileTrialLogger<SISession, SIBlock, SITrial> {
+
+	public enum Keys {
+        audioFile,
+        vidFile,
+        visFile,
+        audioOffset, 
+        numDots, 
+        animationStart,
+        aniStrikeDelay,
+        audioStart,
+        audioToneDelay,
+        subjDurationResponse,
+        subjDurationValue,
+        subjAgreementResponse,
+        subjAgreementValue
+    }
 
 	public SITrialLogger(SISession session, File workingDirectory) throws IOException {
 		super(session, workingDirectory);
@@ -18,46 +40,75 @@ public class SITrialLogger extends FileTrialLogger<SISession, SIBlock, SITrial> 
 
 	@Override
 	protected void loadAdditionalFileTypes() {
-		// TODO Auto-generated method stub
-		
+		// none needed
 	}
 
 	@Override
-	protected File createFile() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	protected File getCollectedOutputFile() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    protected File getCollectedOutputFile() {
+    	return getOutputFile(FileType.get(RESPONSE_ALL_FILE));
+    }
+    
+    @Override
+    protected File createFile() {
+    	return getOutputFile(FileType.get(RESPONSE_FILE));
+    }
 
 	@Override
 	protected Set<? extends Enum<?>> getGeneralDataHeaders() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	protected EnumMap<? extends Enum<?>, String> marshalGeneralDataToMap(
 			SIBlock block, SITrial trial) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	protected Set<? extends Enum<?>> getTrialDataHeaders() {
-		// TODO Auto-generated method stub
-		return null;
+		return EnumSet.allOf(Keys.class);
 	}
 
-	@Override
-	protected EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(
-			SIBlock block, SITrial trial) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    protected EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(SIBlock block, 
+    		SITrial trial) {
+    	
+        EnumMap<Keys, String> fields = new EnumMap<Keys, String>(Keys.class);
+        
+        // Calculate trial parameters
+        boolean vid = trial.isVideo();
+        Playable media = vid ? trial.getVideoPlayable() : trial.getAudioPlayable();
+        AnimationSequence as = trial.getAnimationSequence();
+        fields.put(Keys.audioFile, !vid && media != null ? media.name() : "N/A");
+        fields.put(Keys.vidFile, vid && media != null ? media.name() : "N/A");
+        fields.put(Keys.visFile, as != null ? as.getSourceFileName() : "N/A");
+        fields.put(Keys.audioOffset, String.valueOf(trial.getOffset()));
+        fields.put(Keys.numDots, String.valueOf(trial.getNumPoints()));
+        if (!vid) {
+            Long start = trial.getLastAnimationStart();
+            fields.put(Keys.animationStart, start != null ? String.valueOf(start) : "N/A");
+            fields.put(Keys.aniStrikeDelay, String.valueOf(trial.getAnimationStrikeTime()));
+            start = trial.getLastMediaStart();
+            fields.put(Keys.audioStart, start != null ? String.valueOf(start) : "N/A");
+            fields.put(Keys.audioToneDelay, String.valueOf(trial.getAudioToneOnset()));
+        }
+        else {
+            fields.put(Keys.animationStart, "N/A");
+            fields.put(Keys.aniStrikeDelay, "N/A");
+            fields.put(Keys.audioStart, "N/A");
+            fields.put(Keys.audioToneDelay, "N/A");
+        }
+        
+        // Output subject response information
+        MultiResponse response = trial.getResponse();
+        IntegerResponse dr = (IntegerResponse) response.getResponse(0);
+        IntegerResponse ir = (IntegerResponse) response.getResponse(1);
+        fields.put(Keys.subjDurationResponse, dr.getAnswer().toString());
+        fields.put(Keys.subjDurationValue, String.valueOf(dr.getValue()));
+        fields.put(Keys.subjAgreementResponse, ir.getAnswer().toString());
+        fields.put(Keys.subjAgreementValue, String.valueOf(ir.getValue()));
+
+        return fields;
+    }
 
 }

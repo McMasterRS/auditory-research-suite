@@ -1,13 +1,19 @@
 package edu.mcmaster.maplelab.rhythm.datamodel;
 
 import edu.mcmaster.maplelab.common.datamodel.Answer;
-import edu.mcmaster.maplelab.common.datamodel.Response;
+import edu.mcmaster.maplelab.common.datamodel.ConfidenceLevel;
+import edu.mcmaster.maplelab.common.datamodel.ConfidenceResponse;
 import edu.mcmaster.maplelab.common.datamodel.ResponseParameters;
 
-public class RhythmResponseParameters extends ResponseParameters<RhythmSession> {
+public class RhythmResponseParameters extends ResponseParameters<RhythmSession, ConfidenceLevel> {
 
 	public RhythmResponseParameters(RhythmSession session) {
 		super(session);
+	}
+
+	@Override
+	public ConfidenceLevel[] getDiscreteValues() {
+		return ConfidenceLevel.values(getSession());
 	}
 
 	@Override
@@ -29,7 +35,7 @@ public class RhythmResponseParameters extends ResponseParameters<RhythmSession> 
      * Indicate if the response indicates that the probe tone was accurate.
      * Returns false if no response yet.
      */
-	public static boolean isProbeToneAccurate(Response response) {
+	public static boolean isProbeToneAccurate(ConfidenceResponse response) {
 		return response != null && response.getAnswer().ordinal() == 0;
 	}
 

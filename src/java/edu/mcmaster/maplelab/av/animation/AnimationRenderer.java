@@ -9,6 +9,8 @@ package edu.mcmaster.maplelab.av.animation;
 
 import static javax.media.opengl.GL2.*;
 
+import java.awt.Component;
+import java.awt.Point;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +30,8 @@ public class AnimationRenderer implements GLEventListener {
 	
 	private long _startTime;				// ms
 	private boolean _animatedOnce = true; // set to true when 1 stroke is animated
+	private boolean _extentsDirty = true;
+	private Point _lastLoc = null;
 	
 	private ArrayList<AnimationListener> _listeners;
 
@@ -39,12 +43,12 @@ public class AnimationRenderer implements GLEventListener {
 
 	/** Set the current animation source. Doing so implies starting at the first frame. */
 	public void setAnimationSource(AnimationSource source) {
+		_extentsDirty = _source != source;
 		_source = source;
 	}
 
 	@Override
 	public void init(GLAutoDrawable canvas) {
-
 		if (!(canvas instanceof GLAutoDrawable)) {
 			throw new IllegalArgumentException("canvas must be type GLAutoDrawable");
 		}
@@ -65,7 +69,10 @@ public class AnimationRenderer implements GLEventListener {
 
 	@Override
 	public void display(GLAutoDrawable d) {
-		
+		// have to force reshape on animation change
+		if (_extentsDirty && _lastLoc != null) {
+			reshape(d, _lastLoc.x, _lastLoc.y, d.getWidth(), d.getHeight());
+		}
 		GL2 gl = (GL2) d.getGL();
 		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);       //Clear The Screen And The Depth Buffer
 		gl.glDisable(GL_DEPTH_TEST);
@@ -142,10 +149,10 @@ public class AnimationRenderer implements GLEventListener {
 	}
 
 	@Override
-	public void reshape(GLAutoDrawable canvas, int x, int y, int width,
-			int height) {
-		if (height==0) height=1; // fix 0 val
-		
+	public void reshape(GLAutoDrawable canvas, int x, int y, int width, int height) {
+		_lastLoc = new Point(x, y);
+		if (height <= 0) height=1; // fix 0 val
+
 		GL2 gl = (GL2) canvas.getGL();
 		GLU glu = new GLU();
 		

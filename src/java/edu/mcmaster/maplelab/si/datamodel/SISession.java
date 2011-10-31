@@ -32,18 +32,15 @@ public class SISession extends AVSession<SIBlock, SITrial, SITrialLogger> {
         
         if (includeAudioBlock()) {
         	retval.add(new SIBlock(this, 0, AVBlockType.AUDIO_ONLY, getVisualDurations(), getPitches(), 
-        			getFrequencies(), getSpectra(), getEnvelopeDurations(), getAudioDurations(), 
-        			getVideoFileExtensions(), getSoundOffsets(), getNumAnimationPoints()));
+        			getSoundOffsets(), getNumAnimationPoints()));
         }
         if (includeVideoBlock()) {
         	retval.add(new SIBlock(this, 0, AVBlockType.VIDEO_ONLY, getVisualDurations(), getPitches(), 
-        			getFrequencies(), getSpectra(), getEnvelopeDurations(), getAudioDurations(), 
-        			getVideoFileExtensions(), getSoundOffsets(), getNumAnimationPoints()));
+        			getSoundOffsets(), getNumAnimationPoints()));
         }
         if (includeAudioAnimationBlock()) {
         	retval.add(new SIBlock(this, 0, AVBlockType.AUDIO_ANIMATION, getVisualDurations(), getPitches(), 
-        			getFrequencies(), getSpectra(), getEnvelopeDurations(), getAudioDurations(), 
-        			getVideoFileExtensions(), getSoundOffsets(), getNumAnimationPoints()));
+        			getSoundOffsets(), getNumAnimationPoints()));
         }
         
         // Shuffle and renumber blocks
@@ -57,16 +54,11 @@ public class SISession extends AVSession<SIBlock, SITrial, SITrialLogger> {
 
 	@Override
 	public SIBlock generateWarmup() {
-		return new SIBlock(this, 0, AVBlockType.AUDIO_ANIMATION, 
-				Arrays.asList(DurationEnum.NORMAL), 
-				Arrays.asList(NotesEnum.D), 
-				null,
-				null,
-				null,
-				Arrays.asList(DurationEnum.NORMAL),
-				Arrays.asList("avi"),
-				Arrays.asList((long) 0), 
-				Arrays.asList(5));
+        SIBlock warmup = new SIBlock(this, 1, AVBlockType.AUDIO_ANIMATION, 
+        		Arrays.asList(DurationEnum.NORMAL), Arrays.asList(NotesEnum.D), 
+        		getSoundOffsets(), getNumAnimationPoints());
+        warmup.clipTrials(getNumWarmupTrials());
+        return warmup;
 	}
 
 	@Override

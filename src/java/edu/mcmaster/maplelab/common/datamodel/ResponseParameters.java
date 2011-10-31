@@ -1,15 +1,17 @@
 package edu.mcmaster.maplelab.common.datamodel;
 
-public abstract class ResponseParameters<S extends Session<?, ?, ?>> {
+public abstract class ResponseParameters<S extends Session<?, ?, ?>, DataType> {
 	private S _session;
 	
 	public ResponseParameters(S session) {
 		_session = session;
 	}
 	
-	public ConfidenceLevel[] getConfidenceLevels() {
-		return ConfidenceLevel.values(_session);
+	protected S getSession() {
+		return _session;
 	}
+	
+	public abstract DataType[] getDiscreteValues();
 	
 	public abstract boolean isDiscrete();
 	

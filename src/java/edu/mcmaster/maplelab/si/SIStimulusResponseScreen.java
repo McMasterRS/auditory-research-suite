@@ -1,7 +1,7 @@
 package edu.mcmaster.maplelab.si;
 
 import edu.mcmaster.maplelab.av.AVStimulusResponseScreen;
-import edu.mcmaster.maplelab.common.datamodel.Response;
+import edu.mcmaster.maplelab.common.datamodel.MultiResponse;
 import edu.mcmaster.maplelab.common.gui.ResponseInputs;
 import edu.mcmaster.maplelab.common.gui.SliderResponseInputs;
 import edu.mcmaster.maplelab.common.gui.StepManager;
@@ -11,7 +11,7 @@ import edu.mcmaster.maplelab.si.datamodel.SITrial;
 import edu.mcmaster.maplelab.si.datamodel.SIResponseParameters.SIDurationResponseParameters;
 import edu.mcmaster.maplelab.si.datamodel.SIResponseParameters.SIAgreementResponseParameters;
 
-public class SIStimulusResponseScreen extends AVStimulusResponseScreen<Response[], SIBlock, SITrial, 
+public class SIStimulusResponseScreen extends AVStimulusResponseScreen<MultiResponse, SIBlock, SITrial, 
 									SITrialLogger, SISession> {
 
 	public SIStimulusResponseScreen(StepManager steps, SISession session,
@@ -20,7 +20,7 @@ public class SIStimulusResponseScreen extends AVStimulusResponseScreen<Response[
 	}
 
 	@Override
-	public ResponseInputs<Response[]> createResponseInputs(SISession session) {
+	public ResponseInputs<MultiResponse> createResponseInputs(SISession session) {
 		return new SliderResponseInputs(new SIDurationResponseParameters(session), 
 				new SIAgreementResponseParameters(session));
 	}

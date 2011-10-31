@@ -3,11 +3,13 @@ package edu.mcmaster.maplelab.av.datamodel;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import edu.mcmaster.maplelab.av.animation.AnimationParser;
 import edu.mcmaster.maplelab.av.animation.AnimationSequence;
+import edu.mcmaster.maplelab.av.media.MediaParams;
 import edu.mcmaster.maplelab.av.media.PlayableMedia;
 import edu.mcmaster.maplelab.av.media.PlayableMedia.MediaType;
 import edu.mcmaster.maplelab.common.LogContext;
@@ -36,82 +38,13 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 		}
 	}
 	
-	/**
-	 * Generate a list of audio file names based on frequency, spectrum, and envelope & duration.
-	 */
-	protected static List<String> genFreqSpecAudioFileNames(List<String> frequencies, List<String> spectrums, 
-			List<String> envDurations) {
-		List<String> retval = new ArrayList<String>();
-		for (String freq : frequencies) {
-			for (String spec : spectrums) {
-				for (String envDur : envDurations) {
-					retval.add(String.format("%s-%s-%s.wav", freq, spec, envDur));
-				}
-			}
-		}
-		
-		return retval;
-	}
-	
-	/**
-	 * Generate a list of audio file names based on pitch and duration.
-	 */
-	protected static List<String> genPitchDurAudioFileNames(List<NotesEnum> pitches, List<String> durations) {
-		List<String> retval = new ArrayList<String>();
-		for (NotesEnum pitch : pitches) {
-			for (String duration : durations) {
-				retval.add(String.format("%s_%s.wav", pitch.toString().toLowerCase(), 
-						duration.toLowerCase()));
-			}
-		}
-		
-		return retval;
-	}
-	
-	/**
-	 * Generate a list of animation file names based on pitch and duration.
-	 */
-	protected static List<String> genAnimationFileNames(List<NotesEnum> pitches, 
-			List<DurationEnum> durations) {
-		
-		List<String> retval = new ArrayList<String>();
-		for (NotesEnum pitch : pitches) {
-			for (DurationEnum duration : durations) {
-				retval.add(String.format("%s%s_.txt", pitch.toString().toLowerCase(), 
-						duration.codeString()));
-			}
-		}
-		
-		return retval;
-	}
-	
-	/**
-	 * Generate a list of video file names based on visual pitch and duration and audio duration.
-	 */
-	protected static List<String> genVideoFileBaseNames(List<NotesEnum> pitches, List<String> visDur,
-			List<String> audDur) {
-		List<String> retval = new ArrayList<String>();
-		for (NotesEnum pitch : pitches) {
-			for (String vDur : visDur) {
-				for (String aDur : audDur) {
-					retval.add(String.format("%s%s%s.", pitch.toString().toLowerCase(), 
-							vDur.toLowerCase(), aDur.toLowerCase()));
-				}
-			}
-		}
-		
-		return retval;
-	}
-	
 	/** AV type of this block. */
 	private final AVBlockType _type;
 	/** Generated trials. */
-	ArrayList<T> _trials = null;
+	List<T> _trials = null;
 
 	protected AVBlock(S session, int blockNum, AVBlockType type, List<DurationEnum> visDurations, 
-			List<NotesEnum> pitches, List<String> frequencies, List<String> spectrums, 
-			List<String> envDurations, List<DurationEnum> audDurations, List<String> videoExtensions,
-			List<Long> offsets, List<Integer> numPoints) {
+			List<NotesEnum> pitches, List<Long> offsets, List<Integer> numPoints) {
 		
 		super(session, blockNum);
 		
@@ -126,21 +59,31 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 
 		// create trials from session
 		if (type == AVBlockType.AUDIO_ANIMATION) {
-			for (String aniName : genAnimationFileNames(pitches, visDurations)) {
-				File dir = session.getExpectedAnimationSubDir();
-				AnimationSequence aniSeq = null;
-				try {
-					aniSeq = AnimationParser.parseFile(new File(dir, aniName), animationAspect);
-				}
-				catch (FileNotFoundException fne) {
-					LogContext.getLogger().warning(String.format("Animation file %s not found.", aniName));
-				}
+			for (PlayableMedia audio : audioMT.getUniqueMedia(session)) {
+				// pitch is shared if legacy audio!
+				List<NotesEnum> pitchList = audioMT == MediaType.LEGACY_AUDIO ? 
+						Arrays.asList(audio.getValue(MediaParams.pitch)) : pitches;
 				
-				for (PlayableMedia audio : audioMT.getUniqueMedia(session)) {
-					for (Long so : offsets) {
-						for (int pts : numPoints) {
-							T trial = createTrial(aniSeq, false, audio, so, pts, pointSize, connect);
-							_trials.add(trial);
+				for (NotesEnum pitch : pitchList) {
+					for (DurationEnum duration : visDurations) {
+						String filename = String.format("%s%s_.txt", pitch.toString().toLowerCase(), 
+								duration.codeString());
+						
+						File dir = session.getExpectedAnimationSubDir();
+						AnimationSequence aniSeq = null;
+						try {
+							aniSeq = AnimationParser.parseFile(new File(dir, filename), animationAspect);
+							aniSeq.setVisualDuration(duration);
+						}
+						catch (FileNotFoundException fne) {
+							LogContext.getLogger().warning(String.format("Animation file %s not found.", filename));
+						}
+						
+						for (Long so : offsets) {
+							for (int pts : numPoints) {
+								T trial = createTrial(aniSeq, false, audio, so, pts, pointSize, connect);
+								_trials.add(trial);
+							}
 						}
 					}
 				}
@@ -189,6 +132,20 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 	public List<T> getTrials() {
 		return _trials;
 	}
+
+    /**
+     * Reduce the number of trials in this block to the given number. If number
+     * is greater than current number then call is ignored. Used for constructing
+     * warmup blocks.
+     * TODO: refactor into Block
+     * 
+     * @param numWarmupTrials number of trials to clip to.
+     */
+    public void clipTrials(int numWarmupTrials) {
+        if (numWarmupTrials < _trials.size()) {
+            _trials = _trials.subList(0, numWarmupTrials);
+        }
+    }
 	
 	/**
 	 * Create a single trial of the needed type from the given parameters.

@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
+import edu.mcmaster.maplelab.common.datamodel.EnvelopeDuration;
 import edu.mcmaster.maplelab.common.sound.NotesEnum;
 
 /**
@@ -42,19 +43,19 @@ public abstract class MediaParams<T> {
 			return (o instanceof String) ? (String) o : null;
 		}
 	};
-	public static final MediaParams<String> envelopeDuration = 
-							new MediaParams<String>("envelopeDuration") {
+	public static final MediaParams<EnvelopeDuration> envelopeDuration = 
+							new MediaParams<EnvelopeDuration>("envelopeDuration") {
 		@Override
-		public List<String> getSessionParameters(AVSession<?, ?, ?> session) {
+		public List<EnvelopeDuration> getSessionParameters(AVSession<?, ?, ?> session) {
 			return session.getEnvelopeDurations();
 		}
 		@Override
-		public String getStringValue(String paramValue) {
-			return paramValue;
+		public String getStringValue(EnvelopeDuration paramValue) {
+			return paramValue.toString();
 		}
 		@Override
-		public String cast(Object o) {
-			return (o instanceof String) ? (String) o : null;
+		public EnvelopeDuration cast(Object o) {
+			return (o instanceof EnvelopeDuration) ? (EnvelopeDuration) o : null;
 		}
 	};
 	public static final MediaParams<NotesEnum> pitch = new MediaParams<NotesEnum>("pitch") {

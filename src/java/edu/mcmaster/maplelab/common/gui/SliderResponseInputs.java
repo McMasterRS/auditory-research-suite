@@ -16,12 +16,12 @@ import javax.swing.event.ChangeListener;
 import net.miginfocom.swing.MigLayout;
 
 import edu.mcmaster.maplelab.common.datamodel.Answer;
-import edu.mcmaster.maplelab.common.datamodel.ConfidenceLevel;
 import edu.mcmaster.maplelab.common.datamodel.ContinuousResponseParameters;
+import edu.mcmaster.maplelab.common.datamodel.MultiResponse;
 import edu.mcmaster.maplelab.common.datamodel.Response;
 import edu.mcmaster.maplelab.common.datamodel.ResponseParameters;
 
-public class SliderResponseInputs extends ResponseInputs<Response[]> {
+public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 	/** Sliders. */
 	private List<JSlider> _sliders;
 	/** Action listeners. */
@@ -33,7 +33,7 @@ public class SliderResponseInputs extends ResponseInputs<Response[]> {
      * Default constructor sets the question asked and labels for the two
      * possible choices as indicated.
      */
-    public SliderResponseInputs(ContinuousResponseParameters<?>... interpreters) {
+    public SliderResponseInputs(ContinuousResponseParameters<?, ?>... interpreters) {
         this(true, interpreters);
     }
     
@@ -42,7 +42,7 @@ public class SliderResponseInputs extends ResponseInputs<Response[]> {
      * possible choices as indicated.
      */
 	public SliderResponseInputs(boolean enableKeyEvents, 
-											ContinuousResponseParameters<?>... interpreters) {
+											ContinuousResponseParameters<?, ?>... interpreters) {
         super(true, enableKeyEvents, interpreters);
         
         if (interpreters.length > 2 || interpreters[0].isDiscrete()) {
@@ -52,18 +52,18 @@ public class SliderResponseInputs extends ResponseInputs<Response[]> {
 	
 	private void createSliders() {
 		if (_sliders == null) {
-			ContinuousResponseParameters<?>[] params = 
-				(ContinuousResponseParameters<?>[]) getResponseParams();
+			ContinuousResponseParameters<?, ?>[] params = 
+				(ContinuousResponseParameters<?, ?>[]) getResponseParams();
 			_sliders = new ArrayList<JSlider>(getResponseParams().length);
 			
 			for (int i = 0; i < params.length; i++) {
-				ContinuousResponseParameters<?> crp = params[i];
-				ConfidenceLevel[] levels = crp.getConfidenceLevels();
-				JSlider s = new JSlider(levels[0].ordinal(), 
-						levels[levels.length-1].ordinal(), 
-						crp.getMiddleValue());
-				int divisor = Math.max(levels.length / 10, 1); // we want ~10 divisions
-				s.setMajorTickSpacing(levels.length / divisor);
+				ContinuousResponseParameters<?, ?> crp = params[i];
+				int max = crp.getMax();
+				int min = crp.getMin();
+				int size = max - min;
+				JSlider s = new JSlider(min, max, crp.getMiddleValue());
+				int divisor = Math.max(size / 10, 1); // we want ~10 divisions
+				s.setMajorTickSpacing(size / divisor);
 				s.setPaintTicks(true);
 				s.setPaintLabels(false);
 				s.addChangeListener(_forwarder);
@@ -89,8 +89,8 @@ public class SliderResponseInputs extends ResponseInputs<Response[]> {
 		outer.setBorder(BorderFactory.createTitledBorder("Response"));
 		
 		// first slider
-		ResponseParameters<?>[] paramArray = getResponseParams();
-		ResponseParameters<?> params = paramArray[0];
+		ResponseParameters<?, ?>[] paramArray = getResponseParams();
+		ResponseParameters<?, ?> params = paramArray[0];
 		Answer[] answers = params.getAnswers();
 		// expect 2 answers, but just use the first 2
 		p.add(new JLabel(answers[0].toString()));
@@ -147,8 +147,8 @@ public class SliderResponseInputs extends ResponseInputs<Response[]> {
 
 	@Override
 	public void reset() {
-		ContinuousResponseParameters<?>[] params = 
-				(ContinuousResponseParameters<?>[]) getResponseParams();
+		ContinuousResponseParameters<?, ?>[] params = 
+				(ContinuousResponseParameters<?, ?>[]) getResponseParams();
 		for (int i = 0; i < params.length; i++) {
 			_sliders.get(i).setValue(params[i].getMiddleValue());
 		}
@@ -160,16 +160,14 @@ public class SliderResponseInputs extends ResponseInputs<Response[]> {
 	}
 
 	@Override
-	protected Response[] getCurrentResponse() {
-		ResponseParameters<?>[] params = getResponseParams();
-		Response[] retval = new Response[params.length];
+	protected MultiResponse getCurrentResponse() {
+		ResponseParameters<?, ?>[] params = getResponseParams();
+		MultiResponse retval = new MultiResponse(params.length);
 		
 		for (int i = 0; i < params.length; i++) {
-			ContinuousResponseParameters<?> crp = (ContinuousResponseParameters<?>) params[i];
+			ContinuousResponseParameters<?, ?> crp = (ContinuousResponseParameters<?, ?>) params[i];
 			int val = _sliders.get(i).getValue();
-			ConfidenceLevel level = crp.getLevelForValue(val);
-			Answer a = crp.getAnswerForValue(val);
-			retval[i] = new Response(a, level);
+			retval.setResponse(i, crp.getResponseForValue(val));
 		}
 		
 		return retval;

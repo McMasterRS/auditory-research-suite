@@ -10,6 +10,7 @@ import java.util.Map;
 
 import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
+import edu.mcmaster.maplelab.common.datamodel.EnvelopeDuration;
 import edu.mcmaster.maplelab.common.sound.NotesEnum;
 import edu.mcmaster.maplelab.common.LogContext;
 
@@ -31,7 +32,7 @@ public class PlayableMedia {
 				List<PlayableMedia> retval = new ArrayList<PlayableMedia>();
 				for (String f : frequency.getSessionParameters(session)) {
 					for (String s : spectrum.getSessionParameters(session)) {
-						for (String ed : envelopeDuration.getSessionParameters(session)) {
+						for (EnvelopeDuration ed : envelopeDuration.getSessionParameters(session)) {
 							retval.add(createMedia(session, f, s, ed));
 						}
 					}

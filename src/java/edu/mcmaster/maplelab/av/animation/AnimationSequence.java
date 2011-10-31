@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.vecmath.*;
 
+import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
+
 /**
  * This class creates a sequence of frames to be animated
  * @author Catherine Elder <cje@datamininglab.com>
@@ -25,6 +27,8 @@ public class AnimationSequence {
 	private final String _fileName;
 	/** Aspect ratio of points - for reporting only. */
 	private final float _aspect;
+	/** Visual duration value associated with this animation. */
+	private DurationEnum _visDur = null;
 	/** Cached values. */
 	private AnimationFrame _lowestFrame = null;
 	private Rectangle2D.Float _extent = null;
@@ -34,6 +38,14 @@ public class AnimationSequence {
 		_aniFrames = aniFrames;	
 		_aspect = aspect;
 		calculateExtents();
+	}
+	
+	public void setVisualDuration(DurationEnum de) {
+		_visDur = de;
+	}
+	
+	public DurationEnum getVisualDuration() {
+		return _visDur;
 	}
 	
 	public String getSourceFileName() {

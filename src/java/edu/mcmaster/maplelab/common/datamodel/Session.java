@@ -490,7 +490,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      * @param def default value if property not found.
      * @return property value.
      */
-    protected final int getInteger(Enum<?> key, int def) {
+    public final int getInteger(Enum<?> key, int def) {
         return getInteger(key.name(), def);
     }
     

@@ -17,7 +17,7 @@ import java.util.List;
 import javax.sound.midi.Sequence;
 
 import edu.mcmaster.maplelab.common.LogContext;
-import edu.mcmaster.maplelab.common.datamodel.Response;
+import edu.mcmaster.maplelab.common.datamodel.ConfidenceResponse;
 import edu.mcmaster.maplelab.common.datamodel.Trial;
 import edu.mcmaster.maplelab.common.sound.Note;
 import edu.mcmaster.maplelab.common.sound.Pitch;
@@ -29,7 +29,7 @@ import edu.mcmaster.maplelab.common.sound.Pitch;
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  Sep 14, 2006
  */
-public class RhythmTrial extends Trial<Response> {
+public class RhythmTrial extends Trial<ConfidenceResponse> {
     private final int _baseIOI;
     private final float _offsetDegree;
     private final boolean _withTap;
@@ -125,7 +125,7 @@ public class RhythmTrial extends Trial<Response> {
      */
     @Override
     public boolean isResponseCorrect() {
-        Response response = getResponse();
+        ConfidenceResponse response = getResponse();
         if(response != null) {
             if (RhythmResponseParameters.isProbeToneAccurate(response)) {
                 return getOffsetDegree() == 0.0;

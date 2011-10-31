@@ -12,12 +12,12 @@
     <property name="src" value="${basedir}" />
     <property name="build" value="${basedir}" />
 	
-    <property name="toj.jar" value="toj.jar" />
+    <property name="si.jar" value="si.jar" />
 	
-	<property name="toj.dist.dir" value="${build}/www/toj" />
-    <property name="toj.jar.path" location="${toj.dist.dir}/${toj.jar}"/>	
+	<property name="si.dist.dir" value="${build}/www/si" />
+    <property name="si.jar.path" location="${si.dist.dir}/${si.jar}"/>	
 	
-	<property name="toj.vprops" value="${basedir}/edu/mcmaster/maplelab/toj/toj.version.properties"/>
+	<property name="si.vprops" value="${basedir}/edu/mcmaster/maplelab/si/si.version.properties"/>
 	
     <patternset id="common.classes">
     	<include name="edu/mcmaster/maplelab/common/*.class" />
@@ -33,11 +33,11 @@
         <include name="edu/mcmaster/maplelab/av/*.properties" />  
     </patternset>
 
-    <patternset id="toj.classes">
-	    <include name="edu/mcmaster/maplelab/toj/*.class" />
-	    <include name="edu/mcmaster/maplelab/toj/**/*.class" />
-        <include name="edu/mcmaster/maplelab/toj/**/*.png" />  
-        <include name="edu/mcmaster/maplelab/toj/*.properties" />  
+    <patternset id="si.classes">
+	    <include name="edu/mcmaster/maplelab/si/*.class" />
+	    <include name="edu/mcmaster/maplelab/si/**/*.class" />
+        <include name="edu/mcmaster/maplelab/si/**/*.png" />  
+        <include name="edu/mcmaster/maplelab/si/*.properties" />  
     </patternset>
 	
 	<path id="used.jars.path">
@@ -50,7 +50,7 @@
         </fileset>
     </path>	
 	
-    <target name="all" depends="toj"/> 
+    <target name="all" depends="si"/> 
 	
 	<target name="cache_version.update">
 		<!-- Update applet cache number to browser knows to re-download it -->
@@ -70,16 +70,16 @@
 	</target>
 
 	
-	<target name="toj" depends="toj.jar">
-	    <ant antfile="${basedir}/app/toj-app-build.xml" dir="${basedir}/app" />
+	<target name="si" depends="si.jar">
+	    <ant antfile="${basedir}/app/si-app-build.xml" dir="${basedir}/app" />
 	</target>
 	
-    <target name="toj.jar" depends="toj.version, compile">
-		<jar destfile="${toj.jar.path}">
+    <target name="si.jar" depends="si.version, compile">
+		<jar destfile="${si.jar.path}">
             <fileset dir="${build}">
                 <patternset refid="common.classes" />
                 <patternset refid="av.classes" />
-                <patternset refid="toj.classes" />
+                <patternset refid="si.classes" />
             </fileset>
             <manifest>
                     <attribute name="Built-By" value="${user.name}" />
@@ -124,13 +124,13 @@
 	</target>
 
 	<available property="is.svn" file=".svn" type="dir" />
-	<target name="toj.version" depends="svn.version, git.version" >
+	<target name="si.version" depends="svn.version, git.version" >
 		
 		<echo>Got build num.</echo>
 		<echo>Got build num=${build-num}.</echo>
 		
 		<!-- Write the property file using the current date and time. -->
-		<propertyfile file="${toj.vprops}" comment="Temporal Order Judgement Experiment Build Information File">
+		<propertyfile file="${si.vprops}" comment="Sensory Integration Experiment Build Information File">
 			<entry key="buildVersion" type="int" value="${build-num}"/>
 			<entry key="buildDate" type="date" value="now" pattern="yyyy-MM-dd HH-mm-ss zzz"/>
 		</propertyfile>
@@ -139,7 +139,9 @@
     <target name="compile">
 	    <javac nowarn="yes" source="1.6" srcdir="${src}" destdir="${build}">
     		<include name="edu/mcmaster/maplelab/common/**/*.java"/>
-	    	<include name="edu/mcmaster/maplelab/toj/**/*.java"/>
+	    	<include name="edu/mcmaster/maplelab/si/**/*.java"/>
+	    	<exclude name="edu/mcmaster/maplelab/toj/*.java" />
+	    	<exclude name="edu/mcmaster/maplelab/toj/**/*.java" />
 	    	<exclude name="edu/mcmaster/maplelab/rhythm/*.java" />
 	    	<exclude name="edu/mcmaster/maplelab/rhythm/**/*.java" />
 	    	<classpath refid="used.jars.path" />

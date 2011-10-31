@@ -13,7 +13,7 @@ public abstract class ResponseInputs<T> extends JPanel {
 	private static final long serialVersionUID = 1L;
     
     /** Response interpreter. */
-    private final ResponseParameters<?>[] _responseParams;
+    private final ResponseParameters<?, ?>[] _responseParams;
     
     /** Top panel. */
     private JPanel _top = null;
@@ -24,7 +24,7 @@ public abstract class ResponseInputs<T> extends JPanel {
      * Default constructor sets the question asked and labels for the two
      * possible choices as indicated.
      */
-    public ResponseInputs(ResponseParameters<?>... interpreter) {
+    public ResponseInputs(ResponseParameters<?, ?>... interpreter) {
         this(true, false, interpreter);
     }
     
@@ -32,7 +32,8 @@ public abstract class ResponseInputs<T> extends JPanel {
      * Default constructor sets the question asked and labels for the
      * possible choices as indicated.
      */
-    public ResponseInputs(boolean vertical, boolean enableKeyEvents, ResponseParameters<?>... interpreter) {
+    public ResponseInputs(boolean vertical, boolean enableKeyEvents, 
+    		ResponseParameters<?, ?>... interpreter) {
         super();
         _responseParams = interpreter;
         
@@ -50,7 +51,7 @@ public abstract class ResponseInputs<T> extends JPanel {
     /**
      * Get the response parameters object(s).
      */
-    protected ResponseParameters<?>[] getResponseParams() {
+    protected ResponseParameters<?, ?>[] getResponseParams() {
     	return _responseParams;
     }
     

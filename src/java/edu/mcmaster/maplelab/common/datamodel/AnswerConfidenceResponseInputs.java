@@ -30,7 +30,7 @@ import edu.mcmaster.maplelab.common.gui.ResponseInputs;
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  Nov 9, 2006
  */
-public class AnswerConfidenceResponseInputs extends ResponseInputs<Response> {
+public class AnswerConfidenceResponseInputs extends ResponseInputs<ConfidenceResponse> {
 	private static final long serialVersionUID = 1L;
 	
 	
@@ -45,7 +45,7 @@ public class AnswerConfidenceResponseInputs extends ResponseInputs<Response> {
      * Default constructor sets the question asked and labels for the two
      * possible choices as indicated.
      */
-    public AnswerConfidenceResponseInputs(ResponseParameters<?> interpreter) {
+    public AnswerConfidenceResponseInputs(ResponseParameters<?, ConfidenceLevel> interpreter) {
         this(true, false, interpreter);
     }
     
@@ -54,7 +54,7 @@ public class AnswerConfidenceResponseInputs extends ResponseInputs<Response> {
      * possible choices as indicated.
      */
 	public AnswerConfidenceResponseInputs(boolean vertical, boolean enableKeyEvents, 
-														ResponseParameters<?> interpreter) {
+												ResponseParameters<?, ConfidenceLevel> interpreter) {
         super(vertical, enableKeyEvents, interpreter);
         
         if (!interpreter.isDiscrete()) {
@@ -160,8 +160,8 @@ public class AnswerConfidenceResponseInputs extends ResponseInputs<Response> {
 	}
 
 	@Override
-	protected Response getCurrentResponse() {
-		return new Response(getAnswerInput(), getConfRating());
+	protected ConfidenceResponse getCurrentResponse() {
+		return new ConfidenceResponse(getAnswerInput(), getConfRating());
 	}
     
     private JPanel getConfidencePanel() {
@@ -193,7 +193,7 @@ public class AnswerConfidenceResponseInputs extends ResponseInputs<Response> {
     private List<JRadioButton> getConfidenceButtons() {
         _confGroup = new ButtonGroup();
         if (_confButtons == null)  {
-            ConfidenceLevel[] ratings = getResponseParams()[0].getConfidenceLevels();
+            ConfidenceLevel[] ratings = (ConfidenceLevel[]) getResponseParams()[0].getDiscreteValues();
             _confButtons = new ArrayList<JRadioButton>(ratings.length);
             for (ConfidenceLevel c : ratings) {
                 JRadioButton b = new JRadioButton(c.toString());

@@ -9,7 +9,7 @@ package edu.mcmaster.maplelab.toj;
 
 import edu.mcmaster.maplelab.av.AVStimulusResponseScreen;
 import edu.mcmaster.maplelab.common.datamodel.AnswerConfidenceResponseInputs;
-import edu.mcmaster.maplelab.common.datamodel.Response;
+import edu.mcmaster.maplelab.common.datamodel.ConfidenceResponse;
 import edu.mcmaster.maplelab.common.gui.ResponseInputs;
 import edu.mcmaster.maplelab.common.gui.StepManager;
 import edu.mcmaster.maplelab.toj.datamodel.TOJBlock;
@@ -20,7 +20,7 @@ import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
 /**
  * Primary trial run screen for the TOJ experiment.
  */
-public class TOJStimulusResponseScreen extends AVStimulusResponseScreen<Response, TOJBlock, 
+public class TOJStimulusResponseScreen extends AVStimulusResponseScreen<ConfidenceResponse, TOJBlock, 
 														TOJTrial, TOJTrialLogger, TOJSession> {
 
 	public TOJStimulusResponseScreen(StepManager steps, TOJSession session, boolean isWarmup) {
@@ -28,7 +28,7 @@ public class TOJStimulusResponseScreen extends AVStimulusResponseScreen<Response
     }
 
 	@Override
-	public ResponseInputs<Response> createResponseInputs(TOJSession session) {
+	public ResponseInputs<ConfidenceResponse> createResponseInputs(TOJSession session) {
 		return new AnswerConfidenceResponseInputs(false, true, new TOJResponseParameters(session));
 	}
 }
