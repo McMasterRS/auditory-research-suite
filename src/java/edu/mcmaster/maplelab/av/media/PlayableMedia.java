@@ -122,7 +122,7 @@ public class PlayableMedia {
 			// find the right extension
 			File f = null;
 			for (String ext : getFileExtensions(session)) {
-				f = new File(dir, filename + ext);
+				f = new File(dir, filename + "." + ext);
 				if (f.exists()) break;
 			}
 			return f;
@@ -141,7 +141,7 @@ public class PlayableMedia {
 			Playable retval = null;
 			List<String> extensions = getFileExtensions(session);
 			for (int i = 0; retval == null && i < extensions.size(); i++) {
-				File f = new File(dir, filename + extensions.get(i));
+				File f = new File(dir, filename + "." + extensions.get(i));
 				retval = findPlayable(f.getName(), f.getParentFile(), volume);
 			}
 			
