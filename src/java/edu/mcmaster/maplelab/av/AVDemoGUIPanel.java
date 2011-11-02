@@ -258,6 +258,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
             _vidPanel = new VideoPanel();
 		}
 		
+		if (!trial.isVideo()) _aniPanel.start();
 		if (trialsEqual(_currTrial, trial)) return;
 		_currTrial = trial;
 
@@ -341,6 +342,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
+					_aniPanel.stop();
 					_currTrial.removePlaybackListener(LoopListener.this);
 					if (_loop.isSelected()) {
 						prepare();

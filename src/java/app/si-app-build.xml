@@ -30,10 +30,12 @@
 	                bundleid="edu.mcmaster.maplelab.si.SIExperiment" 
 					>
     	
-		        <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
+	        <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
+    		<javaproperty name="jna.library.path" value="$JAVAROOT"/>
+
+    		<jarfileset dir="../www/si" includes="si.jar"/>
     	
     		<jarfileset dir="..">
-    			<include name="www/si/si.jar"/>
     			<include name="lib/miglayout-4.0.jar"/>
     			<include name="lib/jogl.all.jar"/>
     			<include name="lib/joal.jar"/>
