@@ -38,6 +38,22 @@
     		</jarfileset>
 	        <resourcefilelist dir="../www/rhythm" files="rhythm.properties"/>
    		</jarbundler>
+		
+		<delete dir="tmp" quiet="true" />
+		<mkdir dir="tmp"/>
+		<copy todir="tmp">
+		    <fileset dir="../../../src/java/edu/mcmaster/maplelab/rhythm">
+		    	<include name="rhythm.properties"/>
+		    </fileset>
+	  	</copy>
+		<copy todir="tmp">
+			<fileset dir=".">
+				<include name="Rhythm Experiment.app/"/>
+			</fileset>
+		</copy>
+		<zip destfile="RhythmExperiment.zip" encoding="UTF-8">
+		    <zipfileset dir="tmp" filemode="755" />
+		</zip>
 	</target>
 
 	

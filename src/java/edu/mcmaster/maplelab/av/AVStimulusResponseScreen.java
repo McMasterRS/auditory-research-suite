@@ -37,7 +37,7 @@ import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.av.datamodel.AVTrial;
 import edu.mcmaster.maplelab.av.datamodel.TrialPlaybackListener;
 import edu.mcmaster.maplelab.av.datamodel.AVBlock.AVBlockType;
-import edu.mcmaster.maplelab.av.media.QTVideoClip;
+import edu.mcmaster.maplelab.av.media.VideoPanel;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.TrialLogger;
 import edu.mcmaster.maplelab.common.gui.BasicStep;
@@ -84,7 +84,7 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
 	private final boolean _isWarmup;
 	private AnimationPanel _aniPanel;
 	private final AnimationRenderer _renderer;
-	private JPanel _vidPanel;
+	private VideoPanel _vidPanel;
 	private final ResponseKeyListener _keyListener;
 
 	public AVStimulusResponseScreen(StepManager steps, S session, boolean isWarmup) {
@@ -380,13 +380,12 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
                     	if (block.getType() == AVBlockType.VIDEO_ONLY) {
                     		// create and add video panel if not done
                     		if (_vidPanel == null) {
-                    			_vidPanel = new JPanel();
+                    			_vidPanel = new VideoPanel();
                     		}
 
                 			getContentPanel().remove(_vidPanel);
                 			getContentPanel().add(_vidPanel, BorderLayout.CENTER);
-                    		_vidPanel.removeAll();
-                    		_vidPanel.add(QTVideoClip.makeComponent(_trial.getVideoPlayable()));
+                    		_vidPanel.setMovie(_trial.getVideoPlayable());
                     	}
                     	else if (_vidPanel != null) {
                     		getContentPanel().remove(_vidPanel);

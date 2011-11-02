@@ -4,30 +4,37 @@ import java.awt.Component;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+
+import org.rococoa.Rococoa;
+import org.rococoa.cocoa.foundation.NSArray;
+import org.rococoa.cocoa.foundation.NSObject;
+import org.rococoa.cocoa.qtkit.MovieComponent;
+import org.rococoa.cocoa.qtkit.QTKit;
+import org.rococoa.cocoa.qtkit.QTMedia;
+import org.rococoa.cocoa.qtkit.QTMovie;
+import org.rococoa.cocoa.qtkit.QTMovieView;
+import org.rococoa.cocoa.qtkit.QTTime;
+import org.rococoa.cocoa.qtkit.QTTrack;
+
+import com.sun.jna.NativeLong;
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.ResourceLoader;
 import edu.mcmaster.maplelab.common.datamodel.Session;
 
-import quicktime.QTException;
-import quicktime.QTSession;
-import quicktime.app.view.QTFactory;
-import quicktime.io.OpenMovieFile;
-import quicktime.io.QTFile;
-import quicktime.std.StdQTException;
-import quicktime.std.movies.Movie;
-
-@SuppressWarnings("deprecation")
+/**
+ * Class for encapsulating a Quicktime video clip as a Playable.
+ * 
+ * @author bguseman
+ */
 public class QTVideoClip implements Playable {
 	static {
-		try {
-			QTSession.open();
-		} 
-		catch (QTException e) {
-			LogContext.getLogger().severe("Could not initialize QuickTime environment.");
-		}
+        // load library
+        @SuppressWarnings("unused")
+        QTKit instance = QTKit.instance;
 	}
 	
 	private static final Map<String, Playable> _movieCache = new HashMap<String, Playable>();
@@ -36,11 +43,10 @@ public class QTVideoClip implements Playable {
         Playable p = _movieCache.get(filename);
         if (p == null) {
             if (filename != null) {
-            	Movie m = null;
+            	QTMovie m = null;
             	try {
                 	File f = ResourceLoader.findResource(directory, filename);
-                    OpenMovieFile omf = OpenMovieFile.asRead(new QTFile (f));
-                    m = Movie.fromFile(omf);
+                    m = QTMovie.movieWithFile_error(f.getAbsolutePath(), null);
             	}
             	catch (Exception e) {
             		LogContext.getLogger().log(Level.SEVERE, "Couldn't load video resource " + filename, e);
@@ -63,66 +69,87 @@ public class QTVideoClip implements Playable {
 		Component retval = null;
 		if (clip instanceof QTVideoClip) {
 			QTVideoClip qtc = (QTVideoClip) clip;
-			try {
-				retval = QTFactory.makeQTComponent(qtc._movie).asComponent();
-			} 
-			catch (QTException e) {
-				LogContext.getLogger().severe("Could not initialize clip component.");
-			}
-		}
-		else {
-			LogContext.getLogger().severe(String.format("Playable %sis not a " +
-					"valid video clip", clip != null ? clip.name() + " " : ""));
+	        QTMovieView movieView = QTMovieView.CLASS.create();
+	        movieView.setControllerVisible(false);
+	        movieView.setPreservesAspectRatio(true);
+	        
+	        MovieComponent component = new MovieComponent(movieView);
+	        movieView.setMovie(qtc._movie);                
+			
+	        retval = component;
 		}
 		
 		return retval;
 	}
 	
-	private final Movie _movie;
+	private final QTMovie _movie;
 	private final String _name;
-	private float _volume;
+	private List<Float> _volumes = new ArrayList<Float>(1); // expect only 1
     private ArrayList<PlayableListener> _listeners = new ArrayList<PlayableListener>();
 	
-	private QTVideoClip(String name, Movie m) {
+	private QTVideoClip(String name, QTMovie m) {
 		if (m == null) {
 			throw new IllegalArgumentException("Movie object may not be null.");
 		}
 
 		_name = name;
 		_movie = m;
+		
+		// initialize volumes
+		NSArray soundTracks = _movie.tracksOfMediaType(QTMedia.QTMediaTypeSound);
+		for (int i = 0; i < soundTracks.count(); i++) {
+			QTTrack track = Rococoa.cast(soundTracks.objectAtIndex(i), QTTrack.class);
+			_volumes.add(track.volume());
+		}
 	}
 
 	@Override
 	public void play() {
-		try {
-			_movie.setTimeValue(0);
-			_movie.start();
-			
-			Session.sleep(duration());
-	        
-	        synchronized (_listeners) {
-	            if (!_listeners.isEmpty()) {
-	            	for (PlayableListener pl : _listeners) {
-	            		pl.playableEnded(null);
-	            	}
-	            }
-	        }
-		} 
-		catch (StdQTException e) {
-			LogContext.getLogger().severe("Video playback failed: " + name());
-		}
+		_movie.gotoBeginning();
+		_movie.play();
 		
+		Session.sleep(duration());
+        
+        synchronized (_listeners) {
+            if (!_listeners.isEmpty()) {
+            	for (PlayableListener pl : _listeners) {
+            		pl.playableEnded(null);
+            	}
+            }
+        }
 	}
 
 	@Override
 	public int duration() {
-		try {
+		QTTime time = _movie.duration();
+		return (int) (1000 * time.timeValue / time.timeScale.longValue());
+		
+		
+		/*_movie.gotoEnd();
+		int w = (int) _movie.currentTime().timeValue;
+		w = w * _movie.currentTime().timeScale.intValue();
+		
+		int x = (int) _movie.duration().timeValue;
+		NativeLong y = _movie.duration().timeScale;
+		int z = x / y.intValue();
+		
+		QTTrack track = Rococoa.cast(_movie.tracksOfMediaType(
+				QTMedia.QTMediaTypeVideo).objectAtIndex(0), QTTrack.class);
+		QTMedia media = track.media();
+		NSObject o = media.attributeForKey(QTMedia.QTMediaDurationAttribute);
+		System.out.println(o);
+		o = media.attributeForKey(QTMedia.QTMediaTimeScaleAttribute);
+		
+		System.out.println(o);
+		
+		return (int) _movie.duration().timeValue / 1000;
+		/*try {
 			// XXX: DO NOT use getDuration!
 			return _movie.getTimeBase().getStopTime() / 1000;
 		} 
 		catch (StdQTException e) {
 			return 0;
-		}
+		}*/
 	}
 
 	@Override
@@ -132,45 +159,37 @@ public class QTVideoClip implements Playable {
 
 	@Override
 	public void setVolume(float volume) {
-		try {
-			_movie.setVolume(volume);
-		} 
-		catch (StdQTException e) { }
+		NSArray soundTracks = _movie.tracksOfMediaType(QTMedia.QTMediaTypeSound);
+		for (int i = 0; i < soundTracks.count(); i++) {
+			QTTrack track = Rococoa.cast(soundTracks.objectAtIndex(i), QTTrack.class);
+			track.setVolume(volume);
+			_volumes.set(i, volume);
+		}
 	}
 
 	@Override
 	public void setMute(boolean mute) {
+		NSArray soundTracks = _movie.tracksOfMediaType(QTMedia.QTMediaTypeSound);
 		
-		try {
-			if (mute) {
-				_volume = _movie.getVolume();
-				_movie.setVolume(0);
+		if (mute) {
+			for (int i = 0; i < soundTracks.count(); i++) {
+				QTTrack track = Rococoa.cast(soundTracks.objectAtIndex(i), QTTrack.class);
+				track.setVolume(0);
 			}
-			else {
-				_movie.setVolume(_volume);
+		}
+		else {
+			for (int i = 0; i < soundTracks.count(); i++) {
+				QTTrack track = Rococoa.cast(soundTracks.objectAtIndex(i), QTTrack.class);
+				track.setVolume(_volumes.get(i));
 			}
-		} 
-		catch (StdQTException e) { }
+		}
 	}
 	
-	public int getWidth() {
-		int retval = 0;
-		try {
-			retval =  _movie.getBounds().getWidth();
-		} 
-		catch (StdQTException e) { }
-		
-		return retval;
-	}
-	
-	public int getHeight() {
-		int retval = 0;
-		try {
-			retval =  _movie.getBounds().getHeight();
-		} 
-		catch (StdQTException e) { }
-		
-		return retval;
+	/**
+	 * Get the QTMovie object.
+	 */
+	protected QTMovie getQTMovie() {
+		return _movie;
 	}
 
 	@Override

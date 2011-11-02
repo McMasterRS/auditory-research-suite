@@ -41,7 +41,7 @@ public class PlayableMedia {
 			}
 			@Override
 			protected Playable findPlayable(String filename, File directory, Float volume) {
-				return SoundClip.findPlayable(filename,directory, volume);
+				return SoundClip.findPlayable(filename, directory, volume);
 			}
 		},
 		VIDEO(new MediaParams[]{pitch, visualDuration, audioDuration}, "%s%s%s") {
@@ -67,7 +67,7 @@ public class PlayableMedia {
 			}
 			@Override
 			protected Playable findPlayable(String filename, File directory, Float volume) {
-				return QTVideoClip.findPlayable(filename,directory, volume);
+				return QTVideoClip.findPlayable(filename, directory, volume);
 			}
 		},
 		LEGACY_AUDIO(new MediaParams[]{pitch, audioDuration}, "%s_%s") {
@@ -91,7 +91,7 @@ public class PlayableMedia {
 			}
 			@Override
 			protected Playable findPlayable(String filename, File directory, Float volume) {
-				return SoundClip.findPlayable(filename,directory, volume);
+				return SoundClip.findPlayable(filename, directory, volume);
 			}
 		};
 

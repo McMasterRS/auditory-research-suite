@@ -32,6 +32,7 @@ import edu.mcmaster.maplelab.av.datamodel.AVTrial;
 import edu.mcmaster.maplelab.av.datamodel.TrialPlaybackListener;
 import edu.mcmaster.maplelab.av.media.PlayableMedia;
 import edu.mcmaster.maplelab.av.media.PlayableMedia.MediaType;
+import edu.mcmaster.maplelab.av.media.VideoPanel;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
 import edu.mcmaster.maplelab.common.datamodel.EnvelopeDuration;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
@@ -42,6 +43,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	private FilePathUpdater _fUpdater = new FilePathUpdater();
 	private JComboBox _pitches;
 	private JComboBox _vDurations;
+	private JComboBox _aDurations;
 	private JComboBox _frequency;
 	private JComboBox _spectrum;
 	private JComboBox _envDuration;
@@ -59,7 +61,11 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	private JButton _startButton;
 	
 	private AnimationRenderer _renderer;
-	private AVTrial<?> _currTrial;
+	private T _currTrial;
+	
+	private JFrame _testFrame;
+	private AnimationPanel _aniPanel;
+	private VideoPanel _vidPanel;
 		
 	//read data from user entries and create a trial
 	
@@ -123,6 +129,13 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		add(new JLabel("Duration"), "right");
 		add(_vDurations, "left, growx");
 		
+		_aDurations = new JComboBox(DurationEnum.unDampedValues());
+		_aDurations.setSelectedItem(DurationEnum.NORMAL);
+		_aDurations.addActionListener(_fUpdater);
+		
+		add(new JLabel("Audio Duration"), "right");
+		add(_aDurations, "left, growx");
+		
 		add (new JLabel("Number of dots"), "right");
 		SpinnerModel model = new SpinnerNumberModel(6, 1, 20, 1);
 		_numPts = new JSpinner(model);
@@ -135,7 +148,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		add(new JLabel("Use video"), "right");
 		_useVideo = new JCheckBox();
 		add(_useVideo, "left");
-		_useVideo.setEnabled(false);
+		//_useVideo.setEnabled(false);
 		
 		add(new JLabel("Connect dots w/ lines"), "right");
 		_connect = new JCheckBox();
@@ -157,7 +170,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		add(new JLabel("Video File"));
 		_vidFile = new FileBrowseField(false);
 		add(_vidFile, "span, growx");
-		_vidFile.setEnabled(false);
+		//_vidFile.setEnabled(false);
 		
 		JPanel p = new JPanel(new MigLayout("insets 0, fill"));
 		_startButton = new JButton("Start");
@@ -174,15 +187,14 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	  
 	@Override
 	public T getTrial() {
-			
 		AVSession<?, ?, ?> session = getSession();
 		final boolean vid = _useVideo.isSelected();
 		float volume = session.getPlaybackGain();
 		PlayableMedia media = vid ? MediaType.VIDEO.createDemoMedia(_vidFile.getFile(), volume) :
 				MediaType.AUDIO.createDemoMedia(_audFile.getFile(), volume);
 		try {
-			AnimationSequence aniSeq = AnimationParser.parseFile(
-					_visFile.getFile(), session.getAnimationPointAspect());
+			AnimationSequence aniSeq = !vid ? AnimationParser.parseFile(
+					_visFile.getFile(), session.getAnimationPointAspect()) : null;
 			Object val = _delayText.getValue();
 			Long delay = Long.valueOf(val instanceof String ? (String) val : ((Number) val).toString());
 			return createTrial(aniSeq, vid, media, delay, 
@@ -193,13 +205,18 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 			Runnable r = new Runnable() {
 				@Override
 				public void run() {
-					boolean vis = _visFile.getFile().exists();
-					boolean aud = _audFile.getFile().exists();
 					String msg = "%s file";
-					if (aud & vis) {
-						msg = "Audio and animation files";
+					if (vid) msg = String.format(msg, "Video");
+					else {
+						boolean vis = _visFile.getFile().exists();
+						boolean aud = _audFile.getFile().exists();
+						if (!aud & !vis) {
+							msg = "Audio and animation files";
+						}
+						else {
+							msg = String.format(msg, aud ? "Animation" : "Audio");
+						}
 					}
-					else String.format(msg, aud ? "Animation" : "Audio");
 					
 					JOptionPane.showMessageDialog(AVDemoGUIPanel.this, 
 							msg + " could not be found.", 
@@ -227,22 +244,50 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	/**
 	 * Prepare and display the demo display window.
 	 */
-	private void prepareDemoScreen() {
-		if (_renderer == null) {
-    		JFrame testFrame = new JFrame(AnimationPanel.class.getName());
-            testFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	private void prepare() {
+		T trial = getTrial();
+		
+		if (_testFrame == null) {
+			_testFrame = new JFrame();
+			_testFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            Window w = getParentWindow();
+            _testFrame.setLocation(w.getLocation().x + w.getWidth(), w.getLocation().y);
             
             _renderer = new AnimationRenderer();
-        	AnimationPanel view = new AnimationPanel(_renderer);
+            _aniPanel = new AnimationPanel(_renderer);
+            _vidPanel = new VideoPanel();
+		}
+		
+		if (trialsEqual(_currTrial, trial)) return;
+		_currTrial = trial;
 
-        	testFrame.getContentPane().removeAll();
-            testFrame.getContentPane().add(view, BorderLayout.CENTER);
-            
-            testFrame.pack();
-            Window w = getParentWindow();
-            testFrame.setLocation(w.getLocation().x + w.getWidth(), w.getLocation().y);
-            testFrame.setVisible(true);
+    	_testFrame.getContentPane().removeAll();
+    	if (_currTrial.isVideo()) {
+    		_vidPanel.setMovie(_currTrial.getVideoPlayable());
+    		_testFrame.getContentPane().add(_vidPanel, BorderLayout.CENTER);
+    		_testFrame.setTitle(_vidPanel.getClass().getSimpleName());
     	}
+    	else {
+    		_testFrame.getContentPane().add(_aniPanel, BorderLayout.CENTER);
+    		_testFrame.setTitle(_aniPanel.getClass().getSimpleName());
+    	}
+
+        _testFrame.setVisible(true);
+        _testFrame.pack();
+	}
+	
+	private boolean trialsEqual(T trial1, T trial2) {
+		boolean retval = trial1 != null && trial2 != null;
+		retval = retval && trial1.getAnimationSequence() == trial2.getAnimationSequence();
+		retval = retval && trial1.getVideoPlayable() == trial2.getVideoPlayable();
+		retval = retval && trial1.getAudioPlayable() == trial2.getAudioPlayable();
+		retval = retval && trial1.isVideo() == trial2.isVideo();
+		if (retval && trial1.isVideo()) return retval; // nothing else matters for video
+		
+		retval = retval && trial1.getOffset() == trial2.getOffset();
+		retval = retval && trial1.isConnected() == trial2.isConnected();
+		retval = retval && trial1.getNumPoints() == trial2.getNumPoints();
+		return retval;
 	}
 	
 	/**
@@ -266,8 +311,10 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 			f = new File(getSession().getExpectedAnimationSubDir(), aniName);
 			_visFile.setFile(f);
 			
-			/*File vidDir = new File("");				 //TODO: get video file
-			_vidFile.setFile(vidDir);*/
+			f = MediaType.VIDEO.getExpectedFile(getSession(), _pitches.getSelectedItem(),
+					_vDurations.getSelectedItem(), _aDurations.getSelectedItem());
+			if (f == null) f = getSession().getExpectedVideoSubDir();
+			_vidFile.setFile(f);
 		}
 	}
 	
@@ -280,10 +327,8 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			prepareDemoScreen();
-			
 			_startButton.setEnabled(false);
-			_currTrial = getTrial();
+			prepare();
 			_currTrial.preparePlayback(getSession(), _renderer);
 			_currTrial.addPlaybackListener(new LoopListener());
 			_currTrial.play();
@@ -298,7 +343,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 				public void run() {
 					_currTrial.removePlaybackListener(LoopListener.this);
 					if (_loop.isSelected()) {
-						_currTrial = getTrial();
+						prepare();
 						_currTrial.preparePlayback(getSession(), _renderer);
 						_currTrial.addPlaybackListener(LoopListener.this);
 						_currTrial.play();

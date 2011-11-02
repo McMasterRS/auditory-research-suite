@@ -38,9 +38,17 @@
     			<include name="lib/jogl.all.jar"/>
     			<include name="lib/joal.jar"/>
     			<include name="lib/gluegen-rt.jar"/>
+    			<include name="lib/rococoa-cocoa-0.5.jar"/>
+    			<include name="lib/rococoa-core-0.5.jar"/>
+    			<include name="lib/jna-3.2.4.jar"/>
+    			<include name="lib/cgilib-2.2.jar"/>
+    			<include name="lib/slf4j-api-1.5.8.jar"/>
+    			<include name="lib/slf4j-jdk14-1.5.8.jar"/>
+    			<include name="lib/asm-3.1.jar"/>
     		</jarfileset>
 	        <resourcefileset dir="../www/si" includes="si.properties"/>
 	        <javafileset dir="../lib/natives" includes="*.jnilib"/>
+	        <javafileset dir="../lib/natives" includes="*.dylib"/>
    		</jarbundler>
 		
 		<delete dir="tmp" quiet="true" />
