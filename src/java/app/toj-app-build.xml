@@ -41,7 +41,7 @@
     			<include name="lib/rococoa-cocoa-0.5.jar"/>
     			<include name="lib/rococoa-core-0.5.jar"/>
     			<include name="lib/jna-3.2.4.jar"/>
-    			<include name="lib/cgilib-2.2.jar"/>
+    			<include name="lib/cglib-2.2.jar"/>
     			<include name="lib/slf4j-api-1.5.8.jar"/>
     			<include name="lib/slf4j-jdk14-1.5.8.jar"/>
     			<include name="lib/asm-3.1.jar"/>

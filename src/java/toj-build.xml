@@ -47,6 +47,13 @@
         	<include name="jogl.all.jar" />
         	<include name="joal.jar" />
         	<include name="gluegen-rt.jar" />
+   			<include name="rococoa-cocoa-0.5.jar"/>
+   			<include name="rococoa-core-0.5.jar"/>
+   			<include name="jna-3.2.4.jar"/>
+   			<include name="cglib-2.2.jar"/>
+   			<include name="slf4j-api-1.5.8.jar"/>
+   			<include name="slf4j-jdk14-1.5.8.jar"/>
+   			<include name="asm-3.1.jar"/>
         </fileset>
     </path>	
 	
@@ -138,8 +145,14 @@
 	
     <target name="compile">
 	    <javac nowarn="yes" source="1.6" srcdir="${src}" destdir="${build}">
+    		<include name="edu/mcmaster/maplelab/common/*.java"/>
     		<include name="edu/mcmaster/maplelab/common/**/*.java"/>
+	    	<include name="edu/mcmaster/maplelab/av/*.java"/>
+	    	<include name="edu/mcmaster/maplelab/av/**/*.java"/>
+	    	<include name="edu/mcmaster/maplelab/toj/*.java"/>
 	    	<include name="edu/mcmaster/maplelab/toj/**/*.java"/>
+	    	<exclude name="edu/mcmaster/maplelab/si/*.java" />
+	    	<exclude name="edu/mcmaster/maplelab/si/**/*.java" />
 	    	<exclude name="edu/mcmaster/maplelab/rhythm/*.java" />
 	    	<exclude name="edu/mcmaster/maplelab/rhythm/**/*.java" />
 	    	<classpath refid="used.jars.path" />
@@ -150,6 +163,7 @@
 		<delete dir="edu/mcmaster/maplelab">
 			<include name="*.class"/>
 			<include name="./**/*.class"/>
+			<include name="./**/**/*.class"/>
 		</delete>
 	</target>
 
