@@ -1,11 +1,13 @@
 package edu.mcmaster.maplelab.av;
 
 import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.reflect.InvocationTargetException;
 import java.text.NumberFormat;
 
 import javax.swing.JButton;
@@ -61,6 +63,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	private JButton _startButton;
 	
 	private AnimationRenderer _renderer;
+	private Boolean _video = null;
 	private T _currTrial;
 	
 	private JFrame _testFrame;
@@ -186,7 +189,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 			int animationPoints, float diskRadius, boolean connectDots);
 	  
 	@Override
-	public T getTrial() {
+	public synchronized T getTrial() {
 		AVSession<?, ?, ?> session = getSession();
 		final boolean vid = _useVideo.isSelected();
 		float volume = session.getPlaybackGain();
@@ -244,9 +247,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	/**
 	 * Prepare and display the demo display window.
 	 */
-	private void prepare() {
-		T trial = getTrial();
-		
+	private void prepareNext(T trial) {
 		if (_testFrame == null) {
 			_testFrame = new JFrame();
 			_testFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -258,37 +259,28 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
             _vidPanel = new VideoPanel();
 		}
 		
-		if (!trial.isVideo()) _aniPanel.start();
-		if (trialsEqual(_currTrial, trial)) return;
-		_currTrial = trial;
-
-    	_testFrame.getContentPane().removeAll();
-    	if (_currTrial.isVideo()) {
-    		_vidPanel.setMovie(_currTrial.getVideoPlayable());
-    		_testFrame.getContentPane().add(_vidPanel, BorderLayout.CENTER);
-    		_testFrame.setTitle(_vidPanel.getClass().getSimpleName());
+    	if (trial.isVideo()) {
+    		_vidPanel.setMovie(trial.getVideoPlayable());
+    		if (_video == null || !_video) {
+    			_testFrame.getContentPane().removeAll();
+        		_testFrame.getContentPane().add(_vidPanel, BorderLayout.CENTER);
+        		_testFrame.setTitle(_vidPanel.getClass().getSimpleName());
+        		_aniPanel.stop();
+    		}
+    		_video = true;
     	}
     	else {
-    		_testFrame.getContentPane().add(_aniPanel, BorderLayout.CENTER);
-    		_testFrame.setTitle(_aniPanel.getClass().getSimpleName());
+    		if (_video == null || _video) {
+    			_testFrame.getContentPane().removeAll();
+        		_testFrame.getContentPane().add(_aniPanel, BorderLayout.CENTER);
+        		_testFrame.setTitle(_aniPanel.getClass().getSimpleName());
+        		_aniPanel.start();
+    		}
+    		_video = false;
     	}
 
         _testFrame.setVisible(true);
         _testFrame.pack();
-	}
-	
-	private boolean trialsEqual(T trial1, T trial2) {
-		boolean retval = trial1 != null && trial2 != null;
-		retval = retval && trial1.getAnimationSequence() == trial2.getAnimationSequence();
-		retval = retval && trial1.getVideoPlayable() == trial2.getVideoPlayable();
-		retval = retval && trial1.getAudioPlayable() == trial2.getAudioPlayable();
-		retval = retval && trial1.isVideo() == trial2.isVideo();
-		if (retval && trial1.isVideo()) return retval; // nothing else matters for video
-		
-		retval = retval && trial1.getOffset() == trial2.getOffset();
-		retval = retval && trial1.isConnected() == trial2.isConnected();
-		retval = retval && trial1.getNumPoints() == trial2.getNumPoints();
-		return retval;
 	}
 	
 	/**
@@ -329,33 +321,42 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			_startButton.setEnabled(false);
-			prepare();
-			_currTrial.preparePlayback(getSession(), _renderer);
-			_currTrial.addPlaybackListener(new LoopListener());
-			_currTrial.play();
+			SwingUtilities.invokeLater(new PrepareAndRun());
+		}
+	}
+	
+	private class PrepareAndRun implements Runnable {
+		@Override
+		public void run() {
+			T next = getTrial();
+			prepareNext(next);
+			next.preparePlayback(getSession(), _renderer);
+			next.addPlaybackListener(new LoopListener(next));
+			next.play();
 		}
 	}
 	
 	private class LoopListener implements TrialPlaybackListener {
+		private T _trial;
+		
+		public LoopListener(T trial) {
+			_trial = trial;
+		}
+		
 		@Override
 		public void playbackEnded() {
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-					_aniPanel.stop();
-					_currTrial.removePlaybackListener(LoopListener.this);
+					_trial.removePlaybackListener(LoopListener.this);
 					if (_loop.isSelected()) {
-						prepare();
-						_currTrial.preparePlayback(getSession(), _renderer);
-						_currTrial.addPlaybackListener(LoopListener.this);
-						_currTrial.play();
+						SwingUtilities.invokeLater(new PrepareAndRun());
 					}
 					else {
 						_startButton.setEnabled(true);
 					}
 				}
 			});
-			
 		}
 	}
 }
