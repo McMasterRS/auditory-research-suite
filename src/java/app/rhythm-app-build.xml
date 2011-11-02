@@ -30,7 +30,7 @@
 	                bundleid="edu.mcmaster.maplelab.rhythm.RhythmExperiment" 
 					>
     	
-		        <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
+	        <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
     	
 	    	<jarfileset dir="..">
     			<include name="www/rhythm/rhythm.jar"/>

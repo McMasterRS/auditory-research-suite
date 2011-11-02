@@ -9,15 +9,15 @@
 		<format property="DTS" pattern="DDD.HH.mm.ss"/>
 	</tstamp>
 	
-    <property name="src" value="${basedir}" />
+    <property name="src" value="${basedir}/edu/mcmaster/maplelab" />
     <property name="build" value="${basedir}" />
 	
     <property name="toj.jar" value="toj.jar" />
-	
 	<property name="toj.dist.dir" value="${build}/www/toj" />
     <property name="toj.jar.path" location="${toj.dist.dir}/${toj.jar}"/>	
-	
-	<property name="toj.vprops" value="${basedir}/edu/mcmaster/maplelab/toj/toj.version.properties"/>
+
+	<property name="toj.props" value="${src}/toj/toj.properties"/>
+	<property name="toj.vprops" value="${src}/toj/toj.version.properties"/>
 	
     <patternset id="common.classes">
     	<include name="edu/mcmaster/maplelab/common/*.class" />
@@ -57,31 +57,13 @@
         </fileset>
     </path>	
 	
-    <target name="all" depends="toj"/> 
+    <target name="all" depends="toj"/>
 	
-	<target name="cache_version.update">
-		<!-- Update applet cache number to browser knows to re-download it -->
-    	<replaceregexp byline="yes">
-    		<regexp pattern="^.*cache_version.*$"/>
-    		<substitution expression="    &lt;param name=&quot;cache_version&quot; value=&quot;${DTS}&quot;/&gt;"/>
-    		
-    		<fileset dir="${basedir}">
-    			<include name="www/**/*.html"/>
-			</fileset>
-    		<!--
-    		<fileset dir="${iat.destdir}">
-	    		<include name="mondrian.jsp" if="iat.exists"/>
-    		</fileset>
-    		-->
-    	</replaceregexp>		
-	</target>
-
-	
-	<target name="toj" depends="toj.jar">
+	<target name="toj" depends="toj.jar.publish">
 	    <ant antfile="${basedir}/app/toj-app-build.xml" dir="${basedir}/app" />
 	</target>
 	
-    <target name="toj.jar" depends="toj.version, compile">
+    <target name="toj.jar.publish" depends="toj.version, compile">
 		<jar destfile="${toj.jar.path}">
             <fileset dir="${build}">
                 <patternset refid="common.classes" />
@@ -92,6 +74,8 @@
                     <attribute name="Built-By" value="${user.name}" />
             </manifest>			
 		</jar>
+
+		<copy file="${toj.props}" toDir="${toj.dist.dir}" overwrite="true" />
     </target>	
 	
 	<!-- Get the SVN build version. -->
@@ -144,17 +128,11 @@
 	</target>
 	
     <target name="compile">
-	    <javac nowarn="yes" source="1.6" srcdir="${src}" destdir="${build}">
-    		<include name="edu/mcmaster/maplelab/common/*.java"/>
-    		<include name="edu/mcmaster/maplelab/common/**/*.java"/>
-	    	<include name="edu/mcmaster/maplelab/av/*.java"/>
-	    	<include name="edu/mcmaster/maplelab/av/**/*.java"/>
-	    	<include name="edu/mcmaster/maplelab/toj/*.java"/>
-	    	<include name="edu/mcmaster/maplelab/toj/**/*.java"/>
-	    	<exclude name="edu/mcmaster/maplelab/si/*.java" />
-	    	<exclude name="edu/mcmaster/maplelab/si/**/*.java" />
-	    	<exclude name="edu/mcmaster/maplelab/rhythm/*.java" />
-	    	<exclude name="edu/mcmaster/maplelab/rhythm/**/*.java" />
+	    <javac nowarn="yes" source="1.6" destdir="${build}">
+	    	<src path="${src}/common"/>
+	        <src path="${src}/av"/>
+	        <src path="${src}/toj"/>
+	    	<include name="**/*.java"/>
 	    	<classpath refid="used.jars.path" />
         </javac>
     </target>	

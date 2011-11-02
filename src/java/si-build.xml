@@ -9,15 +9,15 @@
 		<format property="DTS" pattern="DDD.HH.mm.ss"/>
 	</tstamp>
 	
-    <property name="src" value="${basedir}" />
+    <property name="src" value="${basedir}/edu/mcmaster/maplelab" />
     <property name="build" value="${basedir}" />
 	
     <property name="si.jar" value="si.jar" />
-	
 	<property name="si.dist.dir" value="${build}/www/si" />
     <property name="si.jar.path" location="${si.dist.dir}/${si.jar}"/>	
-	
-	<property name="si.vprops" value="${basedir}/edu/mcmaster/maplelab/si/si.version.properties"/>
+
+	<property name="si.props" value="${src}/si/si.properties" />
+	<property name="si.vprops" value="${src}/si/si.version.properties"/>
 	
     <patternset id="common.classes">
     	<include name="edu/mcmaster/maplelab/common/*.class" />
@@ -57,31 +57,13 @@
         </fileset>
     </path>	
 	
-    <target name="all" depends="si"/> 
+    <target name="all" depends="si"/>
 	
-	<target name="cache_version.update">
-		<!-- Update applet cache number to browser knows to re-download it -->
-    	<replaceregexp byline="yes">
-    		<regexp pattern="^.*cache_version.*$"/>
-    		<substitution expression="    &lt;param name=&quot;cache_version&quot; value=&quot;${DTS}&quot;/&gt;"/>
-    		
-    		<fileset dir="${basedir}">
-    			<include name="www/**/*.html"/>
-			</fileset>
-    		<!--
-    		<fileset dir="${iat.destdir}">
-	    		<include name="mondrian.jsp" if="iat.exists"/>
-    		</fileset>
-    		-->
-    	</replaceregexp>		
-	</target>
-
-	
-	<target name="si" depends="si.jar">
+	<target name="si" depends="si.jar.publish">
 	    <ant antfile="${basedir}/app/si-app-build.xml" dir="${basedir}/app" />
 	</target>
 	
-    <target name="si.jar" depends="si.version, compile">
+    <target name="si.jar.publish" depends="si.version, compile">
 		<jar destfile="${si.jar.path}">
             <fileset dir="${build}">
                 <patternset refid="common.classes" />
@@ -92,6 +74,8 @@
                     <attribute name="Built-By" value="${user.name}" />
             </manifest>			
 		</jar>
+
+		<copy file="${si.props}" toDir="${si.dist.dir}" overwrite="true" />
     </target>	
 	
 	<!-- Get the SVN build version. -->
@@ -144,17 +128,11 @@
 	</target>
 	
     <target name="compile">
-	    <javac nowarn="yes" source="1.6" srcdir="${src}" destdir="${build}">
-    		<include name="edu/mcmaster/maplelab/common/*.java"/>
-    		<include name="edu/mcmaster/maplelab/common/**/*.java"/>
-	    	<include name="edu/mcmaster/maplelab/av/*.java"/>
-	    	<include name="edu/mcmaster/maplelab/av/**/*.java"/>
-	    	<include name="edu/mcmaster/maplelab/si/*.java"/>
-	    	<include name="edu/mcmaster/maplelab/si/**/*.java"/>
-	    	<exclude name="edu/mcmaster/maplelab/toj/*.java" />
-	    	<exclude name="edu/mcmaster/maplelab/toj/**/*.java" />
-	    	<exclude name="edu/mcmaster/maplelab/rhythm/*.java" />
-	    	<exclude name="edu/mcmaster/maplelab/rhythm/**/*.java" />
+	    <javac nowarn="yes" source="1.6" destdir="${build}">
+	    	<src path="${src}/common"/>
+	        <src path="${src}/av"/>
+	        <src path="${src}/si"/>
+	    	<include name="**/*.java"/>
 	    	<classpath refid="used.jars.path" />
         </javac>
     </target>	

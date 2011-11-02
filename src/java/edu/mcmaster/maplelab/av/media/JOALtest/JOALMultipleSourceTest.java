@@ -1,5 +1,5 @@
 
-package edu.mcmaster.maplelab.common.sound.JOALtest;
+package edu.mcmaster.maplelab.av.media.JOALtest;
 /**
 * Copyright (c) 2003 Sun Microsystems, Inc. All  Rights Reserved.
 *

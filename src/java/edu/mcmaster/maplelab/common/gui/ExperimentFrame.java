@@ -25,7 +25,6 @@ import net.miginfocom.swing.MigLayout;
 
 import edu.mcmaster.maplelab.common.*;
 import edu.mcmaster.maplelab.common.datamodel.*;
-import edu.mcmaster.maplelab.toj.TOJExperiment;
 
 
 /**

@@ -9,17 +9,18 @@
 		<format property="DTS" pattern="DDD.HH.mm.ss"/>
 	</tstamp>
 	
-    <property name="src" value="${basedir}" />
+    <property name="src" value="${basedir}/edu/mcmaster/maplelab" />
     <property name="build" value="${basedir}" />
 	
     <property name="rhythm.jar" value="rhythm.jar" />
-	
 	<property name="rhythm.dist.dir" value="${build}/www/rhythm" />
     <property name="rhythm.jar.path" location="${rhythm.dist.dir}/${rhythm.jar}"/>	
 	
-	<property name="rhythm.vprops" value="${basedir}/edu/mcmaster/maplelab/rhythm/rhythm.version.properties"/>
+	<property name="rhythm.props" value="${src}/rhythm/rhythm.properties" />
+	<property name="rhythm.vprops" value="${src}/rhythm/rhythm.version.properties"/>
 	
     <patternset id="common.classes">
+	    <include name="edu/mcmaster/maplelab/common/*.class" />
 	    <include name="edu/mcmaster/maplelab/common/**/*.class" />
         <include name="edu/mcmaster/maplelab/common/**/*.png" />
         <include name="edu/mcmaster/maplelab/common/**/*.properties" />      	
@@ -42,7 +43,7 @@
     <target name="all" depends="rhythm"/> 
 	
 	<target name="cache_version.update">
-		<!-- Update applet cache number to browser knows to re-download it -->
+		<!-- Update applet cache number so browser knows to re-download it -->
     	<replaceregexp byline="yes">
     		<regexp pattern="^.*cache_version.*$"/>
     		<substitution expression="    &lt;param name=&quot;cache_version&quot; value=&quot;${DTS}&quot;/&gt;"/>
@@ -50,20 +51,14 @@
     		<fileset dir="${basedir}">
     			<include name="www/**/*.html"/>
 			</fileset>
-    		<!--
-    		<fileset dir="${iat.destdir}">
-	    		<include name="mondrian.jsp" if="iat.exists"/>
-    		</fileset>
-    		-->
     	</replaceregexp>		
 	</target>
-
 	
-	<target name="rhythm" depends="rhythm.jar">
+	<target name="rhythm" depends="rhythm.jar.publish">
 	    <ant antfile="${basedir}/app/rhythm-app-build.xml" dir="${basedir}/app" />
 	</target>
 	
-    <target name="rhythm.jar" depends="rhythm.version, compile">
+    <target name="rhythm.jar.publish" depends="rhythm.version, compile">
 		<jar destfile="${rhythm.jar.path}">
             <fileset dir="${build}">
                 <patternset refid="common.classes" />
@@ -73,6 +68,8 @@
                     <attribute name="Built-By" value="${user.name}" />
             </manifest>			
 		</jar>
+
+		<copy file="${rhythm.props}" toDir="${rhythm.dist.dir}" overwrite="true" />
     </target>	
 	
 	<!-- Get the SVN build version. -->
@@ -125,19 +122,19 @@
 	</target>
 	
     <target name="compile">
-	    <javac nowarn="yes" source="1.6" srcdir="${src}" destdir="${build}">
-	    	<include name="edu/mcmaster/maplelab/common/**/*.java"/>
-	    	<include name="edu/mcmaster/maplelab/rhythm/**/*.java"/>
-	    	<exclude name="edu/mcmaster/maplelab/toj/*.java" />
-	    	<exclude name="edu/mcmaster/maplelab/toj/**/*.java" />
+	    <javac nowarn="yes" source="1.6" destdir="${build}">
+	    	<src path="${src}/common"/>
+	        <src path="${src}/rhythm"/>
+	    	<include name="**/*.java"/>
 	    	<classpath refid="used.jars.path" />
         </javac>
     </target>	
 	
 	<target name="clean">
 		<delete dir="edu/mcmaster/maplelab">
-			<include name="*.class"/>
-			<include name="**/*.class"/>
+			<include name="./*.class"/>
+			<include name="./**/*.class"/>
+			<include name="./**/**/*.class"/>
 		</delete>
 	</target>
 
