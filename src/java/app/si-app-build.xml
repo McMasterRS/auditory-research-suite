@@ -58,6 +58,7 @@
 		    <fileset dir="../../../datafiles/examples">
 		    	<include name="aud/"/>
 		    	<include name="vis/"/>
+		    	<include name="video/"/>
 		    </fileset>
 	  	</copy>
 		<copy todir="tmp">

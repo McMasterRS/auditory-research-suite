@@ -23,7 +23,7 @@ public class VideoPanel extends JPanel {
 			QTVideoClip qtc = (QTVideoClip) clip;
 	        
 	        MovieComponent component = new MovieComponent(_view);
-	        _view.setMovie(qtc.getQTMovie());                
+	        _view.setMovie(qtc.getQTMovie()); 
 			
 	        removeAll();
 	        add(component);
