@@ -257,7 +257,7 @@ public class SoundClip implements Playable {
 	 * Using this method, there is still a large "pop" before the first trial, 
 	 * but no more for individual sound files played during a trial.
 	 */
-	private static class SoundPreparer implements Runnable {
+	/*private static class SoundPreparer implements Runnable {
 		private final SoundClip _soundClip;
 
 		public SoundPreparer(SoundClip clip) {
@@ -271,5 +271,5 @@ public class SoundClip implements Playable {
 			_soundClip.setMute(false);
 		}
 		
-	}
+	}*/
 }

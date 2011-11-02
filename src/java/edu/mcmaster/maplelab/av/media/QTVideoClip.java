@@ -1,6 +1,5 @@
 package edu.mcmaster.maplelab.av.media;
 
-import java.awt.Component;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,16 +9,11 @@ import java.util.logging.Level;
 
 import org.rococoa.Rococoa;
 import org.rococoa.cocoa.foundation.NSArray;
-import org.rococoa.cocoa.foundation.NSObject;
-import org.rococoa.cocoa.qtkit.MovieComponent;
 import org.rococoa.cocoa.qtkit.QTKit;
 import org.rococoa.cocoa.qtkit.QTMedia;
 import org.rococoa.cocoa.qtkit.QTMovie;
-import org.rococoa.cocoa.qtkit.QTMovieView;
 import org.rococoa.cocoa.qtkit.QTTime;
 import org.rococoa.cocoa.qtkit.QTTrack;
-
-import com.sun.jna.NativeLong;
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.ResourceLoader;
@@ -65,23 +59,6 @@ public class QTVideoClip implements Playable {
         return p;
     }
 	
-	public static Component makeComponent(Playable clip) {
-		Component retval = null;
-		if (clip instanceof QTVideoClip) {
-			QTVideoClip qtc = (QTVideoClip) clip;
-	        QTMovieView movieView = QTMovieView.CLASS.create();
-	        movieView.setControllerVisible(false);
-	        movieView.setPreservesAspectRatio(true);
-	        
-	        MovieComponent component = new MovieComponent(movieView);
-	        movieView.setMovie(qtc._movie);                
-			
-	        retval = component;
-		}
-		
-		return retval;
-	}
-	
 	private final QTMovie _movie;
 	private final String _name;
 	private List<Float> _volumes = new ArrayList<Float>(1); // expect only 1
@@ -122,34 +99,8 @@ public class QTVideoClip implements Playable {
 	@Override
 	public int duration() {
 		QTTime time = _movie.duration();
-		return (int) (1000 * time.timeValue / time.timeScale.longValue());
-		
-		
-		/*_movie.gotoEnd();
-		int w = (int) _movie.currentTime().timeValue;
-		w = w * _movie.currentTime().timeScale.intValue();
-		
-		int x = (int) _movie.duration().timeValue;
-		NativeLong y = _movie.duration().timeScale;
-		int z = x / y.intValue();
-		
-		QTTrack track = Rococoa.cast(_movie.tracksOfMediaType(
-				QTMedia.QTMediaTypeVideo).objectAtIndex(0), QTTrack.class);
-		QTMedia media = track.media();
-		NSObject o = media.attributeForKey(QTMedia.QTMediaDurationAttribute);
-		System.out.println(o);
-		o = media.attributeForKey(QTMedia.QTMediaTimeScaleAttribute);
-		
-		System.out.println(o);
-		
-		return (int) _movie.duration().timeValue / 1000;
-		/*try {
-			// XXX: DO NOT use getDuration!
-			return _movie.getTimeBase().getStopTime() / 1000;
-		} 
-		catch (StdQTException e) {
-			return 0;
-		}*/
+		// get milliseconds
+		return (int) (1000d * (double) time.timeValue / time.timeScale.doubleValue());
 	}
 
 	@Override
