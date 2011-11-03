@@ -61,6 +61,7 @@
 		    	<include name="aud/"/>
 		    	<include name="vis/"/>
 		    	<include name="video/"/>
+		    	<exclude name="video/*.*"/>
 		    </fileset>
 	  	</copy>
 		<copy todir="tmp">

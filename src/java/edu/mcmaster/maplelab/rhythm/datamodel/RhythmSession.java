@@ -226,6 +226,32 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
         setProperty(ConfigKeys.midiDevID, id);
     }
     
+    @Override
+    public String getCombinatorialDescription(List<RhythmBlock> blocks) {
+		// blocks
+		String blockTypes = "\t\t\tBase IOIs: " + listString(getBaseIOIs()) + "\n";
+		blockTypes += "\t\t\tWith, without subject tapping\n";
+		blockTypes = String.format("\t%d block(s), repeated %d time(s), constructed from:\n", 
+						getNumBlocks(), getBlockSetRepetitions()) + blockTypes;
+		
+		// trials
+		List<Float> offsets = getOffsetDegrees();
+		String trialTypes = String.format("\tEach block contains %d trials constructed from:\n", 
+				offsets.size());
+		trialTypes += "\t\t\tOffset degrees: " + listString(offsets, 4, 4) + "\n";
+		
+		// block ordering
+		String blockList = "\tBlocks (order will change on each repetition):\n";
+		for (RhythmBlock b : blocks) {
+			RhythmTrial t = b.getTrials().get(0);
+			blockList += String.format("\t\t\t%d: IOI=%d, %s tapping\n", b.getNum(), t.getBaseIOI(), 
+					t.isWithTap() ? "with" : "without");
+		}
+		
+		return String.format("\n********** Experiment Session Trial Details **********\n%s\n%s\n%s\n" +
+				"**************************************************\n\n", blockTypes, trialTypes, blockList);
+    }
+    
 	 /**
 	  * Generate the experiment blocks. The number of blocks is a multiple of 
 	  * the number of modulus widths.

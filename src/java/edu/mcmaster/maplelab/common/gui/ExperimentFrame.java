@@ -13,6 +13,7 @@ package edu.mcmaster.maplelab.common.gui;
 
 import java.awt.*;
 import java.io.*;
+import java.net.URL;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -309,16 +310,21 @@ public abstract class ExperimentFrame
     private Properties initProperties(SimpleSetupScreen<T> setup) {
         Properties props = new Properties();
         InputStream in = null;
+        String propFile = "";
         try {
         	String name = setup.getPrefsPrefix() + ".properties";
             File f = new File(setup.getDataDir(), name);
             if (f.exists()) {
-                in = new FileInputStream(f);              
+                in = new FileInputStream(f);   
+                propFile = f.getAbsolutePath();
             }
             else {
+            	URL url = getClass().getResource(name);
                 in = getClass().getResourceAsStream(name);
+                if (url != null) propFile = url.getPath();
             }
             props.load(in);
+            props.put(Session.ConfigKeys.propertiesFile.name(), propFile);
         }
         catch (Exception ex) {
             logError(ex, "Error reading configuration file");

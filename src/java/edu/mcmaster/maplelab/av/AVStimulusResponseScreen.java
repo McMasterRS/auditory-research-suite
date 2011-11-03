@@ -171,7 +171,7 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         }
         else {
             _blocks = _session.generateBlocks();
-            LogContext.getLogger().fine(_session.getCombinatorialDescription());
+            LogContext.getLogger().fine(_session.getCombinatorialDescription(_blocks));
         }
         
     }
@@ -252,6 +252,7 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         	if (_session.hasMoreRepetitions()) {
 	    		_blockIndex = 0;
 	        	_blocks = _session.generateBlocks();
+	            LogContext.getLogger().fine(_session.getCombinatorialDescription(_blocks));
         	}
         }
     }

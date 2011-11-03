@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Properties;
 
 import edu.mcmaster.maplelab.av.datamodel.AVBlock.AVBlockType;
+import edu.mcmaster.maplelab.common.datamodel.Block;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
 import edu.mcmaster.maplelab.common.datamodel.EnvelopeDuration;
 import edu.mcmaster.maplelab.common.datamodel.Session;
@@ -17,31 +18,6 @@ import edu.mcmaster.maplelab.common.sound.NotesEnum;
 
 public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>, 
 										L extends TrialLogger<B, T>> extends Session<B, T, L> {
-	
-	/**
-	 * Utility method to generate a nicely formatted string list from a generic list of objects.
-	 */
-	protected static String listString(List<?> list) {
-		return listString(list, -1, 0);
-	}
-	
-	/**
-	 * Utility method to generate a nicely formatted string list from a generic list of objects.
-	 * Breakafter indicates where a line break should fall, and tabs is the tab depth.
-	 */
-	protected static String listString(List<?> list, int breakAfter, int tabs) {
-		String retval = "[";
-		for (int i = 0; i < list.size(); i++) {
-			if (breakAfter > 0 && i > 0 && i % breakAfter == 0) {
-				retval += "\n";
-				for (int j = 0; j <= tabs; j++) {
-					retval += "\t";
-				}
-			}
-			retval += list.get(i).toString() + ", ";
-		}
-		return retval.substring(0, retval.length()-2) + "]";
-	}
 	
 	private static final String AUDIO_META_FILE = "sound-metadata.properties";
 	
@@ -283,7 +259,8 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	 * Get a description of all of the parameters that will contribute to block and
 	 * trial combinatorial generation.
 	 */
-	public String getCombinatorialDescription() {
+	@Override
+	public String getCombinatorialDescription(List<B> blocks) {
 		// blocks
 		String blockTypes = "";
 		blockTypes += includeAudioBlock() ? 

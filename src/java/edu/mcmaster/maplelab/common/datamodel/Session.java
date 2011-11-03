@@ -34,14 +34,13 @@ import edu.mcmaster.maplelab.common.util.MathUtils;
  * @param <T> Trial type
  */
 public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extends TrialLogger<B, T>> implements Executor {
-    // NB: These are in camel case so that the "name()" matches 
-    // properties file values.
-    /**
+	/**
      * @version   $Revision$
      * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
      * @since   Feb 28, 2007
      */
     public enum ConfigKeys {
+    	propertiesFile,
         raid,
         subject,
         session,
@@ -67,6 +66,31 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         speedMode,
         propertyPrefix
     }
+	
+	/**
+	 * Utility method to generate a nicely formatted string list from a generic list of objects.
+	 */
+	protected static String listString(List<?> list) {
+		return listString(list, -1, 0);
+	}
+	
+	/**
+	 * Utility method to generate a nicely formatted string list from a generic list of objects.
+	 * Breakafter indicates where a line break should fall, and tabs is the tab depth.
+	 */
+	protected static String listString(List<?> list, int breakAfter, int tabs) {
+		String retval = "[";
+		for (int i = 0; i < list.size(); i++) {
+			if (breakAfter > 0 && i > 0 && i % breakAfter == 0) {
+				retval += "\n";
+				for (int j = 0; j <= tabs; j++) {
+					retval += "\t";
+				}
+			}
+			retval += list.get(i).toString() + ", ";
+		}
+		return retval.substring(0, retval.length()-2) + "]";
+	}
 
     /**
      * @uml.property  name="properties"
@@ -306,6 +330,12 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
     protected void setNumBlocks(int numBlocks) {
     	setProperty(ConfigKeys.numBlocks, Integer.valueOf(numBlocks));
     }
+	
+	/**
+	 * Get a description of all of the parameters that will contribute to block and
+	 * trial combinatorial generation.
+	 */
+    public abstract String getCombinatorialDescription(List<B> blocks);
     
      /**
      * Get NumWarmupTrials property
@@ -474,10 +504,12 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         if (b instanceof Boolean) return (Boolean) b;
         
         String str = getString(key, null);
-        try {
-            retval = Boolean.parseBoolean(str);
-        }
-        catch(Exception ex) {
+        if (str != null && !str.isEmpty()) {
+            try {
+                retval = Boolean.parseBoolean(str);
+            }
+            catch(Exception ex) {
+            }
         }
 
         return retval;

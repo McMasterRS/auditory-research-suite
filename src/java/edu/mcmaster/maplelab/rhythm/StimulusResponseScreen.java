@@ -172,6 +172,7 @@ public class StimulusResponseScreen extends BasicStep {
         }
         else {
             _blocks = _session.generateBlocks();
+            LogContext.getLogger().fine(_session.getCombinatorialDescription(_blocks));
         }
         
     }
@@ -252,6 +253,7 @@ public class StimulusResponseScreen extends BasicStep {
         	if (_session.hasMoreRepetitions()) {
 	    		_blockIndex = 0;
 	        	_blocks = _session.generateBlocks();
+	            LogContext.getLogger().fine(_session.getCombinatorialDescription(_blocks));
         	}
         }
     }

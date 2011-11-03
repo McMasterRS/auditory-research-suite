@@ -31,9 +31,9 @@
 					>
     	
 	        <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
-    	
+
+    		<jarfileset dir="../www/rhythm" includes="rhythm.jar"/>
 	    	<jarfileset dir="..">
-    			<include name="www/rhythm/rhythm.jar"/>
     			<include name="lib/miglayout-4.0.jar"/>
     		</jarfileset>
 	        <resourcefilelist dir="../www/rhythm" files="rhythm.properties"/>
