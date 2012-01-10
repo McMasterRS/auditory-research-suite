@@ -1,8 +1,6 @@
 package edu.mcmaster.maplelab.av;
 
-import java.awt.BorderLayout;
-import java.awt.Container;
-import java.awt.Window;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -254,6 +252,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 			_testFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             Window w = getParentWindow();
             _testFrame.setLocation(w.getLocation().x + w.getWidth(), w.getLocation().y);
+
             
             _renderer = new AnimationRenderer();
             _aniPanel = new AnimationPanel(_renderer);
@@ -282,8 +281,16 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
     		_video = false;
     	}
 
-        _testFrame.setVisible(true);
         _testFrame.pack();
+        
+        if(getSession().isOscilloscopeSensorMode()) {
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            Dimension size = _testFrame.getSize();
+            _testFrame.setLocation(screenSize.width - size.width, screenSize.height - size.height);
+        }
+
+        _testFrame.setVisible(true);
+        
 	}
 	
 	/**
@@ -341,11 +348,16 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	private class PrepareAndRun implements Runnable {
 		@Override
 		public void run() {
-			T next = getTrial();
-			prepareNext(next);
-			next.preparePlayback(getSession(), _renderer);
-			next.addPlaybackListener(new LoopListener(next));
-			next.play();
+		    try {
+		        T next = getTrial();
+		        prepareNext(next);
+		        next.preparePlayback(getSession(), _renderer);
+		        next.addPlaybackListener(new LoopListener(next));
+		        next.play();
+		    }
+		    finally {
+                _startButton.setEnabled(true);
+		    }
 		}
 	}
 	

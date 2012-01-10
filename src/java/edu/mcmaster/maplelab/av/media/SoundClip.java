@@ -30,8 +30,8 @@ public class SoundClip implements Playable {
 	}
 	
     private static Map<String, Playable> _soundCache = new HashMap<String, Playable>();
-    private final Clip _clip;
-    private final Source _source;
+    private final Clip _clip;     // javax.media version
+    private final Source _source; // OpenAL version
     private float _sourceVol = 1.0f;
     private final String _name;
     private int _desiredDur = -1;

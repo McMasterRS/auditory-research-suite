@@ -43,7 +43,8 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		includeVideoBlock,
 		includeAudioAnimationBlock,
 		connectDots,
-		videoFileExtensions
+		videoFileExtensions,
+		oscilloscopeSensorMode
 	}
 	
 	private Properties _audioFileMetaData = null;
@@ -253,6 +254,14 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	public List<Integer> getNumAnimationPoints() {
 		List<Integer> intList= getIntegerList(ConfigKeys.numAnimationPoints);
 		return intList;
+	}
+	
+	/**
+	 * Determine if we are testing A/V synchronization with oscilloscope, for demo code to
+	 * position windows appropriately.
+	 */
+	public boolean isOscilloscopeSensorMode() {
+	    return getBoolean(ConfigKeys.oscilloscopeSensorMode, false);
 	}
 	
 	/**

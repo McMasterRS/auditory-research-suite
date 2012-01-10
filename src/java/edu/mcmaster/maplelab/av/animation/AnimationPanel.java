@@ -13,6 +13,7 @@ import java.awt.Dimension;
 import java.io.File;
 
 import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLEventListener;
 import javax.media.opengl.awt.GLJPanel;
 import javax.media.opengl.GLProfile;
 import javax.swing.JFrame;
@@ -36,7 +37,7 @@ import edu.mcmaster.maplelab.common.sound.NotesEnum;
  */
 public class AnimationPanel extends JPanel {
 	private final GLJPanel _canvas;
-	private final AnimationRenderer _animator;
+	private final GLEventListener _animator;
 	private final Animator _glTrigger;
     
     static {
@@ -49,11 +50,11 @@ public class AnimationPanel extends JPanel {
         ToolTipManager.sharedInstance().setLightWeightPopupEnabled(false);
     }
     
-    public AnimationPanel(AnimationRenderer animator) {
+    public AnimationPanel(GLEventListener animator) {
     	this(animator, null);
     }
     
-    public AnimationPanel(AnimationRenderer animator, Dimension dim) {
+    public AnimationPanel(GLEventListener animator, Dimension dim) {
 
         super(new MigLayout("insets 0, nogrid, center, fill", "center", "center"));
 
@@ -136,14 +137,14 @@ public class AnimationPanel extends JPanel {
             f.setLocationRelativeTo(null);
             f.setVisible(true);
             
-    		File file = new File("/Users/Catherine/Workspace/Maple/auditory-research-suite/datafiles/examples/vis/es_.txt");
+    		File file = new File("datafiles/examples/vis/es_.txt");
     		
 			final AnimationSequence animation = AnimationParser.parseFile(file);
 			
 			String filename = NotesEnum.D.toString().toLowerCase() + "_" +  DurationEnum.LONG.codeString() + ".wav";
 			//System.out.printf("sound clip filename = %s\n", filename);
 
-			File dir = new File("/Users/Catherine/Workspace/Maple/auditory-research-suite/datafiles/examples/aud");
+			File dir = new File("datafiles/examples/aud");
 
 			final Playable audio = SoundClip.findPlayable(filename, dir);
 			

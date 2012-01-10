@@ -214,6 +214,9 @@ public class AnimationParser {
 							
 							dotList.add(new AnimationPoint(point, colorVec, sizeDouble, shape));
 							// INNER LOOP ITERATION ENDS
+							if(!scanner.hasNext()) {
+							    break;
+							}
 						}
 						catch (Exception e) {
 							// if this is a "blank" animation point, just

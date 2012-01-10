@@ -49,11 +49,7 @@ public class AnimationRenderer implements GLEventListener {
 
 	@Override
 	public void init(GLAutoDrawable canvas) {
-		if (!(canvas instanceof GLAutoDrawable)) {
-			throw new IllegalArgumentException("canvas must be type GLAutoDrawable");
-		}
-
-		GL2 gl = (GL2) canvas.getGL();
+		GL2 gl = canvas.getGL().getGL2();
 
 		gl.glShadeModel(GL_SMOOTH);                            //Enables Smooth Color Shading
 		gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);               //This Will Clear The Background Color To Black
