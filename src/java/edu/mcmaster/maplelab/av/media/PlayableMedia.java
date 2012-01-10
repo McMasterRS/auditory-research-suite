@@ -153,21 +153,35 @@ public class PlayableMedia {
 			return retval;
 		}
 		
+		/**
+		 * Construct the data file basename from the generic set of parameters.
+		 * 
+		 * @param session Experiment session
+		 * @param params generic parameters, which will be expanded into filename components.
+		 * @return Formated file basename.
+		 */
+		public String getExpectedBasename(AVSession<?, ?, ?> session, Object... params) {
+            Object[] stringVals = new String[params.length];
+            MediaParams<?>[] mps = getParamTypes();
+            for (int i = 0; i < params.length; i++) {
+                stringVals[i] = mps[i].getString(params[i]);
+            }
+            
+            return String.format(getFileFormat(), stringVals);
+		}
+		
+		
 		public File getExpectedFile(AVSession<?, ?, ?> session, Object... params) {
-			File dir = getDirectory(session);
-			Object[] stringVals = new String[params.length];
-			MediaParams<?>[] mps = getParamTypes();
-			for (int i = 0; i < params.length; i++) {
-				stringVals[i] = mps[i].getString(params[i]);
-			}
-			
-			File retval = null;
-			String filename = String.format(getFileFormat(), stringVals);
+		    File retval = null;
+            File dir = getDirectory(session);
+            
+			String filename = getExpectedBasename(session, params);
 			List<String> extensions = getFileExtensions(session);
 			for (int i = 0; retval == null && i < extensions.size(); i++) {
 				retval = new File(dir, filename + "." + extensions.get(i));
 				if (!retval.exists()) retval = null;
 			}
+			
 			return retval;
 		}
 		

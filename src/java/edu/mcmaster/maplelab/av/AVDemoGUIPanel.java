@@ -35,6 +35,7 @@ import edu.mcmaster.maplelab.av.datamodel.TrialPlaybackListener;
 import edu.mcmaster.maplelab.av.media.PlayableMedia;
 import edu.mcmaster.maplelab.av.media.PlayableMedia.MediaType;
 import edu.mcmaster.maplelab.av.media.VideoPanel;
+import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
 import edu.mcmaster.maplelab.common.datamodel.EnvelopeDuration;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
@@ -256,10 +257,12 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
             
             _renderer = new AnimationRenderer();
             _aniPanel = new AnimationPanel(_renderer);
-            _vidPanel = new VideoPanel();
 		}
 		
     	if (trial.isVideo()) {
+    	    if(_vidPanel == null) {
+                _vidPanel = new VideoPanel();
+    	    }
     		_vidPanel.setMovie(trial.getVideoPlayable());
     		if (_video == null || !_video) {
     			_testFrame.getContentPane().removeAll();
@@ -294,8 +297,18 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		}
 		
 		public void update() {
+		    
 			File f = MediaType.AUDIO.getExpectedFile(getSession(), _frequency.getSelectedItem(), 
 					_spectrum.getSelectedItem(), _envDuration.getSelectedItem());
+
+			if(f == null) {
+			    LogContext.getLogger().severe("Unable find file with form: " + 
+			        MediaType.AUDIO.getExpectedBasename(
+			        getSession(), _frequency.getSelectedItem(), 
+                    _spectrum.getSelectedItem(), _envDuration.getSelectedItem()) + ".*");
+			    return;
+			}
+			
 			_audFile.setFile(f);
 			
 			String aniName = _pitches.getSelectedItem().toString().toLowerCase() + 
