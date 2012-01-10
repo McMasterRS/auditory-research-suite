@@ -244,17 +244,19 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
     	}
         
         // load properties
-        try {
-            props.load(is);
-        }
-        catch (Exception ex) {
-            String msg = String.format("Error reading configuration file: ", propFile.getName());
-            LogContext.getLogger().log(Level.SEVERE, msg, ex);
-        }
-        finally {
-            if(is != null)  try { is.close(); } catch (IOException e) {}
-        }
-        
+    	if(is != null) {
+    	    try {
+    	        props.load(is);
+    	    }
+    	    catch (Exception ex) {
+    	        String msg = String.format("Error reading configuration file: ", propFile.getName());
+    	        LogContext.getLogger().log(Level.SEVERE, msg, ex);
+    	    }
+    	    finally {
+    	        if(is != null)  try { is.close(); } catch (IOException e) {}
+    	    }
+    	}
+    	
         return props;
     }
     

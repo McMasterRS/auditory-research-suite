@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
@@ -174,6 +175,11 @@ public class PlayableMedia {
 		public File getExpectedFile(AVSession<?, ?, ?> session, Object... params) {
 		    File retval = null;
             File dir = getDirectory(session);
+            
+            if(!dir.exists()) {
+                LogContext.getLogger().severe("Data directory missing: " + dir);
+                return null;
+            }
             
 			String filename = getExpectedBasename(session, params);
 			List<String> extensions = getFileExtensions(session);

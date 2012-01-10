@@ -12,10 +12,8 @@
 
 package edu.mcmaster.maplelab.common.gui;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.File;
 
 import javax.swing.*;
@@ -35,12 +33,19 @@ public class FileBrowseField extends JPanel {
 
 	private JButton _button;
 
+    private boolean _missingFileIndicator = true;
+
+    private ColorUpdater _colorUpdater;
+
     public FileBrowseField(boolean directoriesOnly) {
         super(new GridBagLayout());
         
         _directoriesOnly = directoriesOnly;
         
         _fileName = new JTextField();
+        _colorUpdater = new ColorUpdater();
+        _fileName.addFocusListener(_colorUpdater);
+        _fileName.addActionListener(_colorUpdater);
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -71,9 +76,14 @@ public class FileBrowseField extends JPanel {
             }
         }
     }
+    
+    public void setMissingFileIndicator(boolean state) {
+        _missingFileIndicator  = state;
+    }
 
     public void setFile(File file) {
         _fileName.setText(file.getAbsolutePath());
+        _colorUpdater.updateColor();
     }
     
     public File getFile() {
@@ -85,5 +95,29 @@ public class FileBrowseField extends JPanel {
     	super.setEnabled(state);
     	_fileName.setEnabled(state);
     	_button.setEnabled(state);
+    }
+    
+    private class ColorUpdater implements FocusListener, ActionListener {
+        public void updateColor() {
+            if(!_missingFileIndicator) return;
+            
+            File file = getFile();
+            _fileName.setForeground(file == null || file.exists() ? SystemColor.textText : Color.red);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            updateColor();
+        }
+
+        @Override
+        public void focusGained(FocusEvent arg0) {
+            updateColor();
+        }
+
+        @Override
+        public void focusLost(FocusEvent arg0) {
+            updateColor();
+        }
     }
 }
