@@ -1,10 +1,13 @@
 package edu.mcmaster.maplelab.av.datamodel;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EventObject;
 
 import javax.swing.SwingUtilities;
 
+import edu.mcmaster.maplelab.av.TimeTracker;
 import edu.mcmaster.maplelab.av.animation.AnimationListener;
 import edu.mcmaster.maplelab.av.animation.AnimationRenderer;
 import edu.mcmaster.maplelab.av.animation.AnimationSequence;
@@ -263,6 +266,16 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 				_renderer.addAnimationListener(new AnimationListener() {
 					@Override
 					public void animationDone() {
+						/******************************/
+						File f = null;
+						try {
+							f = File.createTempFile(AnimationRenderer.class.getSimpleName() + "-timestamps", 
+									".log", _session.getDataDir());
+						} 
+						catch (IOException e) { }
+						if (f != null) TimeTracker.logTimes(AnimationRenderer.TIMESTAMPS, f, true);
+						/****************************/
+						
 						markFinish(this, null);
 					}
 				});

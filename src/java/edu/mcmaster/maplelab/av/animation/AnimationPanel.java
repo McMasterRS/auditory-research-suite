@@ -24,6 +24,7 @@ import javax.swing.ToolTipManager;
 import net.miginfocom.swing.MigLayout;
 
 import com.jogamp.opengl.util.Animator;
+import com.jogamp.opengl.util.FPSAnimator;
 
 import edu.mcmaster.maplelab.av.media.Playable;
 import edu.mcmaster.maplelab.av.media.SoundClip;
@@ -37,8 +38,9 @@ import edu.mcmaster.maplelab.common.sound.NotesEnum;
  */
 public class AnimationPanel extends JPanel {
 	private final GLJPanel _canvas;
-	private final GLEventListener _animator;
-	private final Animator _glTrigger;
+	private final GLEventListener _renderer;
+	private Animator _defaultTrigger;
+	private AnimationTrigger _altTrigger = null;
     
     static {
         // Put JOGL version information into system properties to 
@@ -50,41 +52,57 @@ public class AnimationPanel extends JPanel {
         ToolTipManager.sharedInstance().setLightWeightPopupEnabled(false);
     }
     
-    public AnimationPanel(GLEventListener animator) {
-    	this(animator, null);
+    public AnimationPanel(GLEventListener renderer) {
+    	this(renderer, null);
     }
     
-    public AnimationPanel(GLEventListener animator, Dimension dim) {
-
-        super(new MigLayout("insets 0, nogrid, center, fill", "center", "center"));
+    public AnimationPanel(GLEventListener renderer, Dimension dim) {
+    	super(new MigLayout("insets 0, nogrid, center, fill", "center", "center"));
 
         GLCapabilities caps = new GLCapabilities(GLProfile.get(GLProfile.GL2));
 
         _canvas = new GLJPanel(caps);
         _canvas.setName("glCanvas");
-        _animator = animator;
-        _canvas.addGLEventListener(_animator);
+        _renderer = renderer;
+        _canvas.addGLEventListener(_renderer);
         
-        _glTrigger = new Animator(_canvas);
-        _glTrigger.setPrintExceptions(true);
-        _glTrigger.start();
+        useDefaultTrigger();
  		
         add(_canvas);
         _canvas.setPreferredSize(dim != null ? dim : new Dimension(640, 480));
     }
     
     /**
+     * Use the default rendering trigger, which paints as quickly as possible.
+     */
+    public void useDefaultTrigger() {
+    	_defaultTrigger = new Animator(_canvas);
+        _defaultTrigger.setPrintExceptions(true);
+    }
+    
+    /**
+     * Override the default rendering trigger with the given trigger.
+     */
+    public void overrideDefaultTrigger(AnimationTrigger trigger) {
+    	_defaultTrigger = null;
+    	_altTrigger = trigger;
+    	_altTrigger.setCanvas(_canvas);
+    }
+    
+    /**
      * Start processing animation events.
      */
     public synchronized void start() {
-    	_glTrigger.start();
+    	if (_defaultTrigger != null) _defaultTrigger.start();
+    	else _altTrigger.start();
     }
     
     /**
      * Stop processing animation events.
      */
     public synchronized void stop() {
-    	_glTrigger.stop();
+    	if (_defaultTrigger != null) _defaultTrigger.stop();
+    	else _altTrigger.stop();
     }
     
     /**

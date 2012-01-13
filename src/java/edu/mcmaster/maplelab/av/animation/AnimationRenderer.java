@@ -12,6 +12,8 @@ import static javax.media.opengl.GL2.*;
 import java.awt.Component;
 import java.awt.Point;
 import java.awt.geom.Rectangle2D;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,11 +23,15 @@ import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
 import javax.vecmath.Point2f;
 
+import edu.mcmaster.maplelab.av.TimeTracker;
+
 /**
  * AnimationRenderer animates an AnimationSequence.
  * @author Catherine Elder <cje@datamininglab.com>
  */
 public class AnimationRenderer implements GLEventListener { 
+	public static final String TIMESTAMPS = "ANIMATION_TIMESTAMPS";
+	
 	private AnimationSource _source = null;
 	
 	private long _startTime;				// ms
@@ -65,11 +71,14 @@ public class AnimationRenderer implements GLEventListener {
 
 	@Override
 	public void display(GLAutoDrawable d) {
+		TimeTracker.timeStamp(TIMESTAMPS);
+		
 		// have to force reshape on animation change
 		if (_extentsDirty && _lastLoc != null) {
 			reshape(d, _lastLoc.x, _lastLoc.y, d.getWidth(), d.getHeight());
 		}
 		GL2 gl = (GL2) d.getGL();
+		
 		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);       //Clear The Screen And The Depth Buffer
 		gl.glDisable(GL_DEPTH_TEST);
 		

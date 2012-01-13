@@ -3,6 +3,8 @@ package edu.mcmaster.maplelab.av.media;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,10 +12,12 @@ import java.util.logging.Level;
 
 import javax.sound.sampled.*;
 
+import com.jogamp.openal.AL;
+import com.jogamp.openal.ALFactory;
 import com.jogamp.openal.sound3d.AudioSystem3D;
-import com.jogamp.openal.sound3d.Buffer;
-import com.jogamp.openal.sound3d.Source;
 import com.jogamp.openal.util.ALut;
+import com.jogamp.openal.util.WAVData;
+import com.jogamp.openal.util.WAVLoader;
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.ResourceLoader;
@@ -30,23 +34,26 @@ public class SoundClip implements Playable {
 	}
 	
     private static Map<String, Playable> _soundCache = new HashMap<String, Playable>();
-    private final Clip _clip;     // javax.media version
-    private final Source _source; // OpenAL version
+    private final Clip _clip; // javax.media version
+    private final Integer _sourceID; // open al version
+    private final Integer _bufferID; // open al version
     private float _sourceVol = 1.0f;
     private final String _name;
     private int _desiredDur = -1;
     private ArrayList<PlayableListener> _listeners = new ArrayList<PlayableListener>();
     
-    public SoundClip(String name, Source source) {
+    public SoundClip(String name, int source, int buffer) {
     	_name = name;
-    	_source = source;
+    	_sourceID = source;
+    	_bufferID = buffer;
     	_clip = null;
     }
 
     public SoundClip(String name, Clip clip) {
         _name = name;
         _clip = clip;
-        _source = null;
+        _sourceID = null;
+        _bufferID = null;
     }
 
     public void setDesiredDuration(int desiredDur) {
@@ -54,17 +61,27 @@ public class SoundClip implements Playable {
     }
 
     public int getClipDuration() {
-    	if (_source != null) {
+    	if (_bufferID != null) {
         	/* Frequency is in terms of samples/second.
         	 * Size is in terms of bytes.
         	 * Bit-depth is sample size in bits (bits/sample).
         	 * We want bytes * bits/byte * sample/bits * seconds/sample * milliseconds/second
         	 */
-    		Buffer b = _source.getBuffer();
+    		
+    		/*Buffer b = _sourceID.getBuffer();
     		double bytes = b.getSize();
     		double bitsPerByte = 8;
     		double samplePerBits = 1d / (double) b.getBitDepth();
-    		double secondsPerSample = 1d / (double) b.getFrequency();
+    		double secondsPerSample = 1d / (double) b.getFrequency();*/
+    		AL al = ALFactory.getAL();
+    		int[] val = new int[1];
+    		al.alGetBufferi(_bufferID, AL.AL_SIZE, val, 0);
+    		double bytes = val[0];
+    		double bitsPerByte = 8;
+    		al.alGetBufferi(_bufferID, AL.AL_BITS, val, 0);
+    		double samplePerBits = 1d / (double) val[0];
+    		al.alGetBufferi(_bufferID, AL.AL_FREQUENCY, val, 0);
+    		double secondsPerSample = 1d / (double) val[0];
     		double millisPerSec = 1000;
     		return (int) (bytes * samplePerBits * bitsPerByte * millisPerSec * secondsPerSample);
     	}
@@ -77,11 +94,22 @@ public class SoundClip implements Playable {
         if (_desiredDur > 0) return _desiredDur;
         return getClipDuration();
     }
+    
+    /**
+     * Get playback position, in samples.
+     */
+    public float getCurrentPlaybackPosition() {
+    	AL al = ALFactory.getAL();
+    	int[] offset = new int[1];
+		al.alGetSourcei(_sourceID, AL.AL_SAMPLE_OFFSET, offset, 0);
+		return offset[0];
+    }
 
     public void play() {
-    	if (_source != null) {
-    		_source.rewind();
-    		_source.play();
+    	if (_sourceID != null) {
+    		AL al = ALFactory.getAL();
+    		al.alSourceRewind(_sourceID);
+    		al.alSourcePlay(_sourceID);
     	}
     	else {
             _clip.setFramePosition(0);
@@ -95,7 +123,9 @@ public class SoundClip implements Playable {
         Session.sleep(duration());
         
         // if desired duration was less than actual, we have to stop early
-        if (_source != null) _source.stop();
+        if (_sourceID != null) {
+        	ALFactory.getAL().alSourceStop(_sourceID);
+        }
         else _clip.stop();
         
         synchronized (_listeners) {
@@ -113,8 +143,8 @@ public class SoundClip implements Playable {
     
     @Override
     public void setVolume(float volume) {
-    	if (_source != null) {
-    		_source.setGain(volume);
+    	if (_sourceID != null) {
+    		ALFactory.getAL().alSourcef(_sourceID, AL.AL_GAIN, volume);
     		return;
     	}
     	
@@ -136,13 +166,16 @@ public class SoundClip implements Playable {
     
     @Override
     public void setMute(boolean mute) {
-    	if (_source != null) {
-    		if (mute) {
-        		_sourceVol = _source.getGain();
-        		_source.setGain(0);
+    	if (_sourceID != null) {
+    		AL al = ALFactory.getAL();
+	        if (mute) {
+    			float[] vol = new float[1];
+    	        al.alGetSourcef(_sourceID, AL.AL_GAIN, vol, 0);
+    	        _sourceVol = vol[0];
+    	        al.alSourcef(_sourceID, AL.AL_GAIN, 0);
     		}
     		else {
-    			_source.setGain(_sourceVol);
+    			al.alSourcef(_sourceID, AL.AL_GAIN, _sourceVol);
     		}
     		return;
     	}
@@ -175,7 +208,8 @@ public class SoundClip implements Playable {
         if (p == null) {
             if (filename != null) {
                 Clip clip = null;
-                Source source = null;
+                Integer sourceID = null;
+                Integer bufferID = null;
                 try {
                     InputStream input = ResourceLoader.findAudioData(directory, filename);
                     if(input == null) {
@@ -183,9 +217,23 @@ public class SoundClip implements Playable {
                     }
                     
                     // load the source
-                    source = AudioSystem3D.loadSource(input);
+                    AL al = ALFactory.getAL();
+                    int[] id = new int[1];
+                    al.alGenBuffers(1, id, 0);
+                    bufferID = id[0];
+                    al.alGenSources(1, id, 0);
+                    sourceID = id[0];
                     
-                    if (source == null) {
+                    if (sourceID != null) {
+                    	// XXX: Must load buffer before assigning to source!!!!
+                    	// Otherwise, sound will: (1) not work and (2) give no
+                    	// hint as to why.
+                        WAVData wd = WAVLoader.loadFromStream(input);
+                        al.alBufferData(bufferID, wd.format, wd.data, wd.data.capacity(), wd.freq);
+                        al.alSourcei(sourceID, AL.AL_BUFFER, bufferID);
+                        //source = AudioSystem3D.loadSource(input);
+                    }
+                    else {
                     	// if source load failed, try clip
                     	input = ResourceLoader.findAudioData(directory, filename);
                         AudioInputStream stream = AudioSystem.getAudioInputStream(input);
@@ -200,19 +248,17 @@ public class SoundClip implements Playable {
                     return null;
                 }
                 
-                if (source != null) {
-                	p = new SoundClip(filename, source);
-                    if (desiredDur > 0) {
-                        ((SoundClip) p).setDesiredDuration(desiredDur);
-                    }
-                    
-                    // don't change the volume unless necessary
-                    if (Float.compare(1.0f, volume) != 0) p.setVolume(volume);
-                    
-                    _soundCache.put(filename, p);
+                // create playable according to type
+                if (sourceID != null) {
+                	p = new SoundClip(filename, sourceID, bufferID);
                 }
                 else if (clip != null)  {
                     p = new SoundClip(filename, clip);
+                    //(new Thread(new SoundPreparer((SoundClip) p))).start();
+                }
+                
+                // set playable parameters and cache
+                if (p != null) {
                     if (desiredDur > 0) {
                         ((SoundClip) p).setDesiredDuration(desiredDur);
                     }
@@ -221,8 +267,6 @@ public class SoundClip implements Playable {
                     if (Float.compare(1.0f, volume) != 0) p.setVolume(volume);
                     
                     _soundCache.put(filename, p);
-                    
-                    //(new Thread(new SoundPreparer((SoundClip) p))).start();
                 }
             }
         }
@@ -237,7 +281,7 @@ public class SoundClip implements Playable {
 	@Override
 	public void addListener(PlayableListener listener) {
 		synchronized (_listeners) {
-			if (_source != null) _listeners.add(listener);
+			if (_sourceID != null) _listeners.add(listener);
 			else _clip.addLineListener(listener);
 		}
 	}
@@ -245,7 +289,7 @@ public class SoundClip implements Playable {
 	@Override
 	public void removeListener(PlayableListener listener) {
 		synchronized (_listeners) {
-			if (_source != null) _listeners.remove(listener);
+			if (_sourceID != null) _listeners.remove(listener);
 			else _clip.removeLineListener(listener);
 		}
 	}
