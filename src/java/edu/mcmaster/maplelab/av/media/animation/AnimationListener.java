@@ -1,4 +1,4 @@
-package edu.mcmaster.maplelab.av.animation;
+package edu.mcmaster.maplelab.av.media.animation;
 
 /**
  * Interface for listening to animation events.

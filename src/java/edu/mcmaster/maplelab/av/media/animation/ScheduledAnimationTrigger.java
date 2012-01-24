@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.mcmaster.maplelab.av.animation;
+package edu.mcmaster.maplelab.av.media.animation;
 
 import javax.media.opengl.awt.GLJPanel;
 
@@ -33,7 +33,7 @@ public class ScheduledAnimationTrigger implements AnimationTrigger, Scheduled {
 	}
 
 	/**
-	 * @see edu.mcmaster.maplelab.av.animation.AnimationTrigger#setCanvas(javax.media.opengl.awt.GLJPanel)
+	 * @see edu.mcmaster.maplelab.av.media.animation.AnimationTrigger#setCanvas(javax.media.opengl.awt.GLJPanel)
 	 */
 	@Override
 	public void setCanvas(GLJPanel canvas) {
@@ -41,7 +41,7 @@ public class ScheduledAnimationTrigger implements AnimationTrigger, Scheduled {
 	}
 
 	/**
-	 * @see edu.mcmaster.maplelab.av.animation.AnimationTrigger#start()
+	 * @see edu.mcmaster.maplelab.av.media.animation.AnimationTrigger#start()
 	 */
 	@Override
 	public void start() {
@@ -49,7 +49,7 @@ public class ScheduledAnimationTrigger implements AnimationTrigger, Scheduled {
 	}
 
 	/**
-	 * @see edu.mcmaster.maplelab.av.animation.AnimationTrigger#stop()
+	 * @see edu.mcmaster.maplelab.av.media.animation.AnimationTrigger#stop()
 	 */
 	@Override
 	public void stop() {

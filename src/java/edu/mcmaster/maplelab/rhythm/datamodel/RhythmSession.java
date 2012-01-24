@@ -282,10 +282,12 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
       * Generate a warmup block.
       */
      @Override
-     public RhythmBlock generateWarmup() {
+     public List<RhythmBlock> generateWarmup() {
          RhythmBlock warmup = new RhythmBlock(this, 1, true, getBaseIOIs().get(0));
          warmup.clipTrials(getNumWarmupTrials());
-         return warmup;
+         List<RhythmBlock> retval = new ArrayList<RhythmBlock>(1);
+         retval.add(warmup);
+         return retval;
      }
      
      /**

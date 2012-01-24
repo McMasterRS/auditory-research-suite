@@ -18,7 +18,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -30,14 +29,14 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
-import edu.mcmaster.maplelab.av.animation.AnimationPanel;
-import edu.mcmaster.maplelab.av.animation.AnimationRenderer;
 import edu.mcmaster.maplelab.av.datamodel.AVBlock;
 import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.av.datamodel.AVTrial;
 import edu.mcmaster.maplelab.av.datamodel.TrialPlaybackListener;
 import edu.mcmaster.maplelab.av.datamodel.AVBlock.AVBlockType;
 import edu.mcmaster.maplelab.av.media.VideoPanel;
+import edu.mcmaster.maplelab.av.media.animation.AnimationPanel;
+import edu.mcmaster.maplelab.av.media.animation.AnimationRenderer;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.TrialLogger;
 import edu.mcmaster.maplelab.common.gui.BasicStep;
@@ -166,8 +165,7 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
      */
 	private void initialize(boolean isWarmup) {
         if (isWarmup) {
-            _blocks = new ArrayList<B>(1);
-            _blocks.add(_session.generateWarmup());
+            _blocks = _session.generateWarmup();
         }
         else {
             _blocks = _session.generateBlocks();
@@ -266,7 +264,9 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         if (currTrial == null) return;
         currTrial.setTimeStamp(new Date());
         
-        LogContext.getLogger().fine(String.format("\n--------------------\n-> %s: %s", 
+        String trialDesc = _isWarmup ? "\n---- Warmup Trial ----\n-> %s: %s" : 
+        		"\n--------------------\n-> %s: %s";
+        LogContext.getLogger().fine(String.format(trialDesc, 
         		currBlock, currTrial.getDescription()));
 
         _session.execute(new PrepareRunnable(currTrial));
@@ -353,6 +353,8 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
                     	else {
                     		_statusText.setText(_session.getString(ConfigKeys.trialDelayText, null));
                     	}
+                    	// necessary for allowing shutdown key sequence
+                    	getParent().requestFocus();
                     }
                 });
             	

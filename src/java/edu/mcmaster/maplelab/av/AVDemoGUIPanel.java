@@ -22,15 +22,16 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
-import edu.mcmaster.maplelab.av.animation.AnimationPanel;
-import edu.mcmaster.maplelab.av.animation.AnimationParser;
-import edu.mcmaster.maplelab.av.animation.AnimationRenderer;
-import edu.mcmaster.maplelab.av.animation.AnimationSequence;
 import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.av.datamodel.AVTrial;
 import edu.mcmaster.maplelab.av.datamodel.TrialPlaybackListener;
-import edu.mcmaster.maplelab.av.media.PlayableMedia;
-import edu.mcmaster.maplelab.av.media.PlayableMedia.MediaType;
+import edu.mcmaster.maplelab.av.media.MediaType.MediaWrapper;
+import edu.mcmaster.maplelab.av.media.animation.AnimationPanel;
+import edu.mcmaster.maplelab.av.media.animation.AnimationParser;
+import edu.mcmaster.maplelab.av.media.animation.AnimationRenderer;
+import edu.mcmaster.maplelab.av.media.animation.AnimationSequence;
+import edu.mcmaster.maplelab.av.media.MediaType;
+import edu.mcmaster.maplelab.av.media.Playable;
 import edu.mcmaster.maplelab.av.media.VideoPanel;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
@@ -183,16 +184,15 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	}
 	
 	protected abstract T createTrial(AnimationSequence animationSequence,
-			boolean isVideo, PlayableMedia media, Long timingOffset,
+			boolean isVideo, MediaWrapper<Playable> media, Long timingOffset,
 			int animationPoints, float diskRadius, boolean connectDots);
 	  
 	@Override
 	public synchronized T getTrial() {
 		AVSession<?, ?, ?> session = getSession();
 		final boolean vid = _useVideo.isSelected();
-		float volume = session.getPlaybackGain();
-		PlayableMedia media = vid ? MediaType.VIDEO.createDemoMedia(_vidFile.getFile(), volume) :
-				MediaType.AUDIO.createDemoMedia(_audFile.getFile(), volume);
+		MediaWrapper<Playable> media = vid ? MediaType.VIDEO.createDemoMedia(_vidFile.getFile(), session) :
+				MediaType.AUDIO.createDemoMedia(_audFile.getFile(), session);
 		try {
 			AnimationSequence aniSeq = !vid ? AnimationParser.parseFile(
 					_visFile.getFile(), session.getAnimationPointAspect()) : null;
@@ -320,12 +320,12 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 			String aniName = _pitches.getSelectedItem().toString().toLowerCase() + 
 						((DurationEnum) _vDurations.getSelectedItem()).codeString() + 
 						"_.txt";
-			f = new File(getSession().getExpectedAnimationSubDir(), aniName);
+			f = new File(getSession().getAnimationDirectory(), aniName);
 			_visFile.setFile(f);
 			
 			f = MediaType.VIDEO.getExpectedFile(getSession(), _pitches.getSelectedItem(),
 					_vDurations.getSelectedItem(), _aDurations.getSelectedItem());
-			if (f == null) f = getSession().getExpectedVideoSubDir();
+			if (f == null) f = getSession().getVideoDirectory();
 			_vidFile.setFile(f);
 		}
 	}

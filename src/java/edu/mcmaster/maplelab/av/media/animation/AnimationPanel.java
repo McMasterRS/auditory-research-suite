@@ -5,7 +5,7 @@
  * Distributed under the terms of the GNU Lesser General Public License (LGPL).
  * See LICENSE.TXT that came with this file.
  */
-package edu.mcmaster.maplelab.av.animation;
+package edu.mcmaster.maplelab.av.media.animation;
 
 import java.awt.BorderLayout;
 import java.awt.Cursor;
@@ -24,7 +24,6 @@ import javax.swing.ToolTipManager;
 import net.miginfocom.swing.MigLayout;
 
 import com.jogamp.opengl.util.Animator;
-import com.jogamp.opengl.util.FPSAnimator;
 
 import edu.mcmaster.maplelab.av.media.Playable;
 import edu.mcmaster.maplelab.av.media.SoundClip;

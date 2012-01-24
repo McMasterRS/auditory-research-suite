@@ -5,20 +5,20 @@
  * Distributed under the terms of the GNU Lesser General Public License (LGPL).
  * See LICENSE.TXT that came with this file.
  */
-package edu.mcmaster.maplelab.av.animation;
+package edu.mcmaster.maplelab.av.media.animation;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 import javax.vecmath.*;
 
-import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
+import edu.mcmaster.maplelab.av.media.MediaSource;
 
 /**
  * This class creates a sequence of frames to be animated
  * @author Catherine Elder <cje@datamininglab.com>
  *
  */
-public class AnimationSequence {
+public class AnimationSequence implements MediaSource {
 	/** Animation extents buffer (each of the 4 sides). */
 	private static final float EXTENT_BUFFER = 0.75f;
 	/** Frames. */
@@ -27,8 +27,6 @@ public class AnimationSequence {
 	private final String _fileName;
 	/** Aspect ratio of points - for reporting only. */
 	private final float _aspect;
-	/** Visual duration value associated with this animation. */
-	private DurationEnum _visDur = null;
 	/** Cached values. */
 	private AnimationFrame _lowestFrame = null;
 	private Rectangle2D.Float _extent = null;
@@ -38,14 +36,6 @@ public class AnimationSequence {
 		_aniFrames = aniFrames;	
 		_aspect = aspect;
 		calculateExtents();
-	}
-	
-	public void setVisualDuration(DurationEnum de) {
-		_visDur = de;
-	}
-	
-	public DurationEnum getVisualDuration() {
-		return _visDur;
 	}
 	
 	public String getSourceFileName() {
@@ -169,9 +159,7 @@ public class AnimationSequence {
 		int numFrames = _aniFrames.size();
 		if (numFrames == 0) return 0;
 		
-		AnimationFrame lastFrame = _aniFrames.get(numFrames - 1);
-		
-		return lastFrame.getTimeInMillis();
+		return _aniFrames.get(numFrames - 1).getTimeInMillis();
 	}
 	
 	/**
@@ -252,5 +240,10 @@ public class AnimationSequence {
 		_extent.height += 2*EXTENT_BUFFER;
 		_extent.x -= EXTENT_BUFFER;
 		_extent.y -= EXTENT_BUFFER;
+	}
+
+	@Override
+	public String name() {
+		return getSourceFileName();
 	}
 }

@@ -2,13 +2,12 @@ package edu.mcmaster.maplelab.av.datamodel;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
 
 import edu.mcmaster.maplelab.av.datamodel.AVBlock.AVBlockType;
-import edu.mcmaster.maplelab.common.datamodel.Block;
+import edu.mcmaster.maplelab.av.media.MediaParams;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
 import edu.mcmaster.maplelab.common.datamodel.EnvelopeDuration;
 import edu.mcmaster.maplelab.common.datamodel.Session;
@@ -34,6 +33,7 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		pitches,
 		frequencies,
 		spectra,
+		spectrums,
 		envelopeDurations,
 		visualDurations,
 		audioDurations,
@@ -43,7 +43,13 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		includeVideoBlock,
 		includeAudioAnimationBlock,
 		connectDots,
+		videoFileSubDirectory,
+		animationFileSubDirectory,
+		audioFileSubDirectory,
 		videoFileExtensions,
+		animationFileExtensions,
+		audioFileExtensions,
+		synchronizeParameters,
 		oscilloscopeSensorMode
 	}
 	
@@ -57,6 +63,8 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		count += includeVideoBlock() ? 1 : 0;
 		count += includeAudioAnimationBlock() ? 1 : 0;
 		setNumBlocks(count);
+		
+		MediaParams.loadMediaParams(this);
 	}
 	
 	/**
@@ -76,7 +84,7 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	 */
 	public Long getToneOnsetTime(String fileName) {
 		if (_audioFileMetaData == null) {
-			File dir = getExpectedAudioSubDir();
+			File dir = getAudioDirectory();
 			File propFile = new File(dir, AUDIO_META_FILE);
 			_audioFileMetaData = loadSecondaryProps(propFile);
 		}
@@ -170,27 +178,40 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		return getBoolean(ConfigKeys.legacyAudioFiles, false);
 	}
 	
+	public boolean synchronizeParameters() {
+		return getBoolean(ConfigKeys.synchronizeParameters, true);
+	}
+	
 	public List<String> getVideoFileExtensions() {
 		return getStringList(ConfigKeys.videoFileExtensions, "avi");
 	}
 	
+	public List<String> getAnimationFileExtensions() {
+		return getStringList(ConfigKeys.animationFileExtensions, "txt");
+	}
+	
 	public List<String> getAudioFileExtensions() {
-		return Arrays.asList("wav");
+		return getStringList(ConfigKeys.audioFileExtensions, "wav");
 	}
 	
-	public File getExpectedAudioSubDir() {
-		return new File(getDataDir(), "aud");
+	private File getSubDirectory(String subDir) {
+		File retval = new File(getDataDir(), subDir);
+		return retval.isDirectory() ? retval : null;
 	}
 	
-	public File getExpectedAnimationSubDir() {
-		return new File(getDataDir(), "vis");
+	public File getVideoDirectory() {
+		return getSubDirectory(getString(ConfigKeys.videoFileSubDirectory, "video"));
 	}
 	
-	public File getExpectedVideoSubDir() {
-		return new File(getDataDir(), "video");
+	public File getAnimationDirectory() {
+		return getSubDirectory(getString(ConfigKeys.animationFileSubDirectory, "vis"));
 	}
 	
-	public List<NotesEnum> getPitches() {
+	public File getAudioDirectory() {
+		return getSubDirectory(getString(ConfigKeys.audioFileSubDirectory, "aud"));
+	}
+	
+	/*public List<NotesEnum> getPitches() {
 		List<String> pitches = getStringList(ConfigKeys.pitches, "C");
 		List<NotesEnum> retval = new ArrayList<NotesEnum>();
 		for (String s: pitches) {
@@ -210,7 +231,9 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	}
 	
 	public List<String> getSpectra() {
-		return getStringList(ConfigKeys.spectra, "Puretone");
+		List<String> retval = getStringList(ConfigKeys.spectra, (String[]) null);
+		if (retval == null) retval = getStringList(ConfigKeys.spectrums, "Puretone");
+		return retval;
 	}
 	
 	public List<EnvelopeDuration> getEnvelopeDurations() {
@@ -244,7 +267,7 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 			if (dur != null) retval.add(dur);
 		}
 		return retval;
-	}
+	}*/
 	
 	public List<Long> getSoundOffsets() {
 		List<Long> offsets = getLongList(ConfigKeys.soundOffsets, new Long[]{(long) 0});
@@ -270,8 +293,9 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	 */
 	@Override
 	public String getCombinatorialDescription(List<B> blocks) {
+		return "";
 		// blocks
-		String blockTypes = "";
+		/*String blockTypes = "";
 		blockTypes += includeAudioBlock() ? 
 				"\t\t\t" + AVBlockType.AUDIO_ONLY.getUIName() + " block\n" : "";
 		blockTypes += includeVideoBlock() ? 
@@ -337,7 +361,7 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 						String.format("\tVideo trial count: %d\n", video) : "") +
 				String.format("\tTotal trials: %d\n\n", audioOnly + animation + video) + 
 				audioString + aniString + vidString +
-				"**************************************************\n\n", blockTypes);
+				"**************************************************\n\n", blockTypes);*/
 	}
 
 	@Override
@@ -346,8 +370,36 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	@Override
     public abstract List<B> generateBlocks();
 
+	/**
+	 * Create warmup blocks.
+	 */
     @Override
- 	public abstract B generateWarmup();
+ 	public List<B> generateWarmup() {
+
+		List<B> retval = generateBlocks();
+		int warmupCount = getNumWarmupTrials();
+		int initialCount = 0;
+		for (B block : retval) {
+			initialCount += block.getNumTrials();
+		}
+		
+		if (initialCount > warmupCount) {
+			int remaining = warmupCount;
+			for (int i = retval.size()-1; i > 0; i--) {
+				B block = retval.get(i);
+				int localCount = block.getNumTrials();
+				if (localCount > 1) {
+					float percent = (float) localCount / (float) initialCount;
+					localCount = (int) (warmupCount * percent);
+					block.clipTrials(localCount);
+					remaining -= localCount;
+				}
+			}
+			retval.get(0).clipTrials(remaining);
+		}
+		
+		return retval;
+    }
 
 	@Override
     public abstract DemoGUIPanel<?, T> getExperimentDemoPanel(); 

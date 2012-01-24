@@ -5,7 +5,7 @@
  * Distributed under the terms of the GNU Lesser General Public License (LGPL).
  * See LICENSE.TXT that came with this file.
  */
-package edu.mcmaster.maplelab.av.animation;
+package edu.mcmaster.maplelab.av.media.animation;
 
 import static javax.media.opengl.GL2.*;
 
@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.media.opengl.DebugGL2;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
@@ -71,14 +72,16 @@ public class AnimationRenderer implements GLEventListener {
 
 	@Override
 	public void display(GLAutoDrawable d) {
-		TimeTracker.timeStamp(TIMESTAMPS);
+		//TimeTracker.timeStamp(TIMESTAMPS);
 		
 		// have to force reshape on animation change
 		if (_extentsDirty && _lastLoc != null) {
 			reshape(d, _lastLoc.x, _lastLoc.y, d.getWidth(), d.getHeight());
 		}
-		GL2 gl = (GL2) d.getGL();
+//		GL2 gl = new DebugGL2((GL2) d.getGL());
+		GL2 gl = d.getGL().getGL2();
 		
+		gl.glPopAttrib();
 		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);       //Clear The Screen And The Depth Buffer
 		gl.glDisable(GL_DEPTH_TEST);
 		
@@ -90,10 +93,9 @@ public class AnimationRenderer implements GLEventListener {
 		gl.glLoadIdentity();                                    //Reset The View
 		
 		AnimationSequence as = _source.getAnimationSequence();
-		int totalFrames = as.getNumFrames();
 		long currentTime = (System.currentTimeMillis() - getStartTime());			// animate only once
 		
-		if (currentTime > as.getFrameAtIndex(totalFrames - 1).getTimeInMillis()) {
+		if (currentTime > as.getTotalAnimationTime()) {
 			_animatedOnce = true;
 		}
 		displayFrame(gl, as.getFrameAtTime(currentTime));

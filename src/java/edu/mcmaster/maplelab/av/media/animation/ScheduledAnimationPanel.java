@@ -2,7 +2,7 @@
  * Copyright (c) 2012 Southwest Research Institute.
  * All Rights reserved.
  */
-package edu.mcmaster.maplelab.av.animation;
+package edu.mcmaster.maplelab.av.media.animation;
 
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;

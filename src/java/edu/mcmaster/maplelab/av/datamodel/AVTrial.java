@@ -8,12 +8,12 @@ import java.util.EventObject;
 import javax.swing.SwingUtilities;
 
 import edu.mcmaster.maplelab.av.TimeTracker;
-import edu.mcmaster.maplelab.av.animation.AnimationListener;
-import edu.mcmaster.maplelab.av.animation.AnimationRenderer;
-import edu.mcmaster.maplelab.av.animation.AnimationSequence;
-import edu.mcmaster.maplelab.av.media.PlayableMedia;
 import edu.mcmaster.maplelab.av.media.Playable;
 import edu.mcmaster.maplelab.av.media.PlayableListener;
+import edu.mcmaster.maplelab.av.media.MediaType.MediaWrapper;
+import edu.mcmaster.maplelab.av.media.animation.AnimationListener;
+import edu.mcmaster.maplelab.av.media.animation.AnimationRenderer;
+import edu.mcmaster.maplelab.av.media.animation.AnimationSequence;
 import edu.mcmaster.maplelab.common.LogContext;
 
 /**
@@ -26,7 +26,7 @@ import edu.mcmaster.maplelab.common.LogContext;
 public abstract class AVTrial<T> extends AnimationTrial<T> {
 	
 	/** External media. */
-	private final PlayableMedia _media;
+	private final MediaWrapper<Playable> _media;
 	/** Indicator for type of media (audio and/or animation OR video). */
 	private final boolean _isVideo;
 	/** Time at which audio tone occurs within the audio file, if applicable. */
@@ -56,7 +56,7 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 	/**
 	 * Constructor.
 	 */
-	public AVTrial(AnimationSequence animationSequence, boolean isVideo, PlayableMedia media, 
+	public AVTrial(AnimationSequence animationSequence, boolean isVideo, MediaWrapper<Playable> media, 
 			Long timingOffset, int animationPoints, float diskRadius, boolean connectDots) {
 		
 		_animationSequence = animationSequence;
@@ -69,7 +69,7 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 		_connectDots = connectDots;
 	}
 	
-	public PlayableMedia getMedia() {
+	public MediaWrapper<Playable> getMedia() {
 		return _media;
 	}
 
@@ -117,11 +117,11 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 	}
 	
 	public Playable getAudioPlayable() {
-		return !isVideo() && _media != null ? _media.getPlayable() : null;
+		return !isVideo() && _media != null ? _media.getMediaObject() : null;
 	}
 	
 	public Playable getVideoPlayable() {
-		return isVideo() && _media != null ? _media.getPlayable() : null;
+		return isVideo() && _media != null ? _media.getMediaObject() : null;
 	}
 	
 	@Override
@@ -267,7 +267,7 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 					@Override
 					public void animationDone() {
 						/******************************/
-						File f = null;
+						/*File f = null;
 						try {
 							f = File.createTempFile(AnimationRenderer.class.getSimpleName() + "-timestamps", 
 									".log", _session.getDataDir());

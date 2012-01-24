@@ -6,8 +6,8 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Set;
 
-import edu.mcmaster.maplelab.av.animation.AnimationSequence;
 import edu.mcmaster.maplelab.av.media.Playable;
+import edu.mcmaster.maplelab.av.media.animation.AnimationSequence;
 import edu.mcmaster.maplelab.common.datamodel.FileTrialLogger;
 import edu.mcmaster.maplelab.common.datamodel.FileType;
 import edu.mcmaster.maplelab.common.datamodel.IntegerResponse;

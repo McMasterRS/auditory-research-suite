@@ -1,13 +1,14 @@
 package edu.mcmaster.maplelab.si.datamodel;
 
-import edu.mcmaster.maplelab.av.animation.AnimationSequence;
 import edu.mcmaster.maplelab.av.datamodel.AVTrial;
-import edu.mcmaster.maplelab.av.media.PlayableMedia;
+import edu.mcmaster.maplelab.av.media.Playable;
+import edu.mcmaster.maplelab.av.media.MediaType.MediaWrapper;
+import edu.mcmaster.maplelab.av.media.animation.AnimationSequence;
 import edu.mcmaster.maplelab.common.datamodel.MultiResponse;
 
 public class SITrial extends AVTrial<MultiResponse> {
 
-	public SITrial(AnimationSequence animationSequence, boolean isVideo, PlayableMedia media, 
+	public SITrial(AnimationSequence animationSequence, boolean isVideo, MediaWrapper<Playable> media, 
 			Long timingOffset, int animationPoints, float diskRadius, boolean connectDots) {
 		
 		super(animationSequence, isVideo, media, timingOffset, animationPoints, diskRadius, connectDots);

@@ -12,6 +12,9 @@
 package edu.mcmaster.maplelab.common.gui;
 
 import java.awt.*;
+import java.awt.event.AWTEventListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
@@ -21,6 +24,11 @@ import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+
+import com.apple.eawt.AppEvent.QuitEvent;
+import com.apple.eawt.Application;
+import com.apple.eawt.QuitHandler;
+import com.apple.eawt.QuitResponse;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -37,6 +45,9 @@ import edu.mcmaster.maplelab.common.datamodel.*;
 public abstract class ExperimentFrame
     <T extends Session<Q, R, L>,  Q extends Block<T, R>, R extends Trial<?>, L extends TrialLogger <Q, R> > 
     extends JFrame {
+	
+	private static final int SHUTDOWN_MODIFIER_MASK = KeyEvent.SHIFT_MASK | KeyEvent.META_MASK;
+	private static final int SHUTDOWN_KEY = KeyEvent.VK_DOWN;
 	
 	static {
         // Not sure this is still needed.
@@ -129,9 +140,10 @@ public abstract class ExperimentFrame
         }
         
         if(_session.isDebug()) {
-            logger.finer("-------Config-------");
+            logger.finer("\n\n-------Config-------");
+            logger.finer("QUIT Key Sequence = 'Command+Shift+[Down Arrow]'");
             logger.finer(_session.toPropertiesString());
-            logger.finer("-------Config-------");
+            logger.finer("-------End Config-------\n\n");
         }
        
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -143,6 +155,44 @@ public abstract class ExperimentFrame
         else {
         	_rootContainer = this;
         }
+
+        registerShutdownHandling();
+    }
+    
+    /**
+     * Handle changing the shutdown keybindings from Command+Q to
+     * X on Mac OSX.
+     */
+    private void registerShutdownHandling() {
+    	if (System.getProperty("os.name").startsWith("Mac OS")) {
+        	Application app = Application.getApplication();
+        	app.setQuitHandler(new QuitHandler() {
+    			@Override
+    			public void handleQuitRequestWith(QuitEvent qe, QuitResponse qr) {
+    				qr.cancelQuit();
+    			}
+        	});
+    	}
+    	
+    	Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener() {
+			@Override
+			public void eventDispatched(AWTEvent event) {
+				switch (event.getID()) {
+			        case KeyEvent.KEY_PRESSED:
+			        	KeyEvent ke = (KeyEvent) event;
+			        	if (ke.getKeyCode() == SHUTDOWN_KEY && 
+			        			ke.getModifiers() == SHUTDOWN_MODIFIER_MASK) {
+			        		Toolkit.getDefaultToolkit().removeAWTEventListener(this);
+			        		dispose();
+			        		processWindowEvent(new WindowEvent(ExperimentFrame.this, 
+			        				WindowEvent.WINDOW_CLOSING));
+			        	}
+			            break;
+			        case KeyEvent.KEY_RELEASED:
+			            return; //nothing
+				} 
+			}
+    	}, AWTEvent.KEY_EVENT_MASK);
     }
     
     /**

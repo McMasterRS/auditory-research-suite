@@ -21,7 +21,7 @@ package edu.mcmaster.maplelab.av.media;
  * @author <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since Oct 1, 2007
  */
-public interface Playable {
+public interface Playable extends MediaSource {
     /**
      * Initiate playback of the source. Call blocks until playback
      * is finished.

@@ -9,9 +9,10 @@
 package edu.mcmaster.maplelab.toj;
 
 import edu.mcmaster.maplelab.av.AVDemoGUIPanel;
-import edu.mcmaster.maplelab.av.animation.AnimationSequence;
 import edu.mcmaster.maplelab.av.datamodel.AVSession;
-import edu.mcmaster.maplelab.av.media.PlayableMedia;
+import edu.mcmaster.maplelab.av.media.Playable;
+import edu.mcmaster.maplelab.av.media.MediaType.MediaWrapper;
+import edu.mcmaster.maplelab.av.media.animation.AnimationSequence;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
 
 /**
@@ -27,7 +28,7 @@ public class TOJDemoGUIPanel extends AVDemoGUIPanel<TOJTrial> {
 
 	@Override
 	protected TOJTrial createTrial(AnimationSequence animationSequence,
-			boolean isVideo, PlayableMedia media, Long timingOffset,
+			boolean isVideo, MediaWrapper<Playable> media, Long timingOffset,
 			int animationPoints, float diskRadius, boolean connectDots) {
 		return new TOJTrial(animationSequence, isVideo, media, timingOffset,
 				animationPoints, diskRadius, connectDots);

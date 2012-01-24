@@ -1,21 +1,19 @@
 package edu.mcmaster.maplelab.av.datamodel;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import edu.mcmaster.maplelab.av.animation.AnimationParser;
-import edu.mcmaster.maplelab.av.animation.AnimationSequence;
-import edu.mcmaster.maplelab.av.media.MediaParams;
-import edu.mcmaster.maplelab.av.media.PlayableMedia;
-import edu.mcmaster.maplelab.av.media.PlayableMedia.MediaType;
+import edu.mcmaster.maplelab.av.media.MediaParams.MediaParamValue;
+import edu.mcmaster.maplelab.av.media.MediaType.MediaWrapper;
+import edu.mcmaster.maplelab.av.media.MediaType;
+import edu.mcmaster.maplelab.av.media.Playable;
+import edu.mcmaster.maplelab.av.media.animation.AnimationSequence;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.Block;
-import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
-import edu.mcmaster.maplelab.common.sound.NotesEnum;
 
 public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> extends Block<S, T> {
 	
@@ -43,64 +41,83 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 	/** Generated trials. */
 	List<T> _trials = null;
 
-	protected AVBlock(S session, int blockNum, AVBlockType type, List<DurationEnum> visDurations, 
-			List<NotesEnum> pitches, List<Long> offsets, List<Integer> numPoints) {
+	protected AVBlock(S session, int blockNum, AVBlockType type, List<Long> offsets, List<Integer> numPoints) {
 		
 		super(session, blockNum);
 		
 		_type = type;
 		_trials = new ArrayList<T>();
 		
-		float animationAspect = session.getAnimationPointAspect();
 		float pointSize = session.getBaseAnimationPointSize();
 		boolean connect = session.connectDots();
 		
-		MediaType audioMT = session.isUsingLegacyAudioFiles() ? MediaType.LEGACY_AUDIO : MediaType.AUDIO;
-
-		// create trials from session
-		if (type == AVBlockType.AUDIO_ANIMATION) {
-			for (PlayableMedia audio : audioMT.getUniqueMedia(session)) {
-				// pitch is shared if legacy audio!
-				List<NotesEnum> pitchList = audioMT == MediaType.LEGACY_AUDIO ? 
-						Arrays.asList(audio.getValue(MediaParams.pitch)) : pitches;
-				
-				for (NotesEnum pitch : pitchList) {
-					for (DurationEnum duration : visDurations) {
-						String filename = String.format("%s%s_.txt", pitch.toString().toLowerCase(), 
-								duration.codeString());
-						
-						File dir = session.getExpectedAnimationSubDir();
-						AnimationSequence aniSeq = null;
-						try {
-							aniSeq = AnimationParser.parseFile(new File(dir, filename), animationAspect);
-							aniSeq.setVisualDuration(duration);
-						}
-						catch (FileNotFoundException fne) {
-							LogContext.getLogger().warning(String.format("Animation file %s not found.", filename));
-						}
-						
-						for (Long so : offsets) {
-							for (int pts : numPoints) {
-								T trial = createTrial(aniSeq, false, audio, so, pts, pointSize, connect);
-								_trials.add(trial);
-							}
-						}
-					}
-				}
+		if (type == AVBlockType.VIDEO_ONLY) { 
+			List<Map<String, MediaParamValue>> videoCombinations = MediaType.VIDEO.buildParameterMaps(session);
+			for (Map<String, MediaParamValue> map : videoCombinations) {
+				MediaWrapper<Playable> video = MediaType.VIDEO.createMedia(session, map.values());
+				T trial = createTrial(null, true, video, 0l, 0, pointSize, connect);
+				_trials.add(trial);
 			}
 		}
 		else if (type == AVBlockType.AUDIO_ONLY) {
-			for (PlayableMedia audio : audioMT.getUniqueMedia(session)) {
+			List<Map<String, MediaParamValue>> audioCombinations = MediaType.AUDIO.buildParameterMaps(session);
+			for (Map<String, MediaParamValue> map : audioCombinations) {
+				MediaWrapper<Playable> audio = MediaType.AUDIO.createMedia(session, map.values());
 				for (Long so : offsets) {
 					T trial = createTrial(null, false, audio, so, 0, pointSize, connect);
 					_trials.add(trial);
 				}
 			}
 		}
-		else if (type == AVBlockType.VIDEO_ONLY) { 
-			for (PlayableMedia video : MediaType.VIDEO.getUniqueMedia(session)) {
-				T trial = createTrial(null, true, video, 0l, 0, pointSize, connect);
-				_trials.add(trial);
+		else if (type == AVBlockType.AUDIO_ANIMATION) {
+			
+			if (session.synchronizeParameters()) {
+				Set<String> sharedParams = new HashSet<String>();
+				sharedParams.addAll(MediaType.AUDIO.getParams(session));
+				sharedParams.retainAll(MediaType.ANIMATION.getParams(session));
+				
+				List<Map<String, MediaParamValue>> audioCombinations = MediaType.AUDIO.buildParameterMaps(session);
+				List<Map<String, MediaParamValue>> animationCombinations = MediaType.ANIMATION.buildParameterMaps(session);
+				for (Map<String, MediaParamValue> audioMap : audioCombinations) {
+					for (Map<String, MediaParamValue> animationMap : animationCombinations) {
+						boolean synced = true;
+						for (String param : sharedParams) {
+							MediaParamValue audioVal = audioMap.get(param);
+							MediaParamValue animationVal = audioMap.get(param);
+							synced = audioVal == animationVal;
+						}
+						if (!synced) continue;
+						
+						MediaWrapper<Playable> audio = MediaType.AUDIO.createMedia(session, audioMap.values());
+						MediaWrapper<AnimationSequence> ani = 
+								MediaType.ANIMATION.createMedia(session, animationMap.values());
+						for (Long so : offsets) {
+							for (int pts : numPoints) {
+								T trial = createTrial(ani.getMediaObject(), false, audio, so, 
+										pts, pointSize, connect);
+								_trials.add(trial);
+							}
+						}
+					}
+				}
+			}
+			else {
+				List<Map<String, MediaParamValue>> audioCombinations = MediaType.AUDIO.buildParameterMaps(session);
+				List<Map<String, MediaParamValue>> animationCombinations = MediaType.ANIMATION.buildParameterMaps(session);
+				for (Map<String, MediaParamValue> audioMap : audioCombinations) {
+					for (Map<String, MediaParamValue> animationMap : animationCombinations) {
+						MediaWrapper<Playable> audio = MediaType.AUDIO.createMedia(session, audioMap.values());
+						MediaWrapper<AnimationSequence> ani = 
+								MediaType.ANIMATION.createMedia(session, animationMap.values());
+						for (Long so : offsets) {
+							for (int pts : numPoints) {
+								T trial = createTrial(ani.getMediaObject(), false, audio, so, 
+										pts, pointSize, connect);
+								_trials.add(trial);
+							}
+						}
+					}
+				}
 			}
 		}
 		
@@ -149,8 +166,10 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 	
 	/**
 	 * Create a single trial of the needed type from the given parameters.
+	 * 
+	 * TODO: refactor trials to store parameters and load media later?
 	 */
-	protected abstract T createTrial(AnimationSequence animationSequence, boolean isVideo, PlayableMedia media, 
+	protected abstract T createTrial(AnimationSequence animationSequence, boolean isVideo, MediaWrapper<Playable> media, 
 			Long timingOffset, int animationPoints, float diskRadius, boolean connectDots);
 
 }

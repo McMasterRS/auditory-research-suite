@@ -1,10 +1,11 @@
-package edu.mcmaster.maplelab.av.animation;
+package edu.mcmaster.maplelab.av.media.animation;
 
 import static javax.media.opengl.GL2.*;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
+import javax.vecmath.Vector3f;
 
 /** !!!!!!!!!! FOR FUTURE REFERENCE !!!!!!!!!!!!!!
  * 
@@ -118,13 +119,22 @@ public enum AnimationShapeDrawable {
 		}
 		
 		// color each dot individually
+		// XXX: be careful here - for some reason the scaling must be done
+		// at this level - does OpenGL access the actual data locations internally?
 		if (dot.getColor() != null) {
-			if (lum != null) {
-				gl.glColor3d(lum*dot.getColor().x, lum*dot.getColor().y, lum*dot.getColor().z);
-			}
-			else {
-				gl.glColor3d(dot.getColor().x, dot.getColor().y, dot.getColor().z);
-			}
+			Vector3f colorVector = new Vector3f(dot.getColor());
+			float scale = (lum != null ? lum.floatValue() : 1f) / 255f;
+			colorVector.scale(scale);
+			
+			gl.glColor3f(colorVector.x, colorVector.y, colorVector.z);
+			
+			// get current color values (debug)
+			/*int[] col = new int[4];
+			gl.glGetIntegerv(GL2.GL_CURRENT_COLOR, col, 0);
+			System.out.printf("curr int: %d, %d, %d, %d%n", col[0], col[1], col[2], col[3]);
+			float[] col2 = new float[4];
+			gl.glGetFloatv(GL2.GL_CURRENT_COLOR, col2, 0);
+			System.out.printf("curr float: %f, %f, %f, %f%n", col2[0], col2[1], col2[2], col2[3]);*/
 		}
 		
 		// get size of each dot

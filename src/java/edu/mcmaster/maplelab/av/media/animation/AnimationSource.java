@@ -1,4 +1,4 @@
-package edu.mcmaster.maplelab.av.animation;
+package edu.mcmaster.maplelab.av.media.animation;
 
 public interface AnimationSource {
 	public AnimationSequence getAnimationSequence();

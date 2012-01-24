@@ -5,7 +5,7 @@
  * Distributed under the terms of the GNU Lesser General Public License (LGPL).
  * See LICENSE.TXT that came with this file.
  */
-package edu.mcmaster.maplelab.av.animation;
+package edu.mcmaster.maplelab.av.media.animation;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector3d;
@@ -26,7 +26,7 @@ public class AnimationPoint {
 	public AnimationPoint(Point2d location, Vector3d color, Double size, 
 			AnimationShapeDrawable shape) {
 		_location = location;
-		_color = color;
+		_color = color != null ? new Vector3d(color) : null;
 		_size = size;
 		_shape = shape != null ? shape : AnimationShapeDrawable.DOT;
 	}
@@ -36,7 +36,7 @@ public class AnimationPoint {
 	}
 	
 	public Vector3d getColor () {
-		return _color;
+		return _color != null ? new Vector3d(_color) : null;
 	}
 	
 	public Double getSize () {

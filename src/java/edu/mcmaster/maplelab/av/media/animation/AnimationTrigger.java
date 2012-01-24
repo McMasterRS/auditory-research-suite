@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.mcmaster.maplelab.av.animation;
+package edu.mcmaster.maplelab.av.media.animation;
 
 import javax.media.opengl.awt.GLJPanel;
 

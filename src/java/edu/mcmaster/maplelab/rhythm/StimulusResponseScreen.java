@@ -17,7 +17,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -167,8 +166,7 @@ public class StimulusResponseScreen extends BasicStep {
      */
     private void initialize(boolean isWarmup) {
         if (isWarmup) {
-            _blocks = new ArrayList<RhythmBlock>(1);
-            _blocks.add(_session.generateWarmup());
+            _blocks = _session.generateWarmup();
         }
         else {
             _blocks = _session.generateBlocks();
@@ -355,6 +353,8 @@ public class StimulusResponseScreen extends BasicStep {
                     	else {
                     		_statusText.setText(_session.getString(ConfigKeys.trialDelayText, null));
                     	}
+                    	// necessary for allowing shutdown key sequence
+                    	getParent().requestFocus();
                     }
                 });
             	
@@ -460,6 +460,7 @@ public class StimulusResponseScreen extends BasicStep {
                 public void run() {
                     _statusText.setText(_session.getString(ConfigKeys.enterResponseText, null));
                     setEnabled(true);
+                    _response.requestFocusInWindow();
                 }
             });            
         }

@@ -1,7 +1,7 @@
 package edu.mcmaster.maplelab.av.datamodel;
 
-import edu.mcmaster.maplelab.av.animation.AnimationSequence;
-import edu.mcmaster.maplelab.av.animation.AnimationSource;
+import edu.mcmaster.maplelab.av.media.animation.AnimationSequence;
+import edu.mcmaster.maplelab.av.media.animation.AnimationSource;
 import edu.mcmaster.maplelab.common.datamodel.Trial;
 
 public abstract class AnimationTrial<T> extends Trial<T> implements AnimationSource {

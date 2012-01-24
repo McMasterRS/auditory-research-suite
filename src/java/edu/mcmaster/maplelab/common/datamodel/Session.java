@@ -403,9 +403,9 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      public abstract DemoGUIPanel<?, T> getExperimentDemoPanel(); 
 
      /**
-      * Create a generic block for warmup.
+      * Create a block list for warmup.
       */
- 	public abstract B generateWarmup();
+ 	public abstract List<B> generateWarmup();
  	
  	/**
      * Generate the experiment blocks.
@@ -726,7 +726,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      * @param def default value if property name not defeined
      * @return property value parsed as a comma delimited list of integers
      */
-    protected final List<String> getStringList(String key, String... def) {
+    public final List<String> getStringList(String key, String... def) {
         List<String> retval = null;
         
         Object val = getProperty(key);

@@ -5,7 +5,7 @@
  * Distributed under the terms of the GNU Lesser General Public License (LGPL).
  * See LICENSE.TXT that came with this file.
  */
-package edu.mcmaster.maplelab.av.animation;
+package edu.mcmaster.maplelab.av.media.animation;
 
 import java.util.Collections;
 import java.util.List;
