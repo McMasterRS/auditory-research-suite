@@ -6,49 +6,28 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.text.NumberFormat;
+import java.util.*;
+import java.util.List;
 
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JFormattedTextField;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerModel;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
+
+import org.apache.commons.lang3.StringUtils;
 
 import net.miginfocom.swing.MigLayout;
-import edu.mcmaster.maplelab.av.datamodel.AVSession;
-import edu.mcmaster.maplelab.av.datamodel.AVTrial;
-import edu.mcmaster.maplelab.av.datamodel.TrialPlaybackListener;
+import edu.mcmaster.maplelab.av.datamodel.*;
+import edu.mcmaster.maplelab.av.media.*;
+import edu.mcmaster.maplelab.av.media.MediaParams.MediaParamValue;
 import edu.mcmaster.maplelab.av.media.MediaType.MediaWrapper;
-import edu.mcmaster.maplelab.av.media.animation.AnimationPanel;
-import edu.mcmaster.maplelab.av.media.animation.AnimationParser;
-import edu.mcmaster.maplelab.av.media.animation.AnimationRenderer;
-import edu.mcmaster.maplelab.av.media.animation.AnimationSequence;
-import edu.mcmaster.maplelab.av.media.MediaType;
-import edu.mcmaster.maplelab.av.media.Playable;
-import edu.mcmaster.maplelab.av.media.VideoPanel;
+import edu.mcmaster.maplelab.av.media.animation.*;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
-import edu.mcmaster.maplelab.common.datamodel.EnvelopeDuration;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.gui.FileBrowseField;
-import edu.mcmaster.maplelab.common.sound.NotesEnum;
 
 public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<AVSession<?, T, ?>, T> {
-	private FilePathUpdater _fUpdater = new FilePathUpdater();
-	private JComboBox _pitches;
-	private JComboBox _vDurations;
-	private JComboBox _aDurations;
-	private JComboBox _frequency;
-	private JComboBox _spectrum;
-	private JComboBox _envDuration;
 	
+    private FilePathUpdater _fUpdater = new FilePathUpdater();
+
 	private FileBrowseField _audFile;
 	private FileBrowseField _visFile;
 	private FileBrowseField _vidFile;
@@ -63,12 +42,14 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	
 	private AnimationRenderer _renderer;
 	private Boolean _video = null;
-	private T _currTrial;
-	
+
 	private JFrame _testFrame;
 	private AnimationPanel _aniPanel;
 	private VideoPanel _vidPanel;
-		
+	
+	private Map<MediaType<?>, Map<String, JComboBox> > _paramSelectors = new HashMap<MediaType<?>, Map<String,JComboBox>>();
+	
+	
 	//read data from user entries and create a trial
 	
 	public AVDemoGUIPanel(AVSession<?, T, ?> session) {
@@ -79,111 +60,96 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		add(new JLabel("Auditory"), "split, span, gaptop 10");
 		add(new JSeparator(), "growx, wrap, gaptop 10");
 		
-		_frequency = new JComboBox(new String[]{"330Hz"});
-		_frequency.setSelectedIndex(0);
-		_frequency.addActionListener(_fUpdater);
-
-		add(new JLabel("<html>&nbsp;&nbsp;&nbsp;Frequency"), "right");
-		add(_frequency, "left, growx");
+        JPanel p = genParamControls(session, MediaType.AUDIO);
+        add(p, "spany 2, grow");
 		
-		_spectrum = new JComboBox(new String[]{"Puretone"});
-		_spectrum.setSelectedIndex(0);
-		_spectrum.addActionListener(_fUpdater);
-
-		add(new JLabel("Spectrum"), "right");
-		add(_spectrum, "left, growx");
 		
-		_envDuration = new JComboBox(new EnvelopeDuration[]{
-				new EnvelopeDuration("Flat-228ms"), 
-				new EnvelopeDuration("Flat-360ms"),
-				new EnvelopeDuration("Flat-580ms"),
-				new EnvelopeDuration("Perc-400ms"), 
-				new EnvelopeDuration("Perc-600ms"), 
-				new EnvelopeDuration("Perc-1075ms")});
-		_envDuration.setSelectedIndex(0);
-		_envDuration.addActionListener(_fUpdater);
-
-		add(new JLabel("Envelope & Duration"), "right");
-		add(_envDuration, "left, growx");
-		
-		add(new JLabel("Delay (ms)", 2), "right");
+		add(new JLabel("Delay (ms)", 2), "right, split");
 		_delayText = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		_delayText.setValue(new Long(0)); // new
 		_delayText.setColumns(5);
 		
-		add(_delayText, "left, wrap");
+		add(_delayText, "left, top, wrap push");
 		
 		// visual info
-		add(new JLabel("Visual"), "split, span, gaptop 10");
+		add(new JLabel("Visual"), "newline, split, span, gaptop 10");
 		add(new JSeparator(), "growx, wrap, gaptop 10");
-
-		_pitches = new JComboBox(NotesEnum.values());
-		_pitches.setSelectedItem(NotesEnum.D);
-	    _pitches.addActionListener(_fUpdater);
-	     
-	    add(new JLabel("Pitch"), "right");
-		add(_pitches, "left, growx");
-	
-		_vDurations = new JComboBox(DurationEnum.unDampedValues());
-		_vDurations.setSelectedItem(DurationEnum.NORMAL);
-		_vDurations.addActionListener(_fUpdater);
 		
-		add(new JLabel("Duration"), "right");
-		add(_vDurations, "left, growx");
+        p = genParamControls(session, MediaType.ANIMATION);
+        add(p, "spany 2, right");
 		
-		_aDurations = new JComboBox(DurationEnum.unDampedValues());
-		_aDurations.setSelectedItem(DurationEnum.NORMAL);
-		_aDurations.addActionListener(_fUpdater);
-		
-		add(new JLabel("Audio Duration"), "right");
-		add(_aDurations, "left, growx");
-		
-		add (new JLabel("Number of dots"), "right");
+		add (new JLabel("Number of dots"), "right, split 2");
 		SpinnerModel model = new SpinnerNumberModel(6, 1, 20, 1);
 		_numPts = new JSpinner(model);
-		add(_numPts, "left, wrap");
-		
-		add(new JLabel("Loop"), "right");
+		add(_numPts, "left");
+
+		add(new JLabel("Connect dots w/ lines"), "right, split 2");
+		_connect = new JCheckBox();
+		add(_connect, "left");
+		_connect.setSelected(true);
+
+	        
+		add(new JLabel("Loop"), "newline, right, split 2");
 		_loop = new JCheckBox();
 		add(_loop, "left");
 		
-		add(new JLabel("Use video"), "right");
+		add(new JLabel("Use video"), "right, split 2");
 		_useVideo = new JCheckBox();
 		add(_useVideo, "left");
 		//_useVideo.setEnabled(false);
 		
-		add(new JLabel("Connect dots w/ lines"), "right");
-		_connect = new JCheckBox();
-		add(_connect, "left, wrap");
-		_connect.setSelected(true);
-
 		// files 
-		add(new JLabel("Files"), "split, span, gaptop 10");
+		add(new JLabel("Files"), "newline, split, span, gaptop 10");
 		add(new JSeparator(), "growx, wrap, gaptop 10");
 		
-		add(new JLabel("Audio File"));
+		add(new JLabel("Audio File"), "right, span, split");
 		_audFile = new FileBrowseField(false);
-		add(_audFile, "span, growx");
+		add(_audFile, "growx, wrap");
 		
-		add(new JLabel("Visual File"));
+		add(new JLabel("Visual File"),"right, span, split");
 		_visFile = new FileBrowseField(false);
-		add(_visFile, "span, growx");
+		add(_visFile, "growx, wrap");
 		
-		add(new JLabel("Video File"));
+		add(new JLabel("Video File"), "right, span, split");
 		_vidFile = new FileBrowseField(false);
-		add(_vidFile, "span, growx");
+		add(_vidFile, "growx, wrap");
 		//_vidFile.setEnabled(false);
 		
-		JPanel p = new JPanel(new MigLayout("insets 0, fill"));
+		p = new JPanel(new MigLayout("insets 0, fill"));
 		_startButton = new JButton("Start");
 		_startButton.addActionListener(new StartUpdater());
 		p.add(_startButton, "center");
-		add(p, "span, center, growx");
+		add(p, "span, center, grow");
 		
 		_fUpdater.update();
 	}
 	
-	protected abstract T createTrial(AnimationSequence animationSequence,
+	private JPanel genParamControls(AVSession<?, T, ?> session, MediaType<?> type) {
+	    JPanel retval = new JPanel(new MigLayout("insets 0", "", "[][fill]"));
+	    
+	    Map<String, JComboBox> selectorMap = _paramSelectors.get(type);
+	    if(selectorMap == null) {
+	        selectorMap = new HashMap<String, JComboBox>();
+	        _paramSelectors.put(type, selectorMap);
+	    }
+	    
+        List<String> params = type.getParams(session);
+        for(String param : params) {
+            String label = session.getString(param + ".label", param);
+            retval.add(new JLabel(label), "right");
+            MediaParams vals = MediaParams.getAvailableValues(param);
+
+            JComboBox options = new JComboBox(new MediaParamsModel(vals));
+            options.addActionListener(_fUpdater);
+            retval.add(options, "growx, wrap");
+            
+            selectorMap.put(param, options);
+        }
+        
+        return retval;
+    }
+
+    protected abstract T createTrial(AnimationSequence animationSequence,
 			boolean isVideo, MediaWrapper<Playable> media, Long timingOffset,
 			int animationPoints, float diskRadius, boolean connectDots);
 	  
@@ -302,31 +268,42 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 			update();
 		}
 		
+		private File fileFor(MediaType<?> type) {
+            List<String> paramNames = type.getParams(getSession());
+            List<MediaParamValue> selections = new ArrayList<MediaParams.MediaParamValue>(paramNames.size()); 
+            for(String p : paramNames) {
+                JComboBox sel = _paramSelectors.get(type).get(p);
+                if(sel == null) {
+                    throw new IllegalStateException("Missing combo box for parameter type " + p);
+                }
+                selections.add((MediaParamValue) sel.getSelectedItem());
+            }
+            
+            File f = type.getExpectedFile(getSession(), selections);
+
+            if(f == null) {
+                String basename = type.getExpectedFilename(getSession(), selections);
+                LogContext.getLogger().severe("Unable find file with form: " + StringUtils.abbreviateMiddle(basename, "...", 50) + ".*");
+                // We return a file even though it's invalid so the file browser can indicate it's invalid.
+                return new File(basename);
+            }
+            
+            return f;
+            
+		}
+		
 		public void update() {
 		    
-			File f = MediaType.AUDIO.getExpectedFile(getSession(), _frequency.getSelectedItem(), 
-					_spectrum.getSelectedItem(), _envDuration.getSelectedItem());
-
-			if(f == null) {
-			    LogContext.getLogger().severe("Unable find file with form: " + 
-			        MediaType.AUDIO.getExpectedBasename(
-			        getSession(), _frequency.getSelectedItem(), 
-                    _spectrum.getSelectedItem(), _envDuration.getSelectedItem()) + ".*");
-			    return;
-			}
+		    File f = fileFor(MediaType.AUDIO);
+		    _audFile.setFile(f);
+		    
+            f = fileFor(MediaType.ANIMATION);
+            _visFile.setFile(f);
 			
-			_audFile.setFile(f);
-			
-			String aniName = _pitches.getSelectedItem().toString().toLowerCase() + 
-						((DurationEnum) _vDurations.getSelectedItem()).codeString() + 
-						"_.txt";
-			f = new File(getSession().getAnimationDirectory(), aniName);
-			_visFile.setFile(f);
-			
-			f = MediaType.VIDEO.getExpectedFile(getSession(), _pitches.getSelectedItem(),
-					_vDurations.getSelectedItem(), _aDurations.getSelectedItem());
-			if (f == null) f = getSession().getVideoDirectory();
-			_vidFile.setFile(f);
+//			f = MediaType.VIDEO.getExpectedFile(getSession(), _pitches.getSelectedItem(),
+//					_vDurations.getSelectedItem(), _aDurations.getSelectedItem());
+//			if (f == null) f = getSession().getVideoDirectory();
+//			_vidFile.setFile(f);
 		}
 	}
 	
@@ -383,4 +360,18 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 			});
 		}
 	}
+	
+    /**
+     * Adapter around MediaParams for use inside a JComboBox. 
+     * 
+     * @author <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
+     * @since Jan 24, 2012
+     */
+    public class MediaParamsModel extends DefaultComboBoxModel {
+
+        public MediaParamsModel(MediaParams vals) {
+            super(vals.getValues().toArray());
+        }
+    }	
+
 }

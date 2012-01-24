@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.av.media.MediaParams.MediaParamValue;
 import edu.mcmaster.maplelab.av.media.animation.AnimationParser;
@@ -190,6 +192,20 @@ public abstract class MediaType<T extends MediaSource> {
 		return retval;
 	}
 	
+
+	/**
+	 * Provide the file name basename with full path, based on the parameter values. For reporting errors. No
+	 * extension is included.
+	 */
+    public String getExpectedFilename(AVSession<?, ?, ?> session, Collection<MediaParamValue> params) {
+        String filename = getFileName(session, params);
+//        int idx = filename.lastIndexOf('.');
+//        if(idx >= 0) {
+//            filename = filename.substring(0, idx);
+//        }
+        return new File(getDirectory(session), filename).toString();
+    }	
+	
 	/**
 	 * Get the file expected from using the given parameter values and the
 	 * appropriate file extension to construct a file.
@@ -277,5 +293,6 @@ public abstract class MediaType<T extends MediaSource> {
 			return getMediaObject().name();
 		}
 	}
+
 
 }

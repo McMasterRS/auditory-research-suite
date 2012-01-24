@@ -8,6 +8,7 @@ import java.util.Map;
 
 import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.common.LogContext;
+import edu.mcmaster.maplelab.common.datamodel.Pair;
 
 /**
  * Class for enumerating all parameters contributing to media object creation.
@@ -44,10 +45,13 @@ public class MediaParams {
 	private MediaParams(String name, AVSession<?, ?, ?> session) {
 		_name = name;
 		_values = new ArrayList<MediaParamValue>();
-		List<String> strValues = session.getStringList(_name, (String[]) null);
+        List<String> strValues = session.getStringList(_name, (String[]) null);
+        List<String> strLabels = session.getStringList(_name + ".labels", (String[]) null);
 		if (strValues != null) {
+		    int idx = 0;
 			for (String str : strValues) {
-				_values.add(new MediaParamValue(_name, str));
+			    String disp = strLabels != null && strLabels.size() > idx ? strLabels.get(idx++) : null; 
+				_values.add(new MediaParamValue(_name, str, disp));
 			}
 		}
 		else {
@@ -65,21 +69,33 @@ public class MediaParams {
 		return _name;
 	}
 	
-	public static class MediaParamValue {
-		private final String _paramName;
-		private final String _paramValue;
-		
-		private MediaParamValue(String paramName, String paramValue) {
-			_paramName = paramName;
-			_paramValue = paramValue;
+	/**
+	 * Encapsulation of the pairing between parameter name and value
+	 * 
+	 * 
+	 * @author <a href="mailto:fitch@datamininglab.com">Simeon H.K. Fitch</a>
+	 * @since Jan 24, 2012
+	 */
+	public static class MediaParamValue extends Pair<String, String>{
+
+		private final String _displayName;
+
+        private MediaParamValue(String paramName, String paramValue, String displayName) {
+		    super(paramName, paramValue);
+            _displayName = displayName != null ? displayName : paramValue;
 		}
 		
 		public String paramName() {
-			return _paramName;
+			return getFirst();
 		}
 		
 		public String paramValue() {
-			return _paramValue;
+			return getLast();
+		}
+		
+		@Override
+		public String toString() {
+		    return _displayName;
 		}
 	}
 }

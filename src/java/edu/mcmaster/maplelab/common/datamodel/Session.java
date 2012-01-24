@@ -772,11 +772,22 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      * @return key value, or null if no String value with key found.
      */
     public final String getString(String key)  {
+        return getString(key, null);
+    }
+    
+    /**
+     * Lookup a strng value with the given key
+     * 
+     * @param key value key
+     * @param def default value if no value is found
+     * @return key value, or <tt>def</tt> if no String with value found.
+     */
+    public final String getString(String key, String def)  {
         Object val = getProperty(key);
         if(val instanceof String) {
             return (String) val;
         }
-        return null;
+        return def;
     }
 
     // Property management.
