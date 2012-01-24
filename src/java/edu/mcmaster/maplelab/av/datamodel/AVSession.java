@@ -196,7 +196,8 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	
 	private File getSubDirectory(String subDir) {
 		File retval = new File(getDataDir(), subDir);
-		return retval.isDirectory() ? retval : null;
+		// Allow non-existent directory, but not an existing non-dirctory file.
+		return retval.isDirectory() || !retval.exists() ? retval : null;
 	}
 	
 	public File getVideoDirectory() {

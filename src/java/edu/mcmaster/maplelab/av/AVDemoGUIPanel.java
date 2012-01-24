@@ -72,7 +72,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		add(_delayText, "left, top, wrap push");
 		
 		// visual info
-		add(new JLabel("Visual"), "newline, split, span, gaptop 10");
+		add(new JLabel("Animation"), "newline, split, span, gaptop 10");
 		add(new JSeparator(), "growx, wrap, gaptop 10");
 		
         p = genParamControls(session, MediaType.ANIMATION);
@@ -93,10 +93,16 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		_loop = new JCheckBox();
 		add(_loop, "left");
 		
-		add(new JLabel("Use video"), "right, split 2");
-		_useVideo = new JCheckBox();
-		add(_useVideo, "left");
-		//_useVideo.setEnabled(false);
+        // visual info
+        add(new JLabel("Video"), "newline, split, span, gaptop 10");
+        add(new JSeparator(), "growx, wrap, gaptop 10");
+
+        add(new JLabel("Video Enabled:"), "right, split, span");
+        _useVideo = new JCheckBox();
+        add(_useVideo, "left, grow, wrap");
+        
+        p = genParamControls(session, MediaType.VIDEO);
+        add(p, "newline, right");
 		
 		// files 
 		add(new JLabel("Files"), "newline, split, span, gaptop 10");
@@ -299,11 +305,9 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		    
             f = fileFor(MediaType.ANIMATION);
             _visFile.setFile(f);
-			
-//			f = MediaType.VIDEO.getExpectedFile(getSession(), _pitches.getSelectedItem(),
-//					_vDurations.getSelectedItem(), _aDurations.getSelectedItem());
-//			if (f == null) f = getSession().getVideoDirectory();
-//			_vidFile.setFile(f);
+
+            f = fileFor(MediaType.VIDEO);
+            _vidFile.setFile(f);
 		}
 	}
 	

@@ -177,7 +177,7 @@ public abstract class MediaType<T extends MediaSource> {
 	    File retval = null;
 	    File dir = getDirectory(session);
 	    
-	    if (!dir.exists()) {
+	    if (dir == null || !dir.exists()) {
 	        LogContext.getLogger().severe("Data directory missing: " + dir);
 	        return null;
 	    }
