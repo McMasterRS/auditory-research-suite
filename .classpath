@@ -31,5 +31,10 @@
 	<classpathentry kind="lib" path="src/java/lib/slf4j-api-1.5.8.jar"/>
 	<classpathentry kind="lib" path="src/java/lib/slf4j-jdk14-1.5.8.jar"/>
 	<classpathentry kind="lib" path="src/java/lib/asm-3.1.jar"/>
+	<classpathentry kind="lib" path="src/java/lib/commons-lang3-3.1.jar" sourcepath="src/java/lib/source/commons-lang3-3.1-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/auditory-research-suite/src/java/lib/doc/commons-lang3-3.1-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
