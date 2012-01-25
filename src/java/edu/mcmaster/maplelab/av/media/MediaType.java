@@ -257,7 +257,7 @@ public abstract class MediaType<T extends MediaSource> {
 	
 	public MediaWrapper<T> createMedia(AVSession<?, ?, ?> session, Collection<MediaParamValue> values) {
 		T p = loadMediaObject(session, getFileName(session, values));
-		return new MediaWrapper<T>(this, p);
+		return p != null ? new MediaWrapper<T>(this, p) : null;
 	}
 	
 	public MediaWrapper<T> createDemoMedia(File file, AVSession<?, ?, ?> session) {

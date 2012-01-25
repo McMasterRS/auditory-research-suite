@@ -55,6 +55,7 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 			List<Map<String, MediaParamValue>> videoCombinations = MediaType.VIDEO.buildParameterMaps(session);
 			for (Map<String, MediaParamValue> map : videoCombinations) {
 				MediaWrapper<Playable> video = MediaType.VIDEO.createMedia(session, map.values());
+				if (video == null) continue;
 				T trial = createTrial(null, true, video, 0l, 0, pointSize, connect);
 				_trials.add(trial);
 			}
@@ -63,6 +64,7 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 			List<Map<String, MediaParamValue>> audioCombinations = MediaType.AUDIO.buildParameterMaps(session);
 			for (Map<String, MediaParamValue> map : audioCombinations) {
 				MediaWrapper<Playable> audio = MediaType.AUDIO.createMedia(session, map.values());
+				if (audio == null) continue;
 				for (Long so : offsets) {
 					T trial = createTrial(null, false, audio, so, 0, pointSize, connect);
 					_trials.add(trial);
@@ -91,6 +93,7 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 						MediaWrapper<Playable> audio = MediaType.AUDIO.createMedia(session, audioMap.values());
 						MediaWrapper<AnimationSequence> ani = 
 								MediaType.ANIMATION.createMedia(session, animationMap.values());
+						if (audio == null || ani == null) continue;
 						for (Long so : offsets) {
 							for (int pts : numPoints) {
 								T trial = createTrial(ani.getMediaObject(), false, audio, so, 

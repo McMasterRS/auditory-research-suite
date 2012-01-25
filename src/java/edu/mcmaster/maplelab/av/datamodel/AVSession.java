@@ -1,19 +1,16 @@
 package edu.mcmaster.maplelab.av.datamodel;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
 
 import edu.mcmaster.maplelab.av.datamodel.AVBlock.AVBlockType;
 import edu.mcmaster.maplelab.av.media.MediaParams;
-import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
-import edu.mcmaster.maplelab.common.datamodel.EnvelopeDuration;
+import edu.mcmaster.maplelab.av.media.MediaType;
 import edu.mcmaster.maplelab.common.datamodel.Session;
 import edu.mcmaster.maplelab.common.datamodel.TrialLogger;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
-import edu.mcmaster.maplelab.common.sound.NotesEnum;
 
 public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>, 
 										L extends TrialLogger<B, T>> extends Session<B, T, L> {
@@ -236,9 +233,9 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	 */
 	@Override
 	public String getCombinatorialDescription(List<B> blocks) {
-		return "";
+		
 		// blocks
-		/*String blockTypes = "";
+		String blockTypes = "";
 		blockTypes += includeAudioBlock() ? 
 				"\t\t\t" + AVBlockType.AUDIO_ONLY.getUIName() + " block\n" : "";
 		blockTypes += includeVideoBlock() ? 
@@ -249,62 +246,106 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 						getNumBlocks(), getBlockSetRepetitions()) + blockTypes;
 		
 		// parameters
-		List<DurationEnum> visDur = getVisualDurations();
-		List<NotesEnum> pitches = getPitches();
-		List<String> freq = getFrequencies();
-		List<String> spec = getSpectra();
-		List<EnvelopeDuration> envDur = getEnvelopeDurations();
-		List<DurationEnum> audDur = getAudioDurations();
-		List<String> vidExt = getVideoFileExtensions();
+		List<String> audioParams = MediaType.AUDIO.getParams(this);
+		List<String> animationParams = MediaType.ANIMATION.getParams(this);
+		List<String> videoParams = MediaType.VIDEO.getParams(this);
+		
+		// additional experiment parameters
 		List<Long> offsets = getSoundOffsets();
 		List<Integer> points = getNumAnimationPoints();
 		
-		// trial counts
-		int audioFiles = !isUsingLegacyAudioFiles() ? 
-				freq.size() * spec.size() * envDur.size() : pitches.size() * audDur.size();
-		int audioOnly = audioFiles * offsets.size();
-		int animation = visDur.size() * pitches.size() * points.size() * audioOnly;
-		int video = pitches.size() * visDur.size() * audDur.size();
-		if (!includeAudioBlock()) audioOnly = 0;
-		if (!includeAudioAnimationBlock()) animation = 0;
-		if (!includeVideoBlock()) video = 0;
+		// trial counts - init to 1 for loop purposes, correct later
+		int audioOnlyCount = 1;
+		int audAniCount = 1;
+		int videoCount = 1;
 		
-		String pitchString = listString(pitches);
-		String visDurString = listString(visDur);
-		String audDurString = listString(audDur);
+		// file location info
+		File audDir = getAudioDirectory();
+		File aniDir = getAnimationDirectory();
+		File vidDir = getVideoDirectory();
+		List<String> audExt = getAudioFileExtensions();
+		List<String> aniExt = getAnimationFileExtensions();
+		List<String> vidExt = getVideoFileExtensions();
 		
-		String audioFormat = isUsingLegacyAudioFiles() ? 
-				"\tAudio data:\n\t\tPitches: %s\n\t\tDurations: %s\n" +
-						"\tAuditory offsets: %s\n": 
-				"\tAudio data:\n\t\tFrequencies: %s\n\t\tSpectra: %s\n" +
-						"\t\tEnvelope/Durations: %s\n\t\tAuditory offsets: %s\n";
-		String audioString = isUsingLegacyAudioFiles() ? 
-				String.format(audioFormat, pitchString, audDurString, listString(offsets)) :
-				String.format(audioFormat, listString(freq), listString(spec), listString(envDur, 3, 2), 
-						listString(offsets));
-		if (!includeAudioAnimationBlock() && !includeAudioBlock()) audioString = "";
-				
-		String aniFormat = "\tAnimation data:\n\t\tPitches: %s\n\t\tVisual durations: %s\n" +
-				"\t\tAnimation points: %s\n";
-		String aniString = String.format(aniFormat, pitchString, visDurString, listString(points));
-		if (!includeAudioAnimationBlock()) aniString = "";
+		// inclusion checks and description construction
+		String audioDesc = "";
+		if (!includeAudioBlock() && !includeAudioAnimationBlock()) {
+			audioOnlyCount = 0;
+		}
+		else {
+			audioDesc = "\tAudio data:\n";
+			for (String s : audioParams) {
+				List<String> labels = getStringList(s + ".labels", (String[]) null);
+				if (labels == null) {
+					labels = getStringList(s, (String[]) null);
+				}
+				audioOnlyCount *= labels.size();
+				String list = listString(labels, 3, 2);
+				audioDesc += "\t\t" + getString(s + ".label", s) + " " + list + "\n";
+			}
+			audioOnlyCount *= offsets.size();
+			audioDesc += String.format("\t\tAuditory offsets: %s\n", listString(offsets));
+			audioDesc += String.format("\t\tAudio subdirectory: %s\n", audDir.getName());
+			audioDesc += String.format("\t\tAudio extensions: %s\n", listString(audExt));
+		}
 		
-		String vidFormat = "\tVideo data:\n\t\tPitches: %s\n\t\tVisual durations: %s\n" +
-				"\t\tAudio durations: %s\n\t\tVideo extensions: %s\n";
-		String vidString = String.format(vidFormat, pitchString, visDurString, audDurString,
-				listString(vidExt));
-		if (!includeVideoBlock()) vidString = "";
+		String aniDesc = "";
+		if (!includeAudioAnimationBlock()) {
+			audAniCount = 0;
+		}
+		else {
+			audAniCount *= audioOnlyCount * points.size();
+			boolean shared = synchronizeParameters();
+			aniDesc = "\tAnimation data:\n";
+			for (String s : animationParams) {
+				List<String> labels = getStringList(s + ".labels", (String[]) null);
+				if (labels == null) {
+					labels = getStringList(s, (String[]) null);
+				}
+				// check to see if this item already counted
+				if (!(shared && audioParams.contains(s))) {
+					audAniCount *= labels.size();
+				}
+				String list = listString(labels, 3, 2);
+				aniDesc += "\t\t" + getString(s + ".label", s) + " " + list + "\n";
+			}
+			aniDesc += String.format("\t\tAnimation points: %s\n", listString(points));
+			aniDesc += String.format("\t\tAnimation subdirectory: %s\n", aniDir.getName());
+			aniDesc += String.format("\t\tAnimation extensions: %s\n", listString(aniExt));
+		}
+		
+		// audio correction, after used by animation
+		if (!includeAudioBlock()) audioOnlyCount = 0;
+		
+		String videoDesc = "";
+		if (!includeVideoBlock()) {
+			videoCount = 0;
+		}
+		else {
+			videoDesc = "\tVideo data:\n";
+			for (String s : videoParams) {
+				List<String> labels = getStringList(s + ".labels", (String[]) null);
+				if (labels == null) {
+					labels = getStringList(s, (String[]) null);
+				}
+				videoCount *= labels.size();
+				String list = listString(labels, 3, 2);
+				videoDesc += "\t\t" + getString(s + ".label", s) + " " + list + "\n";
+			}
+			videoDesc += String.format("\t\tVideo subdirectory: %s\n", vidDir.getName());
+			videoDesc += String.format("\t\tVideo extensions: %s\n", listString(vidExt));
+		}
 		
 		return String.format("\n********** Experiment Session Trial Details **********\n%s\n" +
 				(includeAudioBlock() ? 
-						String.format("\tAudio-only trial count: %d\n", audioOnly) : "") +
+						String.format("\tAudio-only trial count: %d\n", audioOnlyCount) : "") +
 				(includeAudioAnimationBlock() ? 
-						String.format("\tAudio and animation trial count: %d\n", animation) : "") +
+						String.format("\tAudio and animation trial count: %d\n", audAniCount) : "") +
 				(includeVideoBlock() ? 
-						String.format("\tVideo trial count: %d\n", video) : "") +
-				String.format("\tTotal trials: %d\n\n", audioOnly + animation + video) + 
-				audioString + aniString + vidString +
-				"**************************************************\n\n", blockTypes);*/
+						String.format("\tVideo trial count: %d\n", videoCount) : "") +
+				String.format("\tTotal trials: %d\n\n", audioOnlyCount + audAniCount + videoCount) + 
+				audioDesc + aniDesc + videoDesc +
+				"**************************************************\n\n", blockTypes);
 	}
 
 	@Override

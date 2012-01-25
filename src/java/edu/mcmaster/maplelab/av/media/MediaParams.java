@@ -64,9 +64,13 @@ public class MediaParams {
 		return Collections.unmodifiableList(_values);
 	}
 	
+	public String paramName() {
+		return _name;
+	}
+	
 	@Override
 	public String toString() {
-		return _name;
+		return paramName();
 	}
 	
 	/**
