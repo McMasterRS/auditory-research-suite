@@ -196,7 +196,7 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	
 	private File getSubDirectory(String subDir) {
 		File retval = new File(getDataDir(), subDir);
-		// Allow non-existent directory, but not an existing non-dirctory file.
+		// Allow non-existent directory, but not an existing non-directory file.
 		return retval.isDirectory() || !retval.exists() ? retval : null;
 	}
 	
@@ -211,64 +211,6 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	public File getAudioDirectory() {
 		return getSubDirectory(getString(ConfigKeys.audioFileSubDirectory, "aud"));
 	}
-	
-	/*public List<NotesEnum> getPitches() {
-		List<String> pitches = getStringList(ConfigKeys.pitches, "C");
-		List<NotesEnum> retval = new ArrayList<NotesEnum>();
-		for (String s: pitches) {
-			try {
-				NotesEnum nEnum = NotesEnum.valueOf(s);
-				retval.add(nEnum);
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		return retval;
-	}
-	
-	public List<String> getFrequencies() {
-		return getStringList(ConfigKeys.frequencies, "330Hz");
-	}
-	
-	public List<String> getSpectra() {
-		List<String> retval = getStringList(ConfigKeys.spectra, (String[]) null);
-		if (retval == null) retval = getStringList(ConfigKeys.spectrums, "Puretone");
-		return retval;
-	}
-	
-	public List<EnvelopeDuration> getEnvelopeDurations() {
-		List<EnvelopeDuration> retval = new ArrayList<EnvelopeDuration>();
-		for (String s : getStringList(ConfigKeys.envelopeDurations, "Flat-360ms")) {
-			retval.add(new EnvelopeDuration(s));
-		}
-		return retval;
-	}
-	
-	public List<DurationEnum> getVisualDurations() {
-		return getDurations(getStringList(ConfigKeys.visualDurations, 
-				DurationEnum.NORMAL.codeString()));
-	}
-	
-	public List<DurationEnum> getAudioDurations() {
-		return getDurations(getStringList(ConfigKeys.audioDurations, 
-				DurationEnum.NORMAL.codeString()));
-	}
-	
-	private List<DurationEnum> getDurations(List<String> strVals) {
-		List<DurationEnum> retval = new ArrayList<DurationEnum>();
-		for (String s: strVals) {
-			DurationEnum dur = null;
-			try {
-				dur = DurationEnum.valueOf(s);
-			}
-			catch (Exception e) {
-				dur = DurationEnum.fromCodeString(s);
-			}
-			if (dur != null) retval.add(dur);
-		}
-		return retval;
-	}*/
 	
 	public List<Long> getSoundOffsets() {
 		List<Long> offsets = getLongList(ConfigKeys.soundOffsets, new Long[]{(long) 0});
