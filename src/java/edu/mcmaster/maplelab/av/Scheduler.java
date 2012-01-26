@@ -109,8 +109,7 @@ public class Scheduler {
 	 * Class for running scheduled items at regular intervals.
 	 */
 	private class TimerClock implements Runnable {
-		private final ScheduledExecutorService _exec = 
-			Executors.newScheduledThreadPool(_threads);
+		private final ScheduledExecutorService _exec = Executors.newScheduledThreadPool(_threads);
 		private boolean _initialized = false;
 		
 		public void shutDown() {

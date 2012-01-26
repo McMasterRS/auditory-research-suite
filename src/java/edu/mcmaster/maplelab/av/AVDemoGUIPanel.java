@@ -20,7 +20,6 @@ import edu.mcmaster.maplelab.av.media.MediaParams.MediaParamValue;
 import edu.mcmaster.maplelab.av.media.MediaType.MediaWrapper;
 import edu.mcmaster.maplelab.av.media.animation.*;
 import edu.mcmaster.maplelab.common.LogContext;
-import edu.mcmaster.maplelab.common.datamodel.DurationEnum;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.gui.FileBrowseField;
 

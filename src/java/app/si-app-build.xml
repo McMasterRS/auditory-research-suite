@@ -47,6 +47,7 @@
     			<include name="lib/slf4j-api-1.5.8.jar"/>
     			<include name="lib/slf4j-jdk14-1.5.8.jar"/>
     			<include name="lib/asm-3.1.jar"/>
+    			<include name="lib/commons-lang3-3.1.jar"/>
     		</jarfileset>
 	        <resourcefileset dir="../www/si" includes="si.properties"/>
 	        <javafileset dir="../lib/natives" includes="*.jnilib"/>

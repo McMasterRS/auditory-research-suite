@@ -24,16 +24,8 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	public enum ConfigKeys {
 		screenWidth,
 		screenHeight,
-		legacyAudioFiles,
 		animationPointAspect,
 		animationPointSize,
-		pitches,
-		frequencies,
-		spectra,
-		spectrums,
-		envelopeDurations,
-		visualDurations,
-		audioDurations,
 		soundOffsets,
 		numAnimationPoints,
 		includeAudioBlock,
@@ -61,6 +53,7 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		count += includeAudioAnimationBlock() ? 1 : 0;
 		setNumBlocks(count);
 		
+		// must load the media parameter specification
 		MediaParams.loadMediaParams(this);
 	}
 	
@@ -97,7 +90,7 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
             try {
                 retval = Long.parseLong((String)val);
             }
-            catch(NumberFormatException ex) {
+            catch (NumberFormatException ex) {
             }
         }
         else if (val instanceof Long) {
@@ -169,10 +162,6 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	
 	public boolean connectDots() {
 		return getBoolean(ConfigKeys.connectDots, true);
-	}
-	
-	public boolean isUsingLegacyAudioFiles() {
-		return getBoolean(ConfigKeys.legacyAudioFiles, false);
 	}
 	
 	public boolean synchronizeParameters() {

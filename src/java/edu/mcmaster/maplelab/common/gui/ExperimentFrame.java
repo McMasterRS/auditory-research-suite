@@ -47,7 +47,7 @@ public abstract class ExperimentFrame
     extends JFrame {
 	
 	private static final int SHUTDOWN_MODIFIER_MASK = KeyEvent.SHIFT_MASK | KeyEvent.META_MASK;
-	private static final int SHUTDOWN_KEY = KeyEvent.VK_DOWN;
+	private static final int SHUTDOWN_KEY = KeyEvent.VK_ESCAPE;
 	
 	static {
         // Not sure this is still needed.
@@ -141,7 +141,7 @@ public abstract class ExperimentFrame
         
         if(_session.isDebug()) {
             logger.finer("\n\n-------Config-------");
-            logger.finer("QUIT Key Sequence = 'Command+Shift+[Down Arrow]'");
+            logger.finer("QUIT Key Sequence = 'Command+Shift+ESC'");
             logger.finer(_session.toPropertiesString());
             logger.finer("-------End Config-------\n\n");
         }

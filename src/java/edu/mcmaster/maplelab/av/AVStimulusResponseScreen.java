@@ -92,7 +92,8 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
 		
 		_session = session;
 		_isWarmup = isWarmup;
-		_renderer = new AnimationRenderer();
+		StimulusScheduler _scheduler = StimulusScheduler.getInstance();
+		_renderer = _scheduler.getAnimationRenderer();
 		_keyListener = new ResponseKeyListener();
 		
 		setTitleText(_session.getString(

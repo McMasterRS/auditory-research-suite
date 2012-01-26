@@ -37,7 +37,7 @@ import edu.mcmaster.maplelab.common.sound.NotesEnum;
  */
 public class AnimationPanel extends JPanel {
 	private final GLJPanel _canvas;
-	private final GLEventListener _renderer;
+	private GLEventListener _renderer;
 	private Animator _defaultTrigger;
 	private AnimationTrigger _altTrigger = null;
     
@@ -57,18 +57,26 @@ public class AnimationPanel extends JPanel {
     
     public AnimationPanel(GLEventListener renderer, Dimension dim) {
     	super(new MigLayout("insets 0, nogrid, center, fill", "center", "center"));
-
+    	
         GLCapabilities caps = new GLCapabilities(GLProfile.get(GLProfile.GL2));
 
         _canvas = new GLJPanel(caps);
         _canvas.setName("glCanvas");
-        _renderer = renderer;
-        _canvas.addGLEventListener(_renderer);
+        setRenderer(renderer);
         
         useDefaultTrigger();
  		
         add(_canvas);
         _canvas.setPreferredSize(dim != null ? dim : new Dimension(640, 480));
+    }
+    
+    /**
+     * Set the renderer to provide animation.
+     */
+    public void setRenderer(GLEventListener renderer) {
+    	if (_renderer != null) _canvas.removeGLEventListener(_renderer);
+    	_renderer = renderer;
+    	if (_renderer != null) _canvas.addGLEventListener(_renderer);
     }
     
     /**
