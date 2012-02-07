@@ -39,6 +39,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	
 	private JButton _startButton;
 	
+	private StimulusScheduler _scheduler;
 	private AnimationRenderer _renderer;
 	private Boolean _video = null;
 
@@ -156,7 +157,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 
     protected abstract T createTrial(AnimationSequence animationSequence,
 			boolean isVideo, MediaWrapper<Playable> media, Long timingOffset,
-			int animationPoints, float diskRadius, boolean connectDots);
+			int animationPoints, float diskRadius, boolean connectDots, Long mediaDelay);
 	  
 	@Override
 	public synchronized T getTrial() {
@@ -169,9 +170,10 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 					_visFile.getFile(), session.getAnimationPointAspect()) : null;
 			Object val = _delayText.getValue();
 			Long delay = Long.valueOf(val instanceof String ? (String) val : ((Number) val).toString());
+			Long mediaDelay = session.getToneOnsetTime(media.getName());
 			return createTrial(aniSeq, vid, media, delay, 
 					(Integer)_numPts.getValue(), session.getBaseAnimationPointSize(), 
-					_connect.isSelected());
+					_connect.isSelected(), mediaDelay);
 		}
 		catch (FileNotFoundException ex) {
 			Runnable r = new Runnable() {
@@ -223,9 +225,10 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
             Window w = getParentWindow();
             _testFrame.setLocation(w.getLocation().x + w.getWidth(), w.getLocation().y);
 
-            
-            _renderer = new AnimationRenderer();
+            _scheduler = StimulusScheduler.getInstance();
+            _renderer = _scheduler.getAnimationRenderer();
             _aniPanel = new AnimationPanel(_renderer);
+            _aniPanel.overrideDefaultTrigger(_scheduler.getAnimationTrigger());
 		}
 		
     	if (trial.isVideo()) {
@@ -329,18 +332,22 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		public void run() {
 		    try {
 		        T next = getTrial();
+		        LogContext.getLogger().fine("\n--------------------\n-> " + next.getDescription());
 		        prepareNext(next);
-		        next.preparePlayback(getSession(), _renderer);
-		        next.addPlaybackListener(new LoopListener(next));
-		        next.play();
+		        //next.preparePlayback(_renderer);
+		        _scheduler.setStimulusSource(next);
+		        //next.addPlaybackListener(new LoopListener(next));
+		        _scheduler.addStimulusListener(new LoopListener(next));
+		        //next.play();
+		        _scheduler.start();
 		    }
-		    finally {
+		    catch (Exception e) {
                 _startButton.setEnabled(true);
 		    }
 		}
 	}
 	
-	private class LoopListener implements TrialPlaybackListener {
+	private class LoopListener implements AVStimulusListener {
 		private T _trial;
 		
 		public LoopListener(T trial) {
@@ -348,11 +355,13 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		}
 		
 		@Override
-		public void playbackEnded() {
+		public void stimuliComplete() {
+			_scheduler.stop();
+			_scheduler.removeStimulusListener(LoopListener.this);
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-					_trial.removePlaybackListener(LoopListener.this);
+					//_trial.removePlaybackListener(LoopListener.this);
 					if (_loop.isSelected()) {
 						SwingUtilities.invokeLater(new PrepareAndRun());
 					}

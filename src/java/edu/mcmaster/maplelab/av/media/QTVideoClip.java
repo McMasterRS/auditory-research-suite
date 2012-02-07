@@ -90,7 +90,7 @@ public class QTVideoClip implements Playable {
         synchronized (_listeners) {
             if (!_listeners.isEmpty()) {
             	for (PlayableListener pl : _listeners) {
-            		pl.playableEnded(null);
+            		pl.playableEnded();
             	}
             }
         }

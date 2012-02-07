@@ -56,7 +56,7 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 			for (Map<String, MediaParamValue> map : videoCombinations) {
 				MediaWrapper<Playable> video = MediaType.VIDEO.createMedia(session, map.values());
 				if (video == null) continue;
-				T trial = createTrial(null, true, video, 0l, 0, pointSize, connect);
+				T trial = createTrial(null, true, video, 0l, 0, pointSize, connect, Long.valueOf(0));
 				_trials.add(trial);
 			}
 		}
@@ -65,8 +65,9 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 			for (Map<String, MediaParamValue> map : audioCombinations) {
 				MediaWrapper<Playable> audio = MediaType.AUDIO.createMedia(session, map.values());
 				if (audio == null) continue;
+				Long delay = session.getToneOnsetTime(audio.getName());
 				for (Long so : offsets) {
-					T trial = createTrial(null, false, audio, so, 0, pointSize, connect);
+					T trial = createTrial(null, false, audio, so, 0, pointSize, connect, delay);
 					_trials.add(trial);
 				}
 			}
@@ -94,10 +95,11 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 						MediaWrapper<AnimationSequence> ani = 
 								MediaType.ANIMATION.createMedia(session, animationMap.values());
 						if (audio == null || ani == null) continue;
+						Long delay = session.getToneOnsetTime(audio.getName());
 						for (Long so : offsets) {
 							for (int pts : numPoints) {
 								T trial = createTrial(ani.getMediaObject(), false, audio, so, 
-										pts, pointSize, connect);
+										pts, pointSize, connect, delay);
 								_trials.add(trial);
 							}
 						}
@@ -112,10 +114,12 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 						MediaWrapper<Playable> audio = MediaType.AUDIO.createMedia(session, audioMap.values());
 						MediaWrapper<AnimationSequence> ani = 
 								MediaType.ANIMATION.createMedia(session, animationMap.values());
+						if (audio == null || ani == null) continue;
+						Long delay = session.getToneOnsetTime(audio.getName());
 						for (Long so : offsets) {
 							for (int pts : numPoints) {
 								T trial = createTrial(ani.getMediaObject(), false, audio, so, 
-										pts, pointSize, connect);
+										pts, pointSize, connect, delay);
 								_trials.add(trial);
 							}
 						}
@@ -173,6 +177,6 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 	 * TODO: refactor trials to store parameters and load media later?
 	 */
 	protected abstract T createTrial(AnimationSequence animationSequence, boolean isVideo, MediaWrapper<Playable> media, 
-			Long timingOffset, int animationPoints, float diskRadius, boolean connectDots);
+			Long timingOffset, int animationPoints, float diskRadius, boolean connectDots, Long mediaDelay);
 
 }

@@ -17,9 +17,9 @@ public class SIBlock extends AVBlock<SISession, SITrial> {
 	@Override
 	protected SITrial createTrial(AnimationSequence animationSequence,
 			boolean isVideo, MediaWrapper<Playable> media, Long timingOffset,
-			int animationPoints, float diskRadius, boolean connectDots) {
+			int animationPoints, float diskRadius, boolean connectDots, Long mediaDelay) {
 		return new SITrial(animationSequence, isVideo, media, timingOffset, animationPoints, 
-				diskRadius, connectDots);
+				diskRadius, connectDots, mediaDelay);
 	}
 
 }

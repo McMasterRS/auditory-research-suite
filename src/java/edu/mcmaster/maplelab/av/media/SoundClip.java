@@ -3,8 +3,6 @@ package edu.mcmaster.maplelab.av.media;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -131,7 +129,7 @@ public class SoundClip implements Playable {
         synchronized (_listeners) {
             if (!_listeners.isEmpty()) {
             	for (PlayableListener pl : _listeners) {
-            		pl.playableEnded(null);
+            		pl.playableEnded();
             	}
             }
         }

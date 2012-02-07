@@ -9,7 +9,6 @@ package edu.mcmaster.maplelab.av.media.animation;
 
 import static javax.media.opengl.GL2.*;
 
-import java.awt.Component;
 import java.awt.Point;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
@@ -50,7 +49,7 @@ public class AnimationRenderer implements GLEventListener {
 
 	/** Set the current animation source. Doing so implies starting at the first frame. */
 	public void setAnimationSource(AnimationSource source) {
-		_extentsDirty = _source != source;
+		_extentsDirty = true;
 		_source = source;
 	}
 
@@ -100,12 +99,22 @@ public class AnimationRenderer implements GLEventListener {
 		}
 		displayFrame(gl, as.getFrameAtTime(currentTime));
 		
-		if (_animatedOnce && _listeners != null) {
+		/*long nano = System.nanoTime();
+		gl.glFlush();
+		gl.glFinish();
+		nano = System.nanoTime() - nano;
+		System.out.println(nano);*/
+		
+		if (_animatedOnce) notifyListeners();
+	} 
+	
+	protected void notifyListeners() {
+		if (_listeners != null) {
 			for (AnimationListener al : _listeners) {
 				al.animationDone();
 			}
 		}
-	} 
+	}
 
 	// display 1 frame
 	private void displayFrame(GL2 gl, AnimationFrame frame) {

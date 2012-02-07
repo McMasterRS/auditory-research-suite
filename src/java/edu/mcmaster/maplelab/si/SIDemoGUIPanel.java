@@ -21,8 +21,8 @@ public class SIDemoGUIPanel extends AVDemoGUIPanel<SITrial> {
 	@Override
 	protected SITrial createTrial(AnimationSequence animationSequence,
 			boolean isVideo, MediaWrapper<Playable> media, Long timingOffset,
-			int animationPoints, float diskRadius, boolean connectDots) {
+			int animationPoints, float diskRadius, boolean connectDots, Long mediaDelay) {
 		return new SITrial(animationSequence, isVideo, media, timingOffset,
-				animationPoints, diskRadius, connectDots);
+				animationPoints, diskRadius, connectDots, mediaDelay);
 	}
 }

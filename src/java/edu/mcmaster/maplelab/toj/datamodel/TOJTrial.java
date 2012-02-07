@@ -20,9 +20,10 @@ import edu.mcmaster.maplelab.common.datamodel.ConfidenceResponse;
 public class TOJTrial extends AVTrial<ConfidenceResponse> {
 
 	public TOJTrial(AnimationSequence animationSequence, boolean isVideo, MediaWrapper<Playable> media, 
-			Long timingOffset, int animationPoints, float diskRadius, boolean connectDots) {
+			Long timingOffset, int animationPoints, float diskRadius, boolean connectDots, Long mediaDelay) {
 		
-		super(animationSequence, isVideo, media, timingOffset, animationPoints, diskRadius, connectDots);
+		super(animationSequence, isVideo, media, timingOffset, animationPoints, 
+				diskRadius, connectDots, mediaDelay);
 	}
 
 	@Override

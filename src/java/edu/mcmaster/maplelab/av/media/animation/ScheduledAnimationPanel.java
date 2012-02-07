@@ -4,18 +4,13 @@
  */
 package edu.mcmaster.maplelab.av.media.animation;
 
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.util.concurrent.TimeUnit;
+import java.awt.Dimension;
 import java.util.logging.Level;
 
 import javax.media.opengl.*;
-import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JFrame;
 
-import edu.mcmaster.maplelab.av.ScheduleEvent;
-import edu.mcmaster.maplelab.av.Scheduled;
-import edu.mcmaster.maplelab.av.Scheduler;
+import edu.mcmaster.maplelab.av.StimulusScheduler;
 import edu.mcmaster.maplelab.common.LogContext;
 
 
@@ -27,26 +22,21 @@ import edu.mcmaster.maplelab.common.LogContext;
  * @since Jan 9, 2012
  */
 public class ScheduledAnimationPanel extends AnimationPanel {
-	static {
-		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		GraphicsDevice gs = ge.getDefaultScreenDevice();
-		int r = gs.getDisplayMode().getRefreshRate();
-		System.out.println(r);
+	
+	public ScheduledAnimationPanel() {
+		this(null);
 	}
 	
-	private final Scheduler _scheduler;
-	
-    public ScheduledAnimationPanel() {
-        super(new BackgroundSwitchingAnimator());
-        _scheduler = new Scheduler(123333334, TimeUnit.NANOSECONDS, 5);
-        ScheduledAnimationTrigger trigger = new ScheduledAnimationTrigger();
-        overrideDefaultTrigger(trigger);
-        _scheduler.schedule(trigger);
-        start();
-        _scheduler.start();
-    }
+    public ScheduledAnimationPanel(Dimension dim) {
+		super(null, dim);
+		StimulusScheduler scheduler = StimulusScheduler.getInstance();
+		overrideDefaultTrigger(scheduler.getAnimationTrigger());
+		setRenderer(scheduler.getAnimationRenderer());
+	}
     
-    private static class BackgroundSwitchingAnimator implements GLEventListener {
+    
+    
+    /*private static class BackgroundSwitchingAnimator implements GLEventListener {
     	private boolean _switch = true;
     	
         @Override
@@ -81,6 +71,7 @@ public class ScheduledAnimationPanel extends AnimationPanel {
     public static void main(String[] args) {
     	try { 
             ScheduledAnimationPanel p = new ScheduledAnimationPanel();
+            p.setRenderer(new BackgroundSwitchingAnimator());
             
             JFrame f = new JFrame(p.getClass().getName());
             f.getContentPane().add(p);
@@ -90,5 +81,5 @@ public class ScheduledAnimationPanel extends AnimationPanel {
         catch (Exception ex) {
             LogContext.getLogger().log(Level.SEVERE, "Initialization error.", ex);
         }
-    }
+    }*/
 }

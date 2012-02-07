@@ -9,9 +9,10 @@ import edu.mcmaster.maplelab.common.datamodel.MultiResponse;
 public class SITrial extends AVTrial<MultiResponse> {
 
 	public SITrial(AnimationSequence animationSequence, boolean isVideo, MediaWrapper<Playable> media, 
-			Long timingOffset, int animationPoints, float diskRadius, boolean connectDots) {
+			Long timingOffset, int animationPoints, float diskRadius, boolean connectDots, Long mediaDelay) {
 		
-		super(animationSequence, isVideo, media, timingOffset, animationPoints, diskRadius, connectDots);
+		super(animationSequence, isVideo, media, timingOffset, animationPoints, 
+				diskRadius, connectDots, mediaDelay);
 	}
 
 	@Override

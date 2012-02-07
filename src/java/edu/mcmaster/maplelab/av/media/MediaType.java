@@ -290,7 +290,7 @@ public abstract class MediaType<T extends MediaSource> {
 		}
 		
 		public String getName() {
-			return getMediaObject().name();
+			return _mediaObject != null ? _mediaObject.name() : "";
 		}
 	}
 

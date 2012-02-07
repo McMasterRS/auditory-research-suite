@@ -8,6 +8,7 @@ import java.util.EventObject;
 import javax.swing.SwingUtilities;
 
 import edu.mcmaster.maplelab.av.TimeTracker;
+import edu.mcmaster.maplelab.av.AVStimulusListener;
 import edu.mcmaster.maplelab.av.media.Playable;
 import edu.mcmaster.maplelab.av.media.PlayableListener;
 import edu.mcmaster.maplelab.av.media.MediaType.MediaWrapper;
@@ -29,8 +30,14 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 	private final MediaWrapper<Playable> _media;
 	/** Indicator for type of media (audio and/or animation OR video). */
 	private final boolean _isVideo;
-	/** Time at which audio tone occurs within the audio file, if applicable. */
-	private Long _audioTone = null;
+	/** Onset delay for the contained media, if applicable. */
+	private final Long _inherentMediaDelay;
+	/** Media delay relative to animation, if applicable. */
+	private final Long _relativeMediaDelay;
+	/** Animation delay relative to media, if applicable. */
+	private final Long _relativeAnimationDelay;
+	/** Number of media and/or animation objects. */
+	private int _mediaObjectCount;
 	
 	/** Animation sequence, if applicable. */
 	private final AnimationSequence _animationSequence;
@@ -38,8 +45,6 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 	private final int _numPoints;
 	private final float _diskRadius;
 	private final boolean _connectDots;
-	/** Time at which animation strike occurs within the animation sequence. */
-	private Long _animationStrike = null;
 	/** Experimental timing offset value, used for offset
 	 *  when animation and audio are both present. */
 	private final long _offset;
@@ -47,7 +52,7 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 	/** Runner of various media types. */
 	private TrialRunner _trialRunner = null;
 	/** Trial run listeners. */
-	private ArrayList<TrialPlaybackListener> _listeners;
+	private ArrayList<AVStimulusListener> _listeners;
 	
 	/** Media start times at last run (approx). */
 	private Long _animationStart = null;
@@ -57,16 +62,74 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 	 * Constructor.
 	 */
 	public AVTrial(AnimationSequence animationSequence, boolean isVideo, MediaWrapper<Playable> media, 
-			Long timingOffset, int animationPoints, float diskRadius, boolean connectDots) {
+			Long timingOffset, int animationPoints, float diskRadius, boolean connectDots, Long mediaDelay) {
 		
 		_animationSequence = animationSequence;
 		_isVideo = isVideo;
 		_offset = timingOffset;
 		_numPoints = animationPoints;
 		_media = media;
-		
+		_inherentMediaDelay = mediaDelay;
 		_diskRadius = diskRadius;
 		_connectDots = connectDots;
+		_mediaObjectCount = 0;
+		
+		// gather durations
+		Playable playable = _media != null ? _media.getMediaObject() : null;;
+		long mediaDuration = 0;
+		if (playable != null) {
+			mediaDuration = playable.duration();
+			++_mediaObjectCount;
+		}
+		long aniDuration = 0;
+		if (_animationSequence != null) {
+			aniDuration = _animationSequence.getTotalAnimationTime();
+			++_mediaObjectCount;
+		}
+		
+		// if not 2 items to play, don't calculate
+		boolean animation = aniDuration > 0;
+		if (!animation || mediaDuration == 0) {
+			_relativeMediaDelay = (long) 0;
+			_relativeAnimationDelay = (long) 0;
+		}
+		else {
+			// figure out: 	1. which stimulus starts first
+			//				2. how much to delay 2nd stimulus
+			long aniStrike = _animationSequence.getStrikeTime();
+			boolean animationFirst = aniStrike > _inherentMediaDelay - _offset;
+			if (animationFirst) {
+				_relativeMediaDelay = aniStrike - _inherentMediaDelay + _offset;
+				_relativeAnimationDelay = (long) 0;
+			}
+			else {
+				_relativeAnimationDelay = _inherentMediaDelay - aniStrike - _offset;
+				_relativeMediaDelay = (long) 0;
+			}
+		}
+	}
+	
+	/**
+	 * Get the delay of the expected animation start time relative to
+	 * the media start time in milliseconds.
+	 */
+	public Long getAnimationDelay() {
+		return _relativeAnimationDelay;
+	}
+	
+	/**
+	 * Get the delay of the expected media start time relative to
+	 * the animation start time in milliseconds.
+	 */
+	public Long getMediaDelay() {
+		return _relativeMediaDelay;
+	}
+	
+	/**
+	 * Get the number of media objects in this trial.  Convenience method.
+	 */
+	public int getNumMediaObjects() {
+		return _mediaObjectCount;
 	}
 	
 	public MediaWrapper<Playable> getMedia() {
@@ -90,10 +153,24 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 	}
 	
 	/**
+	 * Mark the animation start time in milliseconds.
+	 */
+	public void markAnimationStart(Long animationStart) {
+		_animationStart = animationStart;
+	}
+	
+	/**
 	 * Get the approximate animation start time during the last run of this trial, if available.
 	 */
 	public Long getLastAnimationStart() {
 		return _animationStart;
+	}
+	
+	/**
+	 * Mark the media start time in milliseconds.
+	 */
+	public void markMediaStart(Long mediaStart) {
+		_mediaStart = mediaStart;
 	}
 	
 	/**
@@ -145,41 +222,39 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 		String aspect = _animationSequence != null ? 
 				String.valueOf(_animationSequence.getPointAspect()) : "N/A";
 		String audio = _media != null && !isVideo() ? _media.getName() : "N/A";
-		String audioOnset = _audioTone != null ? _audioTone.toString() : "0";
+		String audioOnset = _inherentMediaDelay != null ? _inherentMediaDelay.toString() : "0";
+		String delays = "";
+		if (_relativeAnimationDelay != 0) {
+			delays = String.format("\tAudio begins at time 0\n\tAnimation delayed by %d ms", 
+					_relativeAnimationDelay);
+		}
+		else if (_relativeMediaDelay != 0) {
+			delays = String.format("\tAnimation begins at time 0\n\tAudio delayed by %d ms", 
+					_relativeMediaDelay);
+		}
 		String format = "Trial %d:\n\tAudio file: %s\n\tOffset: %d\n\tTone onset delay: %s\n" +
 				"\tAnimation file: %s\n\tFrame count: %s\n\tAnimation points: %d\n" +
-				"\tAnimation hit point(s): %s\n\tConnect points: %b\n\tPoint aspect: %s";
+				"\tAnimation hit point(s): %s\n\tConnect points: %b\n\tPoint aspect: %s\n%s";
 		return String.format(format, getNum(), audio, _offset, audioOnset, ani, frames, _numPoints, 
-				hits, _connectDots, aspect);
-	}
-	
-	/**
-	 * Get the total animation time.
-	 */
-	public long getAnimationDuration() {
-		if (getAnimationSequence() == null) return (long) 0;
-		return getAnimationSequence().getTotalAnimationTime();
+				hits, _connectDots, aspect, delays);
 	}
 	
 	/**
 	 * Get the time that the strike occurs (mallet head is at its lowest point).
 	 */
 	public long getAnimationStrikeTime() {
-		if (_animationStrike == null) {
-			_animationStrike = _animationSequence != null ? _animationSequence.getStrikeTime() : 0;
-		}
-		return _animationStrike;
+		return _animationSequence != null ? _animationSequence.getStrikeTime() : 0;
 	}
 	
 	/**
 	 * Get the time the tone occurs (tone onset delay).
 	 */
 	public long getAudioToneOnset() {
-		return _audioTone != null ? _audioTone : 0;
+		return !isVideo() && _inherentMediaDelay != null ? _inherentMediaDelay : 0;
 	}
 	
-	public synchronized void preparePlayback(AVSession<?, ?, ?> session, AnimationRenderer renderer) {
-		_trialRunner = new TrialRunner(session, renderer);
+	public synchronized void preparePlayback(AnimationRenderer renderer) {
+		_trialRunner = new TrialRunner(renderer);
 	}
 	
 	/**
@@ -196,30 +271,30 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 	/**
 	 * Add a playback listener.
 	 */
-	public void addPlaybackListener(TrialPlaybackListener listener) {
-		if (_listeners == null) _listeners = new ArrayList<TrialPlaybackListener>();
+	public void addPlaybackListener(AVStimulusListener listener) {
+		if (_listeners == null) _listeners = new ArrayList<AVStimulusListener>();
 		_listeners.add(listener);
 	}
 	
 	/**
 	 * Remove a playback listener.
 	 */
-	public void removePlaybackListener(TrialPlaybackListener listener) {
+	public void removePlaybackListener(AVStimulusListener listener) {
 		if (_listeners != null) _listeners.remove(listener);
 	}
+	
+	
 	
 	/**
 	 * Class for encapsulating media preparation and running.
 	 */
 	private class TrialRunner {
-		private final AVSession<?, ?, ?> _session;
 		private final AnimationRenderer _renderer;
 		private final AnimationRunnable _aniRunner;
 		private final Thread _mediaThread;
 		private int _playCount = 3;
 		
-		public TrialRunner(AVSession<?, ?, ?> session, AnimationRenderer renderer) {
-			_session = session;
+		public TrialRunner(AnimationRenderer renderer) {
 			_renderer = renderer;
 			_animationStart = null;
 			_mediaStart = null;
@@ -227,8 +302,7 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 			// gather media data
 			final Playable media = isVideo() ? getVideoPlayable() : getAudioPlayable();
 			long mediaDuration = media != null ? media.duration() : 0; 
-			_audioTone = media != null ? _session.getToneOnsetTime(media.name()) : 0;
-			long aniDuration = getAnimationDuration();	
+			long aniDuration = _animationSequence != null ? _animationSequence.getTotalAnimationTime() : 0;
 			
 			// if nothing to play, return
 			boolean animation = aniDuration > 0;
@@ -239,30 +313,12 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 			}
 			
 			_playCount = animation && mediaDuration > 0 ? 2 : 1;
-			long aniDelay = 0, mediaDelay = 0;
-			
-			// offset calculations only necessary if synchronizing animation w/ audio
-			if (animation) {
-				// figure out: 	1. which stimulus starts first
-				//				2. how much to delay 2nd stimulus
-				long aniStrike = getAnimationStrikeTime();
-				long offset = getOffset();
-				boolean animationFirst = aniStrike > _audioTone - offset;
-				if (animationFirst) {
-					mediaDelay = aniStrike - _audioTone + offset;
-					LogContext.getLogger().fine(String.format("-> Delay audio start by %d", mediaDelay));
-				}
-				else {
-					aniDelay = _audioTone - aniStrike - offset;
-					LogContext.getLogger().fine(String.format("-> Delay animation start by %d", aniDelay));
-				}
-			}
 				
 			// establish reference time
 			long currTime = System.currentTimeMillis();
 			
 			if (animation) {
-				_aniRunner = new AnimationRunnable(_renderer, aniDelay, currTime);
+				_aniRunner = new AnimationRunnable(_renderer, _relativeAnimationDelay, currTime);
 				_renderer.addAnimationListener(new AnimationListener() {
 					@Override
 					public void animationDone() {
@@ -284,10 +340,10 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 			
 			
 			if (media != null) {
-				_mediaThread = new Thread(new MediaRunnable(media, mediaDelay, currTime));
+				_mediaThread = new Thread(new MediaRunnable(media, _relativeMediaDelay, currTime));
 				media.addListener(new PlayableListener() {
 					@Override
-					public void playableEnded(EventObject e) {
+					public void playableEnded() {
 						markFinish(null, this);
 					}
 				});
@@ -320,8 +376,8 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 			}
 			
 			if (_playCount == 0 && _listeners != null) {
-				for (TrialPlaybackListener tpl : _listeners) {
-					tpl.playbackEnded();
+				for (AVStimulusListener tpl : _listeners) {
+					tpl.stimuliComplete();
 				}
 				
 				_trialRunner = null;

@@ -60,6 +60,14 @@ public class Scheduler {
 	}
 	
 	/**
+	 * Remove the given Scheduled item.
+	 */
+	public void unSchedule(Scheduled sched) {
+		_recurring.remove(new Metronome(sched));
+		_alarms.remove(new Alarm(sched, (long) 0));
+	}
+	
+	/**
 	 * Schedule the given action to occur repeatedly every period via Scheduled.markTime.
 	 */
 	public void schedule(Scheduled sched) {
@@ -166,6 +174,17 @@ public class Scheduler {
 			long relative = time - _startTime;
 			_sched.markTime(new ScheduleEvent(time, relative));
 		}
+		
+		/********* Must be implemented to support removal! *******/
+		@Override
+		public boolean equals(Object o) {
+			return o instanceof Metronome && ((Metronome) o)._sched == this._sched;
+		}
+		@Override
+		public int hashCode() {
+			return _sched.hashCode();
+		}
+		/*********************************************************/
 	}
 	
 	/**
@@ -189,6 +208,17 @@ public class Scheduler {
 			long relative = time - _startTime;
 			_sched.alarm(new ScheduleEvent(time, relative));
 		}
+
+		/********* Must be implemented to support removal! *******/
+		@Override
+		public boolean equals(Object o) {
+			return o instanceof Alarm && ((Alarm) o)._sched == this._sched;
+		}
+		@Override
+		public int hashCode() {
+			return _sched.hashCode();
+		}
+		/*********************************************************/
 	}
 	
 	public static void main(String[] args) {

@@ -18,8 +18,8 @@ public class TOJBlock extends AVBlock<TOJSession, TOJTrial> {
 	@Override
 	protected TOJTrial createTrial(AnimationSequence animationSequence,
 			boolean isVideo, MediaWrapper<Playable> media, Long timingOffset,
-			int animationPoints, float diskRadius, boolean connectDots) {
+			int animationPoints, float diskRadius, boolean connectDots, Long mediaDelay) {
 		return new TOJTrial(animationSequence, isVideo, media, timingOffset, animationPoints, 
-				diskRadius, connectDots);
+				diskRadius, connectDots, mediaDelay);
 	}
 }

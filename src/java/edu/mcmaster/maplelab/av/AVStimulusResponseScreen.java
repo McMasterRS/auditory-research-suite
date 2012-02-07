@@ -32,7 +32,6 @@ import net.miginfocom.swing.MigLayout;
 import edu.mcmaster.maplelab.av.datamodel.AVBlock;
 import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.av.datamodel.AVTrial;
-import edu.mcmaster.maplelab.av.datamodel.TrialPlaybackListener;
 import edu.mcmaster.maplelab.av.datamodel.AVBlock.AVBlockType;
 import edu.mcmaster.maplelab.av.media.VideoPanel;
 import edu.mcmaster.maplelab.av.media.animation.AnimationPanel;
@@ -417,9 +416,9 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
      */
     private class PlaybackRunnable implements Runnable {
         private final T _trial;
-        private TrialPlaybackListener _listener = new TrialPlaybackListener() {
+        private AVStimulusListener _listener = new AVStimulusListener() {
 			@Override
-			public void playbackEnded() {
+			public void stimuliComplete() {
 				trialPlaybackDone();
 			}
         };
@@ -427,7 +426,7 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         public PlaybackRunnable(T trial) {
             _trial = trial;
             _trial.addPlaybackListener(_listener);
-            _trial.preparePlayback(_session, _renderer);
+            _trial.preparePlayback(_renderer);
         }
          
         public void run() {

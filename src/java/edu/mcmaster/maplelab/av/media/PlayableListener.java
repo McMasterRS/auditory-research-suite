@@ -17,12 +17,12 @@ public abstract class PlayableListener implements LineListener {
 
 	@Override
 	public void update(LineEvent event) {
-		if (event.getType() == Type.STOP) playableEnded(event);
+		if (event.getType() == Type.STOP) playableEnded();
 	}
 	
 	/**
 	 * Method called when playback has ended.
 	 */
-	public abstract void playableEnded(EventObject e);
+	public abstract void playableEnded();
 
 }
