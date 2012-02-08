@@ -3,14 +3,14 @@
  */
 package edu.mcmaster.maplelab.av.media.animation;
 
-import javax.media.opengl.awt.GLJPanel;
+import javax.media.opengl.GLAutoDrawable;
 
 /**
  * @author bguseman
  *
  */
 public interface AnimationTrigger {
-	public void setCanvas(GLJPanel canvas);
+	public void setCanvas(GLAutoDrawable canvas);
 	public void start();
 	public void stop();
 }

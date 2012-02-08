@@ -7,19 +7,12 @@
  */
 package edu.mcmaster.maplelab.av.media.animation;
 
-import java.awt.BorderLayout;
-import java.awt.Cursor;
-import java.awt.Dimension;
+import java.awt.*;
 import java.io.File;
 
-import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLEventListener;
-import javax.media.opengl.awt.GLJPanel;
-import javax.media.opengl.GLProfile;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-import javax.swing.ToolTipManager;
+import javax.media.opengl.*;
+import javax.media.opengl.awt.GLCanvas;
+import javax.swing.*;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -36,7 +29,7 @@ import edu.mcmaster.maplelab.common.sound.NotesEnum;
  * @author Catherine Elder <cje@datamininglab.com>
  */
 public class AnimationPanel extends JPanel {
-	private final GLJPanel _canvas;
+	private final GLCanvas _canvas;
 	private GLEventListener _renderer;
 	private Animator _defaultTrigger;
 	private AnimationTrigger _altTrigger = null;
@@ -60,7 +53,7 @@ public class AnimationPanel extends JPanel {
     	
         GLCapabilities caps = new GLCapabilities(GLProfile.get(GLProfile.GL2));
 
-        _canvas = new GLJPanel(caps);
+        _canvas = new GLCanvas(caps);
         _canvas.setName("glCanvas");
         setRenderer(renderer);
         

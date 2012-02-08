@@ -3,7 +3,7 @@
  */
 package edu.mcmaster.maplelab.av.media.animation;
 
-import javax.media.opengl.awt.GLJPanel;
+import javax.media.opengl.GLAutoDrawable;
 
 import edu.mcmaster.maplelab.av.ScheduleEvent;
 import edu.mcmaster.maplelab.av.Scheduled;
@@ -13,7 +13,7 @@ import edu.mcmaster.maplelab.av.Scheduled;
  *
  */
 public class ScheduledAnimationTrigger implements AnimationTrigger, Scheduled {
-	private GLJPanel _canvas;
+	private GLAutoDrawable _canvas;
 	private boolean _running = false;
 
 	/**
@@ -33,10 +33,10 @@ public class ScheduledAnimationTrigger implements AnimationTrigger, Scheduled {
 	}
 
 	/**
-	 * @see edu.mcmaster.maplelab.av.media.animation.AnimationTrigger#setCanvas(javax.media.opengl.awt.GLJPanel)
+	 * @see edu.mcmaster.maplelab.av.media.animation.AnimationTrigger#setCanvas(GLAutoDrawable)
 	 */
 	@Override
-	public void setCanvas(GLJPanel canvas) {
+	public void setCanvas(GLAutoDrawable canvas) {
 		_canvas = canvas;
 	}
 

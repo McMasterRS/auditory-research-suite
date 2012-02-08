@@ -188,7 +188,7 @@ public class Scheduler {
 	}
 	
 	/**
-	 * Class for running alarm event updates.
+	 * Class for running alarm event updates (one time events).
 	 */
 	private class Alarm implements Runnable {
 		private final Scheduled _sched;

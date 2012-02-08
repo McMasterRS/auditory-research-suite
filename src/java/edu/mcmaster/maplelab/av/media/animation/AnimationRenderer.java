@@ -16,12 +16,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.media.opengl.DebugGL2;
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLEventListener;
+import javax.media.opengl.*;
 import javax.media.opengl.glu.GLU;
 import javax.vecmath.Point2f;
+
+import com.jogamp.opengl.util.FPSAnimator;
 
 import edu.mcmaster.maplelab.av.TimeTracker;
 
@@ -40,7 +39,7 @@ public class AnimationRenderer implements GLEventListener {
 	private Point _lastLoc = null;
 	
 	private ArrayList<AnimationListener> _listeners;
-
+	
 	/**
 	 * Constructor.
 	 */
@@ -66,6 +65,8 @@ public class AnimationRenderer implements GLEventListener {
 		gl.glEnable(GL_BLEND);
 		gl.glLineWidth(1.5f);
 		gl.glEnable(GL_POLYGON_SMOOTH);
+		
+		gl.setSwapInterval(1);
 	}
 
 
@@ -99,9 +100,10 @@ public class AnimationRenderer implements GLEventListener {
 		}
 		displayFrame(gl, as.getFrameAtTime(currentTime));
 		
-		/*long nano = System.nanoTime();
+/*		long nano = System.nanoTime(); */
 		gl.glFlush();
 		gl.glFinish();
+/*
 		nano = System.nanoTime() - nano;
 		System.out.println(nano);*/
 		
