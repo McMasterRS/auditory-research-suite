@@ -1,5 +1,9 @@
-/**
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
  * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
  */
 package edu.mcmaster.maplelab.av.media;
 
@@ -11,8 +15,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
 
 import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.av.media.MediaParams.MediaParamValue;
@@ -54,6 +56,10 @@ public abstract class MediaType<T extends MediaSource> {
 			float volume = session.getPlaybackGain();
 			return SoundClip.findPlayable(filename, directory, volume);
 		}
+		@Override
+		public void initializeCount(int count) {
+			SoundClip.initializeSoundCount(count);
+		}
 	};
 	public static final MediaType<Playable> VIDEO = new MediaType<Playable>("video", 
 				ParameterKeys.videoParams, ParameterKeys.videoFileFormat) {
@@ -70,6 +76,8 @@ public abstract class MediaType<T extends MediaSource> {
 			float volume = session.getPlaybackGain();
 			return QTVideoClip.findPlayable(filename, directory, volume);
 		}
+		@Override
+		public void initializeCount(int count) {}
 	};
 	public static final MediaType<AnimationSequence> ANIMATION = 
 				new MediaType<AnimationSequence>("animation", ParameterKeys.animationParams, 
@@ -95,6 +103,8 @@ public abstract class MediaType<T extends MediaSource> {
 				return null;
 			}
 		}
+		@Override
+		public void initializeCount(int count) {}
 	};
 	
 	private final String _name;
@@ -267,6 +277,7 @@ public abstract class MediaType<T extends MediaSource> {
 	protected abstract List<String> getFileExtensions(AVSession<?, ?, ?> session);
 	protected abstract File getDirectory(AVSession<?, ?, ?> session);
 	protected abstract T findMediaObject(String filename, File directory, AVSession<?, ?, ?> session);
+	public abstract void initializeCount(int count);
 	
 	public static class MediaWrapper<T extends MediaSource> {
 		private final MediaType<T> _type;

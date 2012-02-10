@@ -1,10 +1,19 @@
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
+ * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
+ */
 package edu.mcmaster.maplelab.av;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -20,13 +29,14 @@ import java.util.concurrent.TimeUnit;
 public class Scheduler {
 
 	private long _startTime;
-	private final long _updatePeriod;
+	private long _updatePeriod;
 	private final int _threads;
 	private final ScheduledExecutorService _executor;
 	private TimerClock _clock;
 	private ScheduledFuture<?> _clockFuture;
 	private final Set<Alarm> _alarms;
 	private final Set<Metronome> _recurring;
+	private CountDownLatch _controlLatch = null;
 	
 	/**
 	 * Create a scheduler that runs repeated events after every update period
@@ -39,14 +49,29 @@ public class Scheduler {
 		_threads = threads;
 		_alarms = new HashSet<Alarm>();
 		_recurring = new HashSet<Metronome>();
-		_executor = Executors.newScheduledThreadPool(1);
+		_executor = Executors.newScheduledThreadPool(1, new PriorityThreadFactory());
+		_clock = new TimerClock();
+	}
+	
+	public void setUpdatePeriod(long updatePeriod) {
+		_updatePeriod = updatePeriod;
+	}
+
+	/**
+	 * Start the scheduler.  Some initialization overhead will occur.
+	 * The scheduler will not actually begin until the latch is released.
+	 */
+	public void start(CountDownLatch controlLatch) {
+		_controlLatch = controlLatch;
+		
+		startTimer();
 	}
 
 	/**
 	 * Start the scheduler.  Some initialization overhead will occur.
 	 */
 	public void start() {
-		startTimer();
+		start(null);
 	}
 	
 	/**
@@ -101,15 +126,19 @@ public class Scheduler {
 	private void startTimer() {
 		if (_clockFuture != null) return;
 		
-		_clockFuture = _executor.scheduleAtFixedRate(_clock = new TimerClock(), 0, 
-				_updatePeriod, TimeUnit.NANOSECONDS);
+		_clockFuture = _executor.schedule(_clock, 0, TimeUnit.NANOSECONDS);
+		
+		//_clockFuture = _executor.scheduleAtFixedRate(_clock, 0, 
+		//		_updatePeriod, TimeUnit.NANOSECONDS);
 	}
 	
 	private void stopTimer() {
 		if (_clockFuture != null) {
-			_clockFuture.cancel(true);
+			//_clockFuture.cancel(true);
 			_clockFuture = null;
 			_clock.shutDown();
+			_controlLatch = null;
+			_clock = new TimerClock();
 		}
 	}
 	
@@ -117,8 +146,8 @@ public class Scheduler {
 	 * Class for running scheduled items at regular intervals.
 	 */
 	private class TimerClock implements Runnable {
-		private final ScheduledExecutorService _exec = Executors.newScheduledThreadPool(_threads);
-		private boolean _initialized = false;
+		private final ScheduledExecutorService _exec = 
+				Executors.newScheduledThreadPool(_threads, new PriorityThreadFactory());
 		
 		public void shutDown() {
 			_exec.shutdown();
@@ -127,16 +156,20 @@ public class Scheduler {
 		
 		@Override
 		public void run() {
-			if (!_initialized) {
-				_startTime = System.nanoTime() + _updatePeriod;
-				for (Alarm alarm : _alarms) {
-					_exec.schedule(alarm, alarm.getDelay() + _updatePeriod, TimeUnit.NANOSECONDS);
+			if (_controlLatch != null) {
+				try {
+					_controlLatch.await();
 				}
-				_initialized = true;
+				catch (InterruptedException e) {} // if wait fails, just move on
+			}
+			
+			_startTime = System.nanoTime() + _updatePeriod;
+			for (Alarm alarm : _alarms) {
+				_exec.schedule(alarm, alarm.getDelay() + _updatePeriod, TimeUnit.NANOSECONDS);
 			}
 			
 			for (Metronome m : _recurring) {
-				_exec.schedule(m, _updatePeriod, TimeUnit.NANOSECONDS);
+				_exec.scheduleAtFixedRate(m, _updatePeriod, _updatePeriod, TimeUnit.NANOSECONDS);
 			}
 		}
 	}
@@ -171,8 +204,7 @@ public class Scheduler {
 		@Override
 		public void run() {
 			long time = System.nanoTime();
-			long relative = time - _startTime;
-			_sched.markTime(new ScheduleEvent(time, relative));
+			_sched.markTime(new ScheduleEvent(time, time - _startTime));
 		}
 		
 		/********* Must be implemented to support removal! *******/
@@ -205,8 +237,7 @@ public class Scheduler {
 		@Override
 		public void run() {
 			long time = System.nanoTime();
-			long relative = time - _startTime;
-			_sched.alarm(new ScheduleEvent(time, relative));
+			_sched.alarm(new ScheduleEvent(time, time - _startTime));
 		}
 
 		/********* Must be implemented to support removal! *******/
@@ -219,6 +250,16 @@ public class Scheduler {
 			return _sched.hashCode();
 		}
 		/*********************************************************/
+	}
+	
+	private static class PriorityThreadFactory implements ThreadFactory {
+		ThreadFactory _parent = Executors.defaultThreadFactory();
+		@Override
+		public Thread newThread(Runnable r) {
+			Thread retval = _parent.newThread(r);
+			retval.setPriority(Thread.MAX_PRIORITY - (r instanceof Metronome ? 0 : 1));
+			return retval;
+		}
 	}
 	
 	public static void main(String[] args) {

@@ -80,8 +80,9 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
 
     private final S _session;
 	private final boolean _isWarmup;
-	private AnimationPanel _aniPanel;
-	private final AnimationRenderer _renderer;
+	private final StimulusScheduler _scheduler;
+	//private AnimationPanel _aniPanel;
+	//private final AnimationRenderer _renderer;
 	private VideoPanel _vidPanel;
 	private final ResponseKeyListener _keyListener;
 
@@ -91,8 +92,8 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
 		
 		_session = session;
 		_isWarmup = isWarmup;
-		StimulusScheduler _scheduler = StimulusScheduler.getInstance();
-		_renderer = _scheduler.getAnimationRenderer();
+		_scheduler = StimulusScheduler.getInstance();
+		//_renderer = _scheduler.getAnimationRenderer();
 		_keyListener = new ResponseKeyListener();
 		
 		setTitleText(_session.getString(
@@ -339,6 +340,9 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         
         public void run() {
             try {
+                // load next trial
+                _scheduler.setStimulusSource(_trial);
+                
             	SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
                         setEnabled(false);
@@ -364,20 +368,22 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
                 SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
                     	B block = currBlock();
+                    	AnimationPanel _aniPanel = _scheduler.getAnimationPanel();
+                    	_aniPanel.setSize(_session.getScreenWidth(), _session.getScreenHeight());
 
                     	if (block.getType() == AVBlockType.AUDIO_ANIMATION) {
                         	// create and add animation panel if not done
-                        	if (_aniPanel == null) {
-                                _aniPanel = new AnimationPanel(_renderer, 
-                                		new Dimension(_session.getScreenWidth(), _session.getScreenHeight()));
-
+                        	//if (_aniPanel == null) {
+                                //_aniPanel = new AnimationPanel(_renderer, 
+                                //		new Dimension(_session.getScreenWidth(), _session.getScreenHeight()));
+                    			getContentPanel().remove(_aniPanel);
                                 getContentPanel().add(_aniPanel, BorderLayout.CENTER);
-                        	}
+                        	//}
                     		_aniPanel.start();
                     	}
-                    	else if (_aniPanel != null) {
+                    	else {//if (_aniPanel != null) {
                     		getContentPanel().remove(_aniPanel);
-                    		_aniPanel = null;
+                    		//_aniPanel = null;
                     	}
                     	
                     	if (block.getType() == AVBlockType.VIDEO_ONLY) {
@@ -425,8 +431,9 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         
         public PlaybackRunnable(T trial) {
             _trial = trial;
-            _trial.addPlaybackListener(_listener);
-            _trial.preparePlayback(_renderer);
+            _scheduler.addStimulusListener(_listener);
+            //_trial.addPlaybackListener(_listener);
+            //_trial.preparePlayback(_renderer);
         }
          
         public void run() {
@@ -434,7 +441,8 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
                 SwingUtilities.invokeAndWait(new Runnable() {
                 	@Override
                 	public void run() {
-                		_trial.play();
+                		_scheduler.start();
+                		//_trial.play();
                 	}
                 });
             }
@@ -446,8 +454,11 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         private synchronized void trialPlaybackDone() {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
+                	AnimationPanel _aniPanel = _scheduler.getAnimationPanel();
                 	if (_aniPanel != null) _aniPanel.stop();
-                	_trial.removePlaybackListener(_listener);
+                	//_trial.removePlaybackListener(_listener);
+                	_scheduler.stop();
+                	_scheduler.removeStimulusListener(_listener);
                     _statusText.setText(_session.getString(ConfigKeys.enterResponseText, null));
                     setEnabled(true);
                     _response.requestFocusInWindow();

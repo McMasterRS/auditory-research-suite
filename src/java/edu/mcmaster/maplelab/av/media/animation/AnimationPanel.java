@@ -31,8 +31,8 @@ import edu.mcmaster.maplelab.common.sound.NotesEnum;
 public class AnimationPanel extends JPanel {
 	private final GLCanvas _canvas;
 	private GLEventListener _renderer;
-	private Animator _defaultTrigger;
-	private AnimationTrigger _altTrigger = null;
+	private final Animator _defaultTrigger;
+	private final AnimationTrigger _altTrigger;
     
     static {
         // Put JOGL version information into system properties to 
@@ -45,10 +45,18 @@ public class AnimationPanel extends JPanel {
     }
     
     public AnimationPanel(GLEventListener renderer) {
-    	this(renderer, null);
+    	this(renderer, null, null);
+    }
+    
+    public AnimationPanel(GLEventListener renderer, AnimationTrigger trigger) {
+    	this(renderer, trigger, null);
     }
     
     public AnimationPanel(GLEventListener renderer, Dimension dim) {
+    	this(renderer, null, dim);
+    }
+    
+    public AnimationPanel(GLEventListener renderer, AnimationTrigger trigger, Dimension dim) {
     	super(new MigLayout("insets 0, nogrid, center, fill", "center", "center"));
     	
         GLCapabilities caps = new GLCapabilities(GLProfile.get(GLProfile.GL2));
@@ -57,10 +65,23 @@ public class AnimationPanel extends JPanel {
         _canvas.setName("glCanvas");
         setRenderer(renderer);
         
-        useDefaultTrigger();
+        if (trigger != null) {
+        	_defaultTrigger = null;
+        	_altTrigger = trigger;
+        	_altTrigger.setCanvas(_canvas);
+        }
+        else {
+        	_altTrigger = null;
+        	_defaultTrigger = new Animator(_canvas);
+            _defaultTrigger.setPrintExceptions(true);
+        }
  		
         add(_canvas);
-        _canvas.setPreferredSize(dim != null ? dim : new Dimension(640, 480));
+        setSize(dim);
+    }
+    
+    public void setSize(Dimension dim) {
+    	_canvas.setPreferredSize(dim != null ? dim : new Dimension(640, 480));
     }
     
     /**
@@ -70,23 +91,6 @@ public class AnimationPanel extends JPanel {
     	if (_renderer != null) _canvas.removeGLEventListener(_renderer);
     	_renderer = renderer;
     	if (_renderer != null) _canvas.addGLEventListener(_renderer);
-    }
-    
-    /**
-     * Use the default rendering trigger, which paints as quickly as possible.
-     */
-    public void useDefaultTrigger() {
-    	_defaultTrigger = new Animator(_canvas);
-        _defaultTrigger.setPrintExceptions(true);
-    }
-    
-    /**
-     * Override the default rendering trigger with the given trigger.
-     */
-    public void overrideDefaultTrigger(AnimationTrigger trigger) {
-    	_defaultTrigger = null;
-    	_altTrigger = trigger;
-    	_altTrigger.setCanvas(_canvas);
     }
     
     /**

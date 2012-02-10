@@ -11,32 +11,32 @@ import static javax.media.opengl.GL2.*;
 
 import java.awt.Point;
 import java.awt.geom.Rectangle2D;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.media.opengl.*;
 import javax.media.opengl.glu.GLU;
 import javax.vecmath.Point2f;
-
-import com.jogamp.opengl.util.FPSAnimator;
-
-import edu.mcmaster.maplelab.av.TimeTracker;
 
 /**
  * AnimationRenderer animates an AnimationSequence.
  * @author Catherine Elder <cje@datamininglab.com>
  */
 public class AnimationRenderer implements GLEventListener { 
+	private static final boolean APPLE_MODE = true;
 	public static final String TIMESTAMPS = "ANIMATION_TIMESTAMPS";
 	
 	private AnimationSource _source = null;
+	private GLDrawDelegate _proxy = null;
 	
-	private long _startTime;				// ms
+	private long _startTime;		
+	private TimeUnit _timeUnit = TimeUnit.MILLISECONDS;
 	private boolean _animatedOnce = true; // set to true when 1 stroke is animated
 	private boolean _extentsDirty = true;
 	private Point _lastLoc = null;
+	private CountDownLatch _controlLatch = null;
 	
 	private ArrayList<AnimationListener> _listeners;
 	
@@ -44,6 +44,25 @@ public class AnimationRenderer implements GLEventListener {
 	 * Constructor.
 	 */
 	public AnimationRenderer() {
+	}
+	
+	public void setControlLatch(CountDownLatch latch) {
+		_controlLatch = latch;
+		// XXX: for some reason this messes things up
+		// release immediately if applicable
+		/*if (_source != null && getCurrentTime() >= _source.getAnimationSequence().getStrikeTime()) {
+			_controlLatch.countDown();
+			_controlLatch = null;
+		}*/
+
+	}
+	
+	public void setDisplayProxy(GLDrawDelegate delegate) {
+		_proxy = delegate;
+	}
+	
+	public void clearProxy() {
+		setDisplayProxy(null);
 	}
 
 	/** Set the current animation source. Doing so implies starting at the first frame. */
@@ -72,12 +91,15 @@ public class AnimationRenderer implements GLEventListener {
 
 	@Override
 	public void display(GLAutoDrawable d) {
-		//TimeTracker.timeStamp(TIMESTAMPS);
-		
-		// have to force reshape on animation change
-		if (_extentsDirty && _lastLoc != null) {
-			reshape(d, _lastLoc.x, _lastLoc.y, d.getWidth(), d.getHeight());
+		if (_proxy != null) {
+			// have to force reshape on animation change
+			if (_extentsDirty && _lastLoc != null) {
+				reshape(d, _lastLoc.x, _lastLoc.y, d.getWidth(), d.getHeight());
+			}
+			_proxy.draw(d);
+			return;
 		}
+		
 //		GL2 gl = new DebugGL2((GL2) d.getGL());
 		GL2 gl = d.getGL().getGL2();
 		
@@ -93,22 +115,41 @@ public class AnimationRenderer implements GLEventListener {
 		gl.glLoadIdentity();                                    //Reset The View
 		
 		AnimationSequence as = _source.getAnimationSequence();
-		long currentTime = (System.currentTimeMillis() - getStartTime());			// animate only once
 		
+		long currentTime = getCurrentTime();
 		if (currentTime > as.getTotalAnimationTime()) {
 			_animatedOnce = true;
 		}
 		displayFrame(gl, as.getFrameAtTime(currentTime));
+
+		if (APPLE_MODE) {
+			gl.glFlushRenderAPPLE();
+			//gl.glFinishRenderAPPLE(); //Not as consistent w/ this?
+		}
+		else {
+			gl.glFlush();
+			//gl.glFinish();
+		}
 		
-/*		long nano = System.nanoTime(); */
-		gl.glFlush();
-		gl.glFinish();
-/*
-		nano = System.nanoTime() - nano;
-		System.out.println(nano);*/
+		if (_controlLatch != null) {
+			_controlLatch.countDown();
+			_controlLatch = null;
+		}
 		
 		if (_animatedOnce) notifyListeners();
 	} 
+	
+	private long getCurrentTime() {
+		long currentTime = 0;
+		if (_timeUnit == TimeUnit.MILLISECONDS) {
+			currentTime = (System.currentTimeMillis() - getStartTime());			// animate only once
+		}
+		else {
+			currentTime = TimeUnit.MILLISECONDS.convert(System.nanoTime() - getStartTime(), 
+					TimeUnit.NANOSECONDS);
+		}
+		return currentTime;
+	}
 	
 	protected void notifyListeners() {
 		if (_listeners != null) {
@@ -224,6 +265,13 @@ public class AnimationRenderer implements GLEventListener {
 	}
 
 	public void setStartTime(long startTime) {
+		_timeUnit = TimeUnit.MILLISECONDS;
+		_startTime = startTime;
+		_animatedOnce = false;
+	}
+
+	public void setNanoStartTime(long startTime) {
+		_timeUnit = TimeUnit.NANOSECONDS;
 		_startTime = startTime;
 		_animatedOnce = false;
 	}
@@ -245,7 +293,12 @@ public class AnimationRenderer implements GLEventListener {
 
 	@Override
 	public void dispose(GLAutoDrawable arg0) {
-		// TODO Auto-generated method stub
-		
+	}
+	
+	/**
+	 * Interface for draw delegates.
+	 */
+	public interface GLDrawDelegate {
+		public void draw(GLAutoDrawable drawable);
 	}
 }

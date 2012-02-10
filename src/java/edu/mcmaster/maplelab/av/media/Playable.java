@@ -12,6 +12,8 @@
 
 package edu.mcmaster.maplelab.av.media;
 
+import java.util.concurrent.CountDownLatch;
+
 
 
 /**
@@ -22,6 +24,11 @@ package edu.mcmaster.maplelab.av.media;
  * @since Oct 1, 2007
  */
 public interface Playable extends MediaSource {
+    /**
+     * Initiate playback of the source. Blocks until latch released, 
+     * then blocks until playback is finished.
+     */
+    void play(CountDownLatch controlLatch);
     /**
      * Initiate playback of the source. Call blocks until playback
      * is finished.

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 
 import org.rococoa.Rococoa;
@@ -82,7 +83,17 @@ public class QTVideoClip implements Playable {
 
 	@Override
 	public void play() {
+    	play(null);
+    }
+
+    public void play(CountDownLatch latch) {
 		_movie.gotoBeginning();
+    	if (latch != null) {
+			try {
+				latch.await();
+			} 
+    		catch (InterruptedException e) {}
+    	}
 		_movie.play();
 		
 		Session.sleep(duration());

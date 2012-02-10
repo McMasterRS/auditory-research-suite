@@ -16,6 +16,7 @@ import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.Block;
 
 public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> extends Block<S, T> {
+	private static boolean _initAudioCount = false;
 	
 	public enum AVBlockType {
 		AUDIO_ONLY("Audio only"),
@@ -50,6 +51,12 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 		
 		float pointSize = session.getBaseAnimationPointSize();
 		boolean connect = session.connectDots();
+
+		List<Map<String, MediaParamValue>> audioCombinations = MediaType.AUDIO.buildParameterMaps(session);
+		if (session.includeAudioBlock()) {
+			MediaType.AUDIO.initializeCount(audioCombinations.size());
+			_initAudioCount = true;
+		}
 		
 		if (type == AVBlockType.VIDEO_ONLY) { 
 			List<Map<String, MediaParamValue>> videoCombinations = MediaType.VIDEO.buildParameterMaps(session);
@@ -61,7 +68,6 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 			}
 		}
 		else if (type == AVBlockType.AUDIO_ONLY) {
-			List<Map<String, MediaParamValue>> audioCombinations = MediaType.AUDIO.buildParameterMaps(session);
 			for (Map<String, MediaParamValue> map : audioCombinations) {
 				MediaWrapper<Playable> audio = MediaType.AUDIO.createMedia(session, map.values());
 				if (audio == null) continue;
@@ -79,17 +85,33 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 				sharedParams.addAll(MediaType.AUDIO.getParams(session));
 				sharedParams.retainAll(MediaType.ANIMATION.getParams(session));
 				
-				List<Map<String, MediaParamValue>> audioCombinations = MediaType.AUDIO.buildParameterMaps(session);
 				List<Map<String, MediaParamValue>> animationCombinations = MediaType.ANIMATION.buildParameterMaps(session);
+				
+				// have to do this in two steps to figure out total counts
+				List<Map<String, MediaParamValue>> audioRemovals = new ArrayList<Map<String, MediaParamValue>>();
+				List<Map<String, MediaParamValue>> animationRemovals = new ArrayList<Map<String, MediaParamValue>>();
 				for (Map<String, MediaParamValue> audioMap : audioCombinations) {
 					for (Map<String, MediaParamValue> animationMap : animationCombinations) {
-						boolean synced = true;
 						for (String param : sharedParams) {
 							MediaParamValue audioVal = audioMap.get(param);
-							MediaParamValue animationVal = audioMap.get(param);
-							synced = audioVal == animationVal;
+							MediaParamValue animationVal = animationMap.get(param);
+							if (audioVal != animationVal) {
+								audioRemovals.add(audioMap);
+								animationRemovals.add(animationMap);
+							}
 						}
-						if (!synced) continue;
+					}
+				}
+				audioCombinations.removeAll(audioRemovals);
+				animationCombinations.removeAll(animationRemovals);
+				if (!_initAudioCount) {
+					MediaType.AUDIO.initializeCount(audioCombinations.size());
+					_initAudioCount = true;
+				}
+				
+				// use reduced number of maps for actual trial construction
+				for (Map<String, MediaParamValue> audioMap : audioCombinations) {
+					for (Map<String, MediaParamValue> animationMap : animationCombinations) {
 						
 						MediaWrapper<Playable> audio = MediaType.AUDIO.createMedia(session, audioMap.values());
 						MediaWrapper<AnimationSequence> ani = 
@@ -107,7 +129,10 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 				}
 			}
 			else {
-				List<Map<String, MediaParamValue>> audioCombinations = MediaType.AUDIO.buildParameterMaps(session);
+				if (!_initAudioCount) {
+					MediaType.AUDIO.initializeCount(audioCombinations.size());
+					_initAudioCount = true;
+				}
 				List<Map<String, MediaParamValue>> animationCombinations = MediaType.ANIMATION.buildParameterMaps(session);
 				for (Map<String, MediaParamValue> audioMap : audioCombinations) {
 					for (Map<String, MediaParamValue> animationMap : animationCombinations) {

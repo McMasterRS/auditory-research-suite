@@ -1,5 +1,9 @@
-/**
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
  * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
  */
 package edu.mcmaster.maplelab.av.media.animation;
 
@@ -54,6 +58,13 @@ public class ScheduledAnimationTrigger implements AnimationTrigger, Scheduled {
 	@Override
 	public void stop() {
 		_running = false;
+	}
+	
+	/**
+	 * Force a rendering update.  Useful for initialization.
+	 */
+	public void forceDisplay() {
+		if (_canvas != null) _canvas.display();
 	}
 
 }

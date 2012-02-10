@@ -40,7 +40,6 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	private JButton _startButton;
 	
 	private StimulusScheduler _scheduler;
-	private AnimationRenderer _renderer;
 	private Boolean _video = null;
 
 	private JFrame _testFrame;
@@ -226,9 +225,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
             _testFrame.setLocation(w.getLocation().x + w.getWidth(), w.getLocation().y);
 
             _scheduler = StimulusScheduler.getInstance();
-            _renderer = _scheduler.getAnimationRenderer();
-            _aniPanel = new AnimationPanel(_renderer);
-            _aniPanel.overrideDefaultTrigger(_scheduler.getAnimationTrigger());
+            _aniPanel = _scheduler.getAnimationPanel();
 		}
 		
     	if (trial.isVideo()) {
@@ -256,7 +253,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 
         _testFrame.pack();
         
-        if(getSession().isOscilloscopeSensorMode()) {
+        if (getSession().isOscilloscopeSensorMode()) {
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
             Dimension size = _testFrame.getSize();
             _testFrame.setLocation(screenSize.width - size.width, screenSize.height - size.height);
@@ -337,7 +334,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		        //next.preparePlayback(_renderer);
 		        _scheduler.setStimulusSource(next);
 		        //next.addPlaybackListener(new LoopListener(next));
-		        _scheduler.addStimulusListener(new LoopListener(next));
+		        _scheduler.addStimulusListener(new LoopListener());
 		        //next.play();
 		        _scheduler.start();
 		    }
@@ -348,12 +345,6 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	}
 	
 	private class LoopListener implements AVStimulusListener {
-		private T _trial;
-		
-		public LoopListener(T trial) {
-			_trial = trial;
-		}
-		
 		@Override
 		public void stimuliComplete() {
 			_scheduler.stop();

@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 
 import javax.sound.sampled.*;
@@ -32,12 +33,33 @@ public class SoundClip implements Playable {
 	}
 	
     private static Map<String, Playable> _soundCache = new HashMap<String, Playable>();
+    private static int[] _bufferIDs = null;
+    private static int[] _sourceIDs = null;
+    private static int _index;
+    
+    /**
+     * Initialize the buffer and source id arrays according to the expected
+     * count;
+     */
+    public static void initializeSoundCount(int count) {
+    	_index = 0;
+    	_bufferIDs = new int[count];
+    	_sourceIDs = new int[count];
+    	
+    	AL al = ALFactory.getAL();
+        al.alGenBuffers(count, _bufferIDs, 0);
+        al.alGenSources(count, _sourceIDs, 0);
+    }
+    
+    
+    
     private final Clip _clip; // javax.media version
     private final Integer _sourceID; // open al version
     private final Integer _bufferID; // open al version
     private float _sourceVol = 1.0f;
     private final String _name;
     private int _desiredDur = -1;
+    private int _calculatedDur = Integer.MIN_VALUE;
     private ArrayList<PlayableListener> _listeners = new ArrayList<PlayableListener>();
     
     public SoundClip(String name, int source, int buffer) {
@@ -60,28 +82,31 @@ public class SoundClip implements Playable {
 
     public int getClipDuration() {
     	if (_bufferID != null) {
-        	/* Frequency is in terms of samples/second.
-        	 * Size is in terms of bytes.
-        	 * Bit-depth is sample size in bits (bits/sample).
-        	 * We want bytes * bits/byte * sample/bits * seconds/sample * milliseconds/second
-        	 */
-    		
-    		/*Buffer b = _sourceID.getBuffer();
-    		double bytes = b.getSize();
-    		double bitsPerByte = 8;
-    		double samplePerBits = 1d / (double) b.getBitDepth();
-    		double secondsPerSample = 1d / (double) b.getFrequency();*/
-    		AL al = ALFactory.getAL();
-    		int[] val = new int[1];
-    		al.alGetBufferi(_bufferID, AL.AL_SIZE, val, 0);
-    		double bytes = val[0];
-    		double bitsPerByte = 8;
-    		al.alGetBufferi(_bufferID, AL.AL_BITS, val, 0);
-    		double samplePerBits = 1d / (double) val[0];
-    		al.alGetBufferi(_bufferID, AL.AL_FREQUENCY, val, 0);
-    		double secondsPerSample = 1d / (double) val[0];
-    		double millisPerSec = 1000;
-    		return (int) (bytes * samplePerBits * bitsPerByte * millisPerSec * secondsPerSample);
+    		if (_calculatedDur == Integer.MIN_VALUE) {
+            	/* Frequency is in terms of samples/second.
+            	 * Size is in terms of bytes.
+            	 * Bit-depth is sample size in bits (bits/sample).
+            	 * We want bytes * bits/byte * sample/bits * seconds/sample * milliseconds/second
+            	 */
+        		
+        		/*Buffer b = _sourceID.getBuffer();
+        		double bytes = b.getSize();
+        		double bitsPerByte = 8;
+        		double samplePerBits = 1d / (double) b.getBitDepth();
+        		double secondsPerSample = 1d / (double) b.getFrequency();*/
+        		AL al = ALFactory.getAL();
+        		int[] val = new int[1];
+        		al.alGetBufferi(_bufferID, AL.AL_SIZE, val, 0);
+        		double bytes = val[0];
+        		double bitsPerByte = 8;
+        		al.alGetBufferi(_bufferID, AL.AL_BITS, val, 0);
+        		double samplePerBits = 1d / (double) val[0];
+        		al.alGetBufferi(_bufferID, AL.AL_FREQUENCY, val, 0);
+        		double secondsPerSample = 1d / (double) val[0];
+        		double millisPerSec = 1000;
+        		_calculatedDur = (int) (bytes * samplePerBits * bitsPerByte * millisPerSec * secondsPerSample);
+    		}
+    		return _calculatedDur;
     	}
     	
         long dur = _clip.getMicrosecondLength();
@@ -102,15 +127,31 @@ public class SoundClip implements Playable {
 		al.alGetSourcei(_sourceID, AL.AL_SAMPLE_OFFSET, offset, 0);
 		return offset[0];
     }
-
+    
     public void play() {
+    	play(null);
+    }
+
+    public void play(CountDownLatch latch) {
+    	AL al = ALFactory.getAL();
     	if (_sourceID != null) {
-    		AL al = ALFactory.getAL();
     		al.alSourceRewind(_sourceID);
-    		al.alSourcePlay(_sourceID);
     	}
     	else {
             _clip.setFramePosition(0);
+    	}
+    	
+    	if (latch != null) {
+			try {
+				latch.await();
+			} 
+    		catch (InterruptedException e) {}
+    	}
+    	
+    	if (_sourceID != null) {
+    		al.alSourcePlay(_sourceID);
+    	}
+    	else {
             _clip.start();
     	}
     	
@@ -216,11 +257,20 @@ public class SoundClip implements Playable {
                     
                     // load the source
                     AL al = ALFactory.getAL();
-                    int[] id = new int[1];
-                    al.alGenBuffers(1, id, 0);
-                    bufferID = id[0];
-                    al.alGenSources(1, id, 0);
-                    sourceID = id[0];
+                    
+                    if (_bufferIDs == null || _index >= _bufferIDs.length) {
+                    	// generate on-the-fly
+                        int[] id = new int[1];
+                        al.alGenBuffers(1, id, 0);
+                        bufferID = id[0];
+                        al.alGenSources(1, id, 0);
+                        sourceID = id[0];
+                    }
+                    else {
+                        bufferID = _bufferIDs[_index];
+                        sourceID = _sourceIDs[_index];
+                        ++_index;
+                    }
                     
                     if (sourceID != null) {
                     	// XXX: Must load buffer before assigning to source!!!!

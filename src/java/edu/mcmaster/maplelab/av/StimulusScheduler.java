@@ -1,7 +1,14 @@
-/**
+/*
+ * Copyright (C) 2011 McMaster University PI: Dr. Michael Schutz
+ * <schutz@mcmaster.ca>
  * 
+ * Distributed under the terms of the GNU Lesser General Public License (LGPL).
+ * See LICENSE.TXT that came with this file.
  */
 package edu.mcmaster.maplelab.av;
+
+import static javax.media.opengl.GL.GL_COLOR_BUFFER_BIT;
+import static javax.media.opengl.GL.GL_DEPTH_BUFFER_BIT;
 
 import java.awt.DisplayMode;
 import java.awt.GraphicsDevice;
@@ -11,11 +18,16 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
+
 import edu.mcmaster.maplelab.av.datamodel.AVTrial;
 import edu.mcmaster.maplelab.av.media.Playable;
 import edu.mcmaster.maplelab.av.media.PlayableListener;
 import edu.mcmaster.maplelab.av.media.animation.AnimationListener;
+import edu.mcmaster.maplelab.av.media.animation.AnimationPanel;
 import edu.mcmaster.maplelab.av.media.animation.AnimationRenderer;
+import edu.mcmaster.maplelab.av.media.animation.AnimationRenderer.GLDrawDelegate;
 import edu.mcmaster.maplelab.av.media.animation.AnimationTrigger;
 import edu.mcmaster.maplelab.av.media.animation.ScheduledAnimationTrigger;
 import edu.mcmaster.maplelab.common.LogContext;
@@ -25,14 +37,17 @@ import edu.mcmaster.maplelab.common.LogContext;
  *
  */
 public class StimulusScheduler {
-	private static final int MAX_STIMULUS_COUNT = 15;
+	private static final boolean APPLE_MODE = true;
+	private static final int MAX_STIMULUS_COUNT = 12;
 	private static final long REFRESH_PERIOD;
 	private static final StimulusScheduler INSTANCE;
 	static {
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		GraphicsDevice gs = ge.getDefaultScreenDevice();
 		int refresh = gs.getDisplayMode().getRefreshRate();
-		if (refresh == DisplayMode.REFRESH_RATE_UNKNOWN) refresh = 60;
+		if (refresh == DisplayMode.REFRESH_RATE_UNKNOWN) {
+			refresh = 60;
+		}
 		REFRESH_PERIOD = (long) (1000000000.0d / (double) refresh); // nanos
 		INSTANCE = new StimulusScheduler();
 	}
@@ -51,9 +66,11 @@ public class StimulusScheduler {
 	private final MediaPlaybackAlarm _mediaStart;
 	private final AnimationCompletionListener _animationListener;
 	private final MediaCompletionListener _mediaListener;
+	private final VSyncedScheduleStarter _starter;
 	private final List<AVStimulusListener> _listeners;
+	private final AnimationPanel _aniPanel;
 	private AVTrial<?> _trial;
-	private CountDownLatch _latch;
+	private CountDownLatch _completionLatch;
 	private boolean _running = false;
 	private Long _lastStart = null;
 	
@@ -69,6 +86,12 @@ public class StimulusScheduler {
 		_mediaListener = new MediaCompletionListener();
 		_renderer.addAnimationListener(_animationListener);
 		_listeners = new ArrayList<AVStimulusListener>();
+		_aniPanel = new AnimationPanel(_renderer, _trigger);
+		_starter = new VSyncedScheduleStarter();
+	}
+	
+	public AnimationPanel getAnimationPanel() {
+		return _aniPanel;
 	}
 	
 	/**
@@ -85,13 +108,21 @@ public class StimulusScheduler {
 		if (_trial == null) return;
 		
 		Playable p = _trial.isVideo() ? _trial.getVideoPlayable() : _trial.getAudioPlayable();
+		long adjust = 0;
+		if (_trial.getAnimationSequence() != null) {
+			_renderer.setAnimationSource(_trial);
+			
+			long time = TimeUnit.NANOSECONDS.convert(_trial.getAnimationDelay(), TimeUnit.MILLISECONDS);
+			adjust = time % REFRESH_PERIOD;
+			_scheduler.scheduleAlarmOnly(_animationStart, time - adjust, TimeUnit.NANOSECONDS);
+		}
 		if (p != null) {
 			p.addListener(_mediaListener);
-			_scheduler.scheduleAlarmOnly(_mediaStart, _trial.getMediaDelay(), TimeUnit.MILLISECONDS);
+			long time = (TimeUnit.NANOSECONDS.convert(_trial.getMediaDelay(), TimeUnit.MILLISECONDS)
+					- adjust) + (5*REFRESH_PERIOD/4); // XXX: ~2 periods for vsync buffering
+			_scheduler.scheduleAlarmOnly(_mediaStart, time, TimeUnit.NANOSECONDS);
 		}
-		if (_trial.getAnimationSequence() != null) {
-			_scheduler.scheduleAlarmOnly(_animationStart, _trial.getAnimationDelay(), TimeUnit.MILLISECONDS);
-		}
+		_completionLatch = new CountDownLatch(_trial.getNumMediaObjects());
 	}
 	
 	public void start() {
@@ -99,8 +130,9 @@ public class StimulusScheduler {
 		_running = true;
 
 		_lastStart = null;
-		_latch = new CountDownLatch(_trial.getNumMediaObjects());
-		_scheduler.start();
+		
+		_renderer.setDisplayProxy(_starter);
+		_trigger.forceDisplay();
 	}
 	
 	/**
@@ -122,7 +154,7 @@ public class StimulusScheduler {
 					_trial.getLastMediaStart() - _lastStart);
 		}
 		LogContext.getLogger().fine(String.format(runDesc, _lastStart, aniDesc, medDesc));
-		
+
 		_running = false;
 		return _lastStart;
 	}
@@ -172,9 +204,17 @@ public class StimulusScheduler {
 		public void markTime(ScheduleEvent e) {}
 		@Override
 		public void alarm(ScheduleEvent e) {
-			// TODO - use time from event?
-			_trial.markMediaStart(TimeUnit.MILLISECONDS.convert(System.nanoTime(), TimeUnit.NANOSECONDS));
-			_trial.getMedia().getMediaObject().play();
+			if (_trial.getNumMediaObjects() > 1) {
+				CountDownLatch latch = new CountDownLatch(1);
+				_renderer.setControlLatch(latch);
+				// TODO - use time from event?
+				_trial.markMediaStart(System.currentTimeMillis());
+				_trial.getMedia().getMediaObject().play(latch);
+			}
+			else {
+				_trial.markMediaStart(System.currentTimeMillis());
+				_trial.getMedia().getMediaObject().play();
+			}
 		}
 	}
 	
@@ -186,11 +226,9 @@ public class StimulusScheduler {
 		public void markTime(ScheduleEvent e) {}
 		@Override
 		public void alarm(ScheduleEvent e) {
-			_renderer.setAnimationSource(_trial);
 			// TODO - use time from event?
-			Long time =  e.getEventTime(TimeUnit.MILLISECONDS);
-			_trial.markAnimationStart(time);
-			_renderer.setStartTime(time);
+			_trial.markAnimationStart(System.currentTimeMillis());
+			_renderer.setNanoStartTime(e.getEventTime(TimeUnit.NANOSECONDS));
 		}
 	}
 	
@@ -201,7 +239,7 @@ public class StimulusScheduler {
 		@Override
 		public void animationDone() {
 			_renderer.setAnimationSource(null);
-			_latch.countDown();
+			_completionLatch.countDown();
 		}
 	}
 	
@@ -212,7 +250,7 @@ public class StimulusScheduler {
 		@Override
 		public void playableEnded() {
 			_trial.getMedia().getMediaObject().removeListener(this);
-			_latch.countDown();
+			_completionLatch.countDown();
 		}
 	}
 	
@@ -225,18 +263,64 @@ public class StimulusScheduler {
 		@Override
 		public void alarm(ScheduleEvent e) {
 			try {
-				_latch.await();
+				_completionLatch.await();
 			} 
-			catch (InterruptedException e1) {
-				
-			}
+			catch (InterruptedException e1) {}
 			
 			_lastStart = TimeUnit.MILLISECONDS.convert(_scheduler.stop(), TimeUnit.NANOSECONDS);
 			notifyListeners();
 		}
 	}
 	
-	public static void main(String[] args) {
-		System.out.println("blah");
+	/**
+	 * Class for attempting to start the scheduler at the front edge of the animation
+	 * update period.
+	 */
+	private class VSyncedScheduleStarter implements GLDrawDelegate {
+		@Override
+		public void draw(GLAutoDrawable drawable) {
+			_renderer.clearProxy(); // remove self
+			CountDownLatch latch = new CountDownLatch(1);
+			_scheduler.start(latch);
+			
+			GL2 gl = drawable.getGL().getGL2();
+			gl.setSwapInterval(1);
+			gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
+			
+			if (APPLE_MODE) {
+				gl.glFlushRenderAPPLE();
+				gl.glFinishRenderAPPLE(); // MUST BE called here!
+			}
+			else {
+				gl.glFlush();
+				gl.glFinish();
+			}
+			
+			latch.countDown();
+		}
+	}
+	
+	/**
+	 * Class for rendering testing.
+	 */
+	private class TestRenderer implements GLDrawDelegate {
+		int _count = 100;
+		@Override
+		public void draw(GLAutoDrawable drawable) {
+			
+			GL2 gl = drawable.getGL().getGL2();
+			if (_count % 2 == 0) {
+				gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);   
+			}
+			else {
+				gl.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+			}
+			gl.glClear(GL_COLOR_BUFFER_BIT);
+			--_count;
+			
+			if (_count == 0) {
+				_renderer.clearProxy();
+			}
+		}
 	}
 }
