@@ -37,6 +37,7 @@ import edu.mcmaster.maplelab.common.LogContext;
  *
  */
 public class StimulusScheduler {
+	private static final int PERIOD_OFFSET_MULTIPLIER = 3;
 	private static final boolean APPLE_MODE = true;
 	private static final int MAX_STIMULUS_COUNT = 12;
 	private static final long REFRESH_PERIOD;
@@ -69,6 +70,8 @@ public class StimulusScheduler {
 	private final VSyncedScheduleStarter _starter;
 	private final List<AVStimulusListener> _listeners;
 	private final AnimationPanel _aniPanel;
+	private long _audioCallAhead;
+	private long _animationFrameAdvance;
 	private AVTrial<?> _trial;
 	private CountDownLatch _completionLatch;
 	private boolean _running = false;
@@ -92,6 +95,27 @@ public class StimulusScheduler {
 	
 	public AnimationPanel getAnimationPanel() {
 		return _aniPanel;
+	}
+	
+	public void setRenderCallAhead(Long renderCallAhead, TimeUnit unit) {
+		if (!_running) {
+			_trigger.setRenderCallAhead(renderCallAhead != null ? 
+					TimeUnit.NANOSECONDS.convert(renderCallAhead, unit) : 0);
+		}
+	}
+	
+	public void setAudioCallAhead(Long audioCallAhead, TimeUnit unit) {
+		if (!_running) {
+			_audioCallAhead = audioCallAhead != null ? 
+					TimeUnit.NANOSECONDS.convert(audioCallAhead, unit) : 0;
+		}
+	}
+	
+	public void setAnimationFrameAdvance(Long animationFrameAdvance, TimeUnit unit) {
+		if (!_running) {
+			_animationFrameAdvance = animationFrameAdvance != null ? 
+					TimeUnit.NANOSECONDS.convert(animationFrameAdvance, unit) : 0;
+		}
 	}
 	
 	/**
@@ -119,7 +143,7 @@ public class StimulusScheduler {
 		if (p != null) {
 			p.addListener(_mediaListener);
 			long time = (TimeUnit.NANOSECONDS.convert(_trial.getMediaDelay(), TimeUnit.MILLISECONDS)
-					- adjust) + (5*REFRESH_PERIOD/4); // XXX: ~2 periods for vsync buffering
+					- adjust) + (PERIOD_OFFSET_MULTIPLIER*REFRESH_PERIOD); // XXX: ~2+ periods for vsync buffering
 			_scheduler.scheduleAlarmOnly(_mediaStart, time, TimeUnit.NANOSECONDS);
 		}
 		_completionLatch = new CountDownLatch(_trial.getNumMediaObjects());
@@ -204,17 +228,22 @@ public class StimulusScheduler {
 		public void markTime(ScheduleEvent e) {}
 		@Override
 		public void alarm(ScheduleEvent e) {
-			if (_trial.getNumMediaObjects() > 1) {
+			/*if (_trial.getNumMediaObjects() > 1) {
 				CountDownLatch latch = new CountDownLatch(1);
 				_renderer.setControlLatch(latch);
 				// TODO - use time from event?
 				_trial.markMediaStart(System.currentTimeMillis());
 				_trial.getMedia().getMediaObject().play(latch);
 			}
-			else {
+			else {*/
 				_trial.markMediaStart(System.currentTimeMillis());
+				//System.out.println("audio play request: " + System.nanoTime());
 				_trial.getMedia().getMediaObject().play();
-			}
+			//}
+		}
+		@Override
+		public long callAheadNanoTime() {
+			return _trial.isVideo() ? 0 : _audioCallAhead;
 		}
 	}
 	
@@ -229,6 +258,10 @@ public class StimulusScheduler {
 			// TODO - use time from event?
 			_trial.markAnimationStart(System.currentTimeMillis());
 			_renderer.setNanoStartTime(e.getEventTime(TimeUnit.NANOSECONDS));
+		}
+		@Override
+		public long callAheadNanoTime() {
+			return _animationFrameAdvance;
 		}
 	}
 	
@@ -270,6 +303,8 @@ public class StimulusScheduler {
 			_lastStart = TimeUnit.MILLISECONDS.convert(_scheduler.stop(), TimeUnit.NANOSECONDS);
 			notifyListeners();
 		}
+		@Override
+		public long callAheadNanoTime() { return 0; }
 	}
 	
 	/**
@@ -287,14 +322,36 @@ public class StimulusScheduler {
 			gl.setSwapInterval(1);
 			gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
 			
+			long curr = System.nanoTime();
+			long total = 0;
+			
 			if (APPLE_MODE) {
+				for (int i = 0; i < 100; i++) {
+					gl.glSwapAPPLE();
+					long tmp = System.nanoTime();
+					total += tmp - curr;
+					curr = tmp;
+				}
+			}
+			else {
+				for (int i = 0; i < 100; i++) {
+					gl.glFinish(); // TODO: would this even work?
+					long tmp = System.nanoTime();
+					total += curr - tmp;
+					curr = tmp;
+				}
+			}
+			_scheduler.setUpdatePeriod(total / 100);
+			
+			// XXX: THIS DOES NOT VSYNC???????
+			/*if (APPLE_MODE) {
 				gl.glFlushRenderAPPLE();
 				gl.glFinishRenderAPPLE(); // MUST BE called here!
 			}
 			else {
 				gl.glFlush();
 				gl.glFinish();
-			}
+			}*/
 			
 			latch.countDown();
 		}

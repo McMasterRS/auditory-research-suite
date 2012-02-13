@@ -14,4 +14,5 @@ package edu.mcmaster.maplelab.av;
 public interface Scheduled {
 	public void markTime(ScheduleEvent e);
 	public void alarm(ScheduleEvent e);
+	public long callAheadNanoTime();
 }

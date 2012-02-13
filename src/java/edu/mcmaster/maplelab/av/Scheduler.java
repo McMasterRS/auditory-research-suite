@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public class Scheduler {
-
 	private long _startTime;
 	private long _updatePeriod;
 	private final int _threads;
@@ -100,27 +99,12 @@ public class Scheduler {
 	}
 	
 	/**
-	 * Schedule the given action to - after the delay - occur repeatedly every period
-	 * via Scheduled.markTime.
-	 */
-	public void scheduleDelayed(Scheduled sched, long alarmTime, TimeUnit unit) {
-		if (alarmTime <= 0) {
-			schedule(sched);
-			return;
-		}
-		scheduleAlarmOnly(new DelayedMetronome(sched), 
-				// scheduled ahead, so subtract two update periods
-				TimeUnit.NANOSECONDS.convert(alarmTime, unit) - 2*_updatePeriod, 
-				TimeUnit.NANOSECONDS);
-	}
-	
-	/**
 	 * Schedule the given action to occur once after the given alarm delay via
 	 * Scheduled.alarm.
 	 */
 	public void scheduleAlarmOnly(Scheduled sched, long alarmTime, TimeUnit unit) {
 		long time = TimeUnit.NANOSECONDS.convert(alarmTime, unit);
-		_alarms.add(new Alarm(sched, time));
+		_alarms.add(new Alarm(sched, time - sched.callAheadNanoTime()));
 	}
 	
 	private void startTimer() {
@@ -141,6 +125,12 @@ public class Scheduler {
 			_clock = new TimerClock();
 		}
 	}
+	
+	private long currTime() {
+		return System.nanoTime();
+	}
+	
+
 	
 	/**
 	 * Class for running scheduled items at regular intervals.
@@ -163,32 +153,16 @@ public class Scheduler {
 				catch (InterruptedException e) {} // if wait fails, just move on
 			}
 			
-			_startTime = System.nanoTime() + _updatePeriod;
+			// XXX: 'call ahead' values larger than the update period could cause
+			// serious problems
+			_startTime = currTime() + _updatePeriod;
 			for (Alarm alarm : _alarms) {
 				_exec.schedule(alarm, alarm.getDelay() + _updatePeriod, TimeUnit.NANOSECONDS);
 			}
 			
 			for (Metronome m : _recurring) {
-				_exec.scheduleAtFixedRate(m, _updatePeriod, _updatePeriod, TimeUnit.NANOSECONDS);
+				_exec.scheduleAtFixedRate(m, _updatePeriod - m.callAhead(), _updatePeriod, TimeUnit.NANOSECONDS);
 			}
-		}
-	}
-	
-	/**
-	 * Class for scheduling a metronome after an initial delay.
-	 */
-	private class DelayedMetronome implements Scheduled {
-		private final Metronome _metronome;
-		
-		public DelayedMetronome(Scheduled sched) {
-			_metronome = new Metronome(sched);
-		}
-		@Override
-		public void markTime(ScheduleEvent e) {
-		}
-		@Override
-		public void alarm(ScheduleEvent e) {
-			_recurring.add(_metronome);
 		}
 	}
 	
@@ -201,9 +175,13 @@ public class Scheduler {
 			_sched = s;
 		}
 		
+		public long callAhead() {
+			return _sched.callAheadNanoTime();
+		}
+		
 		@Override
 		public void run() {
-			long time = System.nanoTime();
+			long time = currTime();
 			_sched.markTime(new ScheduleEvent(time, time - _startTime));
 		}
 		
@@ -236,7 +214,7 @@ public class Scheduler {
 		
 		@Override
 		public void run() {
-			long time = System.nanoTime();
+			long time = currTime();
 			_sched.alarm(new ScheduleEvent(time, time - _startTime));
 		}
 
@@ -274,19 +252,11 @@ public class Scheduler {
 				@Override
 				public void alarm(ScheduleEvent e) {
 				}
+				@Override
+				public long callAheadNanoTime() {
+					return 0;
+				}
 			});
-			scheduler.scheduleDelayed(new Scheduled() {
-				@Override
-				public void markTime(ScheduleEvent e) {
-					long time = e.getRelativeTime(TimeUnit.MILLISECONDS);
-					System.out.println("delayed metronome: " + time);
-				}
-				@Override
-				public void alarm(ScheduleEvent e) {
-					long time = e.getRelativeTime(TimeUnit.MILLISECONDS);
-					System.out.println("alarm: " + time);
-				}
-			}, 7000, TimeUnit.MILLISECONDS);
 			scheduler.scheduleAlarmOnly(new Scheduled() {
 				@Override
 				public void markTime(ScheduleEvent e) {
@@ -295,6 +265,10 @@ public class Scheduler {
 				public void alarm(ScheduleEvent e) {
 					long time = e.getRelativeTime(TimeUnit.MILLISECONDS);
 					System.out.println("alarm only: " + time);
+				}
+				@Override
+				public long callAheadNanoTime() {
+					return 0;
 				}
 			}, 3000, TimeUnit.MILLISECONDS);
 			

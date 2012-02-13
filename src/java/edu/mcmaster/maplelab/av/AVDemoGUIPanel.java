@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.*;
 
@@ -32,6 +33,9 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	private FileBrowseField _vidFile;
 	
 	private JFormattedTextField _delayText;
+	private JFormattedTextField _frameAdvance;
+	private JFormattedTextField _renderCallAhead;
+	private JFormattedTextField _audioCallAhead;
 	private JSpinner _numPts;
 	private JCheckBox _connect;
 	private JCheckBox _loop;
@@ -53,22 +57,28 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	
 	public AVDemoGUIPanel(AVSession<?, T, ?> session) {
 		super(session);
-		setLayout(new MigLayout("", "[][]30px[][]30px[][]30px[][]", ""));
+		setLayout(new MigLayout("", "[]30px[]30px[]30px[]30px[]30px[]30px[]", ""));
 
 		// auditory info
-		add(new JLabel("Auditory"), "split, span, gaptop 10");
+		add(new JLabel("Audio"), "split, span, gaptop 10");
 		add(new JSeparator(), "growx, wrap, gaptop 10");
 		
         JPanel p = genParamControls(session, MediaType.AUDIO);
         add(p, "spany 2, grow");
 		
 		
-		add(new JLabel("Delay (ms)", 2), "right, split");
+		add(new JLabel("Delay (ms)", 2), "right, split 2");
 		_delayText = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		_delayText.setValue(new Long(0)); // new
 		_delayText.setColumns(5);
 		
-		add(_delayText, "left, top, wrap push");
+		add(_delayText, "left");
+		
+		add(new JLabel("Audio call ahead (ms)", 2), "right, split 2");
+		_audioCallAhead = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		_audioCallAhead.setValue(new Long(0)); // new
+		_audioCallAhead.setColumns(5);
+		add(_audioCallAhead, "left, wrap");
 		
 		// visual info
 		add(new JLabel("Animation"), "newline, split, span, gaptop 10");
@@ -81,16 +91,27 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		SpinnerModel model = new SpinnerNumberModel(6, 1, 20, 1);
 		_numPts = new JSpinner(model);
 		add(_numPts, "left");
+		
+		add(new JLabel("Render call ahead (ms)", 2), "right, split 2");
+		_renderCallAhead = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		_renderCallAhead.setValue(new Long(0)); // new
+		_renderCallAhead.setColumns(5);
+		add(_renderCallAhead, "left");
 
-		add(new JLabel("Connect dots w/ lines"), "right, split 2");
+		add(new JLabel("Connect dots w/ lines"), "newline, right, split 2");
 		_connect = new JCheckBox();
 		add(_connect, "left");
 		_connect.setSelected(true);
-
+		
+		add(new JLabel("Frame look ahead (ms)", 2), "right, split 2");
+		_frameAdvance = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		_frameAdvance.setValue(new Long(0)); // new
+		_frameAdvance.setColumns(5);
+		add(_frameAdvance, "left");
 	        
-		add(new JLabel("Loop"), "newline, right, split 2");
+		add(new JLabel("Loop"), "right, split 2");
 		_loop = new JCheckBox();
-		add(_loop, "left");
+		add(_loop, "right");
 		
         // visual info
         add(new JLabel("Video"), "newline, split, span, gaptop 10");
@@ -263,6 +284,18 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
         
 	}
 	
+	private void updateCallAheads() {
+		Object val = _frameAdvance.getValue();
+		Long longVal = Long.valueOf(val instanceof String ? (String) val : ((Number) val).toString());
+		_scheduler.setAnimationFrameAdvance(longVal, TimeUnit.MILLISECONDS);
+		val = _renderCallAhead.getValue();
+		longVal = Long.valueOf(val instanceof String ? (String) val : ((Number) val).toString());
+		_scheduler.setRenderCallAhead(longVal, TimeUnit.MILLISECONDS);
+		val = _audioCallAhead.getValue();
+		longVal = Long.valueOf(val instanceof String ? (String) val : ((Number) val).toString());
+		_scheduler.setAudioCallAhead(longVal, TimeUnit.MILLISECONDS);
+	}
+	
 	/**
 	 * Class for updating file fields.
 	 */
@@ -331,6 +364,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		        T next = getTrial();
 		        LogContext.getLogger().fine("\n--------------------\n-> " + next.getDescription());
 		        prepareNext(next);
+		        updateCallAheads();
 		        //next.preparePlayback(_renderer);
 		        _scheduler.setStimulusSource(next);
 		        //next.addPlaybackListener(new LoopListener(next));

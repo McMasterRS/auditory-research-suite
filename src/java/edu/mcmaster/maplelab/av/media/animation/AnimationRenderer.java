@@ -120,16 +120,19 @@ public class AnimationRenderer implements GLEventListener {
 		if (currentTime > as.getTotalAnimationTime()) {
 			_animatedOnce = true;
 		}
+		
+		//System.out.println("frame: " + System.nanoTime());
 		displayFrame(gl, as.getFrameAtTime(currentTime));
 
-		if (APPLE_MODE) {
-			gl.glFlushRenderAPPLE();
+		/*if (APPLE_MODE) {
+			//gl.glSwapAPPLE();
+			//gl.glFlushRenderAPPLE();
 			//gl.glFinishRenderAPPLE(); //Not as consistent w/ this?
 		}
 		else {
-			gl.glFlush();
+			//gl.glFlush();
 			//gl.glFinish();
-		}
+		}*/
 		
 		if (_controlLatch != null) {
 			_controlLatch.countDown();

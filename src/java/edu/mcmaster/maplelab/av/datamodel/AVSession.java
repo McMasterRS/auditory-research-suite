@@ -39,7 +39,10 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		animationFileExtensions,
 		audioFileExtensions,
 		synchronizeParameters,
-		oscilloscopeSensorMode
+		oscilloscopeSensorMode,
+		animationFrameAdvance,
+		audioCallAhead,
+		renderCallAhead
 	}
 	
 	private Properties _audioFileMetaData = null;
@@ -55,6 +58,27 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		
 		// must load the media parameter specification
 		MediaParams.loadMediaParams(this);
+	}
+	
+	/**
+	 * Get the animation frame look ahead time.
+	 */
+	public Long getAnimationFrameAdvance() {
+		return getLong(ConfigKeys.animationFrameAdvance, 0);
+	}
+	
+	/**
+	 * Get the audio call ahead time.
+	 */
+	public Long getAudioCallAhead() {
+		return getLong(ConfigKeys.audioCallAhead, 0);
+	}
+	
+	/**
+	 * Get the rendering call ahead time.
+	 */
+	public Long getRenderCallAhead() {
+		return getLong(ConfigKeys.renderCallAhead, 0);
 	}
 	
 	/**

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import javax.swing.BorderFactory;
@@ -93,6 +94,9 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
 		_session = session;
 		_isWarmup = isWarmup;
 		_scheduler = StimulusScheduler.getInstance();
+		_scheduler.setAnimationFrameAdvance(_session.getAnimationFrameAdvance(), TimeUnit.MILLISECONDS);
+		_scheduler.setAudioCallAhead(_session.getAudioCallAhead(), TimeUnit.MILLISECONDS);
+		_scheduler.setRenderCallAhead(_session.getRenderCallAhead(), TimeUnit.MILLISECONDS);
 		//_renderer = _scheduler.getAnimationRenderer();
 		_keyListener = new ResponseKeyListener();
 		

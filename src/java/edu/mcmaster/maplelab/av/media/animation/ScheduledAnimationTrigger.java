@@ -18,14 +18,22 @@ import edu.mcmaster.maplelab.av.Scheduled;
  */
 public class ScheduledAnimationTrigger implements AnimationTrigger, Scheduled {
 	private GLAutoDrawable _canvas;
+	private Long _callAheadNanos;
 	private boolean _running = false;
+	
+	public void setRenderCallAhead(Long callAheadNanos) {
+		_callAheadNanos = callAheadNanos != null ? callAheadNanos : 0;
+	}
 
 	/**
 	 * @see edu.mcmaster.maplelab.av.Scheduled#markTime(edu.mcmaster.maplelab.av.ScheduleEvent)
 	 */
 	@Override
 	public void markTime(ScheduleEvent e) {
-		if (_running) _canvas.display();
+		if (_running) {
+			//System.out.println("trigger: " + System.nanoTime());
+			_canvas.display();
+		}
 	}
 
 	/**
@@ -65,6 +73,10 @@ public class ScheduledAnimationTrigger implements AnimationTrigger, Scheduled {
 	 */
 	public void forceDisplay() {
 		if (_canvas != null) _canvas.display();
+	}
+	@Override
+	public long callAheadNanoTime() {
+		return _callAheadNanos;
 	}
 
 }

@@ -104,7 +104,7 @@ public class SoundClip implements Playable {
         		al.alGetBufferi(_bufferID, AL.AL_FREQUENCY, val, 0);
         		double secondsPerSample = 1d / (double) val[0];
         		double millisPerSec = 1000;
-        		_calculatedDur = (int) (bytes * samplePerBits * bitsPerByte * millisPerSec * secondsPerSample);
+        		_calculatedDur = (int) Math.round(bytes * samplePerBits * bitsPerByte * millisPerSec * secondsPerSample);
     		}
     		return _calculatedDur;
     	}
@@ -136,22 +136,22 @@ public class SoundClip implements Playable {
     	AL al = ALFactory.getAL();
     	if (_sourceID != null) {
     		al.alSourceRewind(_sourceID);
-    	}
-    	else {
-            _clip.setFramePosition(0);
-    	}
-    	
-    	if (latch != null) {
-			try {
-				latch.await();
-			} 
-    		catch (InterruptedException e) {}
-    	}
-    	
-    	if (_sourceID != null) {
+    		if (latch != null) {
+    			try {
+    				latch.await();
+    			} 
+        		catch (InterruptedException e) {}
+        	}
     		al.alSourcePlay(_sourceID);
     	}
     	else {
+            _clip.setFramePosition(0);
+            if (latch != null) {
+    			try {
+    				latch.await();
+    			} 
+        		catch (InterruptedException e) {}
+        	}
             _clip.start();
     	}
     	
