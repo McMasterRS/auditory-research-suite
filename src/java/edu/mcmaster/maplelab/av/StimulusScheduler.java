@@ -155,8 +155,13 @@ public class StimulusScheduler {
 
 		_lastStart = null;
 		
-		_renderer.setDisplayProxy(_starter);
-		_trigger.forceDisplay();
+		if (_trial.getNumMediaObjects() > 1) {
+			_renderer.setDisplayProxy(_starter);
+			_trigger.forceDisplay();
+		}
+		else {
+			_scheduler.start();
+		}
 	}
 	
 	/**
