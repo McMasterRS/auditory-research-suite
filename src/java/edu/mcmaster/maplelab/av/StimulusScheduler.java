@@ -41,7 +41,6 @@ public class StimulusScheduler {
 	private static final boolean APPLE_MODE = true;
 	private static final int MAX_STIMULUS_COUNT = 12;
 	private static final long REFRESH_PERIOD;
-	private static final StimulusScheduler INSTANCE;
 	static {
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		GraphicsDevice gs = ge.getDefaultScreenDevice();
@@ -50,14 +49,6 @@ public class StimulusScheduler {
 			refresh = 60;
 		}
 		REFRESH_PERIOD = (long) (1000000000.0d / (double) refresh); // nanos
-		INSTANCE = new StimulusScheduler();
-	}
-	
-	/**
-	 * Get the singleton instance.
-	 */
-	public static StimulusScheduler getInstance() {
-		return INSTANCE;
 	}
 	
 	private final Scheduler _scheduler;
@@ -68,6 +59,7 @@ public class StimulusScheduler {
 	private final AnimationCompletionListener _animationListener;
 	private final MediaCompletionListener _mediaListener;
 	private final VSyncedScheduleStarter _starter;
+	private final VSyncedRefreshCalculator _refreshCalculator;
 	private final List<AVStimulusListener> _listeners;
 	private final AnimationPanel _aniPanel;
 	private long _audioCallAhead;
@@ -77,7 +69,7 @@ public class StimulusScheduler {
 	private boolean _running = false;
 	private Long _lastStart = null;
 	
-	private StimulusScheduler() {
+	public StimulusScheduler() {
 		_scheduler = new Scheduler(REFRESH_PERIOD, TimeUnit.NANOSECONDS, MAX_STIMULUS_COUNT);
 		_trigger = new ScheduledAnimationTrigger();
 		_scheduler.schedule(_trigger);
@@ -91,6 +83,7 @@ public class StimulusScheduler {
 		_listeners = new ArrayList<AVStimulusListener>();
 		_aniPanel = new AnimationPanel(_renderer, _trigger);
 		_starter = new VSyncedScheduleStarter();
+		_refreshCalculator = new VSyncedRefreshCalculator();
 	}
 	
 	public AnimationPanel getAnimationPanel() {
@@ -135,6 +128,7 @@ public class StimulusScheduler {
 		long adjust = 0;
 		if (_trial.getAnimationSequence() != null) {
 			_renderer.setAnimationSource(_trial);
+			calculateRefresh();
 			
 			long time = TimeUnit.NANOSECONDS.convert(_trial.getAnimationDelay(), TimeUnit.MILLISECONDS);
 			adjust = time % REFRESH_PERIOD;
@@ -148,6 +142,45 @@ public class StimulusScheduler {
 		}
 		_completionLatch = new CountDownLatch(_trial.getNumMediaObjects());
 	}
+	
+	/**
+	 * Run the refresh period calculation renderer.
+	 */
+	private void calculateRefresh() {
+		// is this the best way to do this?
+		_renderer.setDisplayProxy(_refreshCalculator);
+		Thread t = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				_trigger.forceDisplay();
+			}}) {{
+			setPriority(Thread.MAX_PRIORITY);
+		}};
+		t.start();
+	}
+	
+	/**
+	 * XXX
+	 * Schedule the trial for the given refresh period.
+	 */
+	/*private void scheduleTrial(long period) {
+		Playable p = _trial.isVideo() ? _trial.getVideoPlayable() : _trial.getAudioPlayable();
+		long adjust = 0;
+		if (_trial.getAnimationSequence() != null) {
+			_renderer.setAnimationSource(_trial);
+			
+			long aniDelay = TimeUnit.NANOSECONDS.convert(_trial.getAnimationDelay(), TimeUnit.MILLISECONDS);
+			adjust = (TimeUnit.NANOSECONDS.convert(_trial.getAnimationStrikeTime(), TimeUnit.MILLISECONDS) +
+					aniDelay) % period;
+			_scheduler.scheduleAlarmOnly(_animationStart, aniDelay - adjust, TimeUnit.NANOSECONDS);
+		}
+		if (p != null) {
+			p.addListener(_mediaListener);
+			long time = (TimeUnit.NANOSECONDS.convert(_trial.getMediaDelay(), TimeUnit.MILLISECONDS)
+					- adjust) + (PERIOD_OFFSET_MULTIPLIER*period); // XXX: ~2+ periods for vsync buffering
+			_scheduler.scheduleAlarmOnly(_mediaStart, time, TimeUnit.NANOSECONDS);
+		}
+	}*/
 	
 	public void start() {
 		if (_running || _trial == null) return;
@@ -313,15 +346,12 @@ public class StimulusScheduler {
 	}
 	
 	/**
-	 * Class for attempting to start the scheduler at the front edge of the animation
-	 * update period.
+	 * Class for calculating the current refresh period on-the-fly.
 	 */
-	private class VSyncedScheduleStarter implements GLDrawDelegate {
+	private class VSyncedRefreshCalculator implements GLDrawDelegate {
 		@Override
 		public void draw(GLAutoDrawable drawable) {
 			_renderer.clearProxy(); // remove self
-			CountDownLatch latch = new CountDownLatch(1);
-			_scheduler.start(latch);
 			
 			GL2 gl = drawable.getGL().getGL2();
 			gl.setSwapInterval(1);
@@ -347,17 +377,32 @@ public class StimulusScheduler {
 				}
 			}
 			_scheduler.setUpdatePeriod(total / 100);
+		}
+	}
+	
+	/**
+	 * Class for attempting to start the scheduler at the front edge of the animation
+	 * update period.
+	 */
+	private class VSyncedScheduleStarter implements GLDrawDelegate {
+		@Override
+		public void draw(GLAutoDrawable drawable) {
+			_renderer.clearProxy(); // remove self
+			CountDownLatch latch = new CountDownLatch(1);
+			_scheduler.start(latch);
 			
-			// XXX: THIS DOES NOT VSYNC???????
-			/*if (APPLE_MODE) {
-				gl.glFlushRenderAPPLE();
-				gl.glFinishRenderAPPLE(); // MUST BE called here!
+			GL2 gl = drawable.getGL().getGL2();
+			gl.setSwapInterval(1);
+			gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
+			
+			if (APPLE_MODE) {
+				gl.glSwapAPPLE();
 			}
 			else {
-				gl.glFlush();
-				gl.glFinish();
-			}*/
+				gl.glFinish(); // TODO: would this even work?
+			}
 			
+			// release scheduler to start after vsync
 			latch.countDown();
 		}
 	}

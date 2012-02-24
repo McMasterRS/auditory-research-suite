@@ -161,9 +161,8 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	    
         List<String> params = type.getParams(session);
         for(String param : params) {
-            String label = session.getString(param + ".label", param);
-            retval.add(new JLabel(label), "right");
             MediaParams vals = MediaParams.getAvailableValues(param);
+            retval.add(new JLabel(vals.displayLabel()), "right");
 
             JComboBox options = new JComboBox(new MediaParamsModel(vals));
             options.addActionListener(_fUpdater);
@@ -245,7 +244,7 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
             Window w = getParentWindow();
             _testFrame.setLocation(w.getLocation().x + w.getWidth(), w.getLocation().y);
 
-            _scheduler = StimulusScheduler.getInstance();
+            _scheduler = new StimulusScheduler();
             _aniPanel = _scheduler.getAnimationPanel();
 		}
 		

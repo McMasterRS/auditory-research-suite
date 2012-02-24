@@ -32,17 +32,17 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		includeVideoBlock,
 		includeAudioAnimationBlock,
 		connectDots,
+		oscilloscopeSensorMode,
+		animationFrameAdvance,
+		audioCallAhead,
+		renderCallAhead,
 		videoFileSubDirectory,
 		animationFileSubDirectory,
 		audioFileSubDirectory,
 		videoFileExtensions,
 		animationFileExtensions,
 		audioFileExtensions,
-		synchronizeParameters,
-		oscilloscopeSensorMode,
-		animationFrameAdvance,
-		audioCallAhead,
-		renderCallAhead
+		synchronizeParameters
 	}
 	
 	private Properties _audioFileMetaData = null;
@@ -127,6 +127,15 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	public String toPropertiesString() {
 		String retval = toPropertiesStringWithEnum(EnumSet.allOf(Session.ConfigKeys.class));
         retval += toPropertiesStringWithEnum(EnumSet.allOf(ConfigKeys.class));
+        retval += toPropertiesStringWithEnum(EnumSet.allOf(MediaType.ParameterKeys.class));
+        for (MediaType<?> mt : MediaType.values()) {
+        	for (String param : mt.getParams(this)) {
+        		retval += toPropertiesStringWithStrings(false, param, 
+        				MediaParams.LabelKeys.LABEL.getKey(param), 
+        				MediaParams.LabelKeys.VAL_LABELS.getKey(param));
+        	}
+        }
+        
         return retval;
 	}
 	

@@ -40,7 +40,7 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 	/** AV type of this block. */
 	private final AVBlockType _type;
 	/** Generated trials. */
-	List<T> _trials = null;
+	private List<T> _trials = null;
 
 	protected AVBlock(S session, int blockNum, AVBlockType type, List<Long> offsets, List<Integer> numPoints) {
 		
@@ -173,7 +173,7 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 		for (T t : _trials) {
 			LogContext.getLogger().fine(t.getDescription());
 		}
-		LogContext.getLogger().fine(String.format("-----------------------------------\n", _trials.size()));
+		LogContext.getLogger().fine("-----------------------------------\n");
 	}
 
 

@@ -155,13 +155,15 @@ public class Scheduler {
 			
 			// XXX: 'call ahead' values larger than the update period could cause
 			// serious problems
-			_startTime = currTime() + _updatePeriod;
+			long initDelay = 2*_updatePeriod; // arbitrary multiple of the period
+			_startTime = currTime() + initDelay;
 			for (Alarm alarm : _alarms) {
-				_exec.schedule(alarm, alarm.getDelay() + _updatePeriod, TimeUnit.NANOSECONDS);
+				// call ahead already built into alarm delay
+				_exec.schedule(alarm, alarm.getDelay() + initDelay, TimeUnit.NANOSECONDS);
 			}
 			
 			for (Metronome m : _recurring) {
-				_exec.scheduleAtFixedRate(m, _updatePeriod - m.callAhead(), _updatePeriod, TimeUnit.NANOSECONDS);
+				_exec.scheduleAtFixedRate(m, initDelay - m.callAhead(), _updatePeriod, TimeUnit.NANOSECONDS);
 			}
 		}
 	}

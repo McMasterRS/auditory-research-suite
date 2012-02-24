@@ -9,7 +9,6 @@ package edu.mcmaster.maplelab.av;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
@@ -36,7 +35,6 @@ import edu.mcmaster.maplelab.av.datamodel.AVTrial;
 import edu.mcmaster.maplelab.av.datamodel.AVBlock.AVBlockType;
 import edu.mcmaster.maplelab.av.media.VideoPanel;
 import edu.mcmaster.maplelab.av.media.animation.AnimationPanel;
-import edu.mcmaster.maplelab.av.media.animation.AnimationRenderer;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.TrialLogger;
 import edu.mcmaster.maplelab.common.gui.BasicStep;
@@ -70,11 +68,13 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         warmupDelayText,
     }
     
-    private ResponseInputs<R> _response;
+    private final ResponseInputs<R> _response;
+    private final JLabel _statusText;
+    private final JLabel _results;
     private List<B> _blocks;
     private int _blockIndex = 0;
-    private final JLabel _statusText;
-    private JLabel _results;
+    private B _finishedBlock;
+    private T _finishedTrial;
     
     private int _completed = 0;
     private int _correct = 0;
@@ -82,8 +82,6 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
     private final S _session;
 	private final boolean _isWarmup;
 	private final StimulusScheduler _scheduler;
-	//private AnimationPanel _aniPanel;
-	//private final AnimationRenderer _renderer;
 	private VideoPanel _vidPanel;
 	private final ResponseKeyListener _keyListener;
 
@@ -93,19 +91,17 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
 		
 		_session = session;
 		_isWarmup = isWarmup;
-		_scheduler = StimulusScheduler.getInstance();
+		_scheduler = new StimulusScheduler();
 		_scheduler.setAnimationFrameAdvance(_session.getAnimationFrameAdvance(), TimeUnit.MILLISECONDS);
 		_scheduler.setAudioCallAhead(_session.getAudioCallAhead(), TimeUnit.MILLISECONDS);
 		_scheduler.setRenderCallAhead(_session.getRenderCallAhead(), TimeUnit.MILLISECONDS);
 		//_renderer = _scheduler.getAnimationRenderer();
 		_keyListener = new ResponseKeyListener();
 		
-		setTitleText(_session.getString(
-            isWarmup ? ConfigKeys.warmupScreenTrialTitle : ConfigKeys.testScreenTrialTitle, 
-                null));
-        setInstructionText(_session.getString(
-            isWarmup ? ConfigKeys.warmupScreenTrialText : ConfigKeys.testScreenTrialText, 
-                null));
+		setTitleText(_session.getString(isWarmup ? 
+				ConfigKeys.warmupScreenTrialTitle : ConfigKeys.testScreenTrialTitle, null));
+        setInstructionText(_session.getString(isWarmup ? 
+        		ConfigKeys.warmupScreenTrialText : ConfigKeys.testScreenTrialText, null));
         
         JPanel bottom = new JPanel(new MigLayout("insets 0, fill", "[]0px[]", "[]"));
         getContentPanel().add(bottom, BorderLayout.SOUTH);
@@ -176,7 +172,6 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
             _blocks = _session.generateBlocks();
             LogContext.getLogger().fine(_session.getCombinatorialDescription(_blocks));
         }
-        
     }
     
     /**
@@ -223,10 +218,24 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         }
     }
     
-    private B currBlock() {
-        if(_blockIndex >= _blocks.size()) return null;
-        
-        return _blocks.get(_blockIndex);
+    private void determineBlockAndTrial() {
+    	// get finished items
+    	_finishedBlock = nextBlock();
+        _finishedTrial = nextTrial();       
+
+        // increment
+        _finishedBlock.incTrial();
+        if (_finishedBlock.isDone()) {
+            incBlock();
+        }
+    }
+    
+    /**
+     * Get the next block.  Assumes that it has already been incremented, if
+     * necessary.
+     */
+    private B nextBlock() {
+        return _blockIndex < _blocks.size() ? _blocks.get(_blockIndex) : null;
     }
     
     /**
@@ -234,9 +243,28 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
      * 
      * @return next trial or null if none.
      */
-    private T currTrial() {
-        B block = currBlock();
+    private T nextTrial() {
+    	B block = nextBlock();
         return block != null ? block.currTrial() : null;
+    }
+    
+    /**
+     * Convenience method to get the just-played trial.
+     * 
+     * @return finished trial or null if none.
+     */
+    private T finishedTrial() {
+        return _finishedTrial;
+    }
+    
+    /**
+     * Convenience method to get the block of the just-played trial.
+     * May be the same as the next block.
+     * 
+     * @return finished block or null if none.
+     */
+    private B finishedBlock() {
+        return _finishedBlock;
     }
     
     /**
@@ -246,7 +274,7 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         _blockIndex++;       
         
         if (_blockIndex < _blocks.size()) {
-            AVBlock<?, ?> block = currBlock();
+            AVBlock<?, ?> block = nextBlock();
             LogContext.getLogger().fine(String.format("> New block: %s: %d trials", 
             		block, block.getNumTrials()));
         }
@@ -263,29 +291,28 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
     private void doNextTrial() {
         _response.reset();
         
-        B currBlock = currBlock();
-
-        T currTrial = currTrial();
-        if (currTrial == null) return;
-        currTrial.setTimeStamp(new Date());
+        B nextBlock = nextBlock();
+        T nextTrial = nextTrial();
+        if (nextTrial == null) return;
+        nextTrial.setTimeStamp(new Date());
         
         String trialDesc = _isWarmup ? "\n---- Warmup Trial ----\n-> %s: %s" : 
         		"\n--------------------\n-> %s: %s";
         LogContext.getLogger().fine(String.format(trialDesc, 
-        		currBlock, currTrial.getDescription()));
+        		nextBlock, nextTrial.getDescription()));
 
-        _session.execute(new PrepareRunnable(currTrial));
-        _session.execute(new PlaybackRunnable(currTrial));
+        _session.execute(new PrepareRunnable(nextTrial));
+        _session.execute(new PlaybackRunnable());
     }
 
     private boolean isDone() {
-        return currTrial() == null;
+        return nextTrial() == null;
     }
     
     private void recordResponse() {
-    	B block = currBlock();
-    	T t = currTrial();
-        if(t == null) return;
+    	B block = finishedBlock();
+    	T t = finishedTrial();
+        if (t == null) return;
         
         t.setResponse(_response.getResponse());
         
@@ -299,12 +326,7 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
             catch (IOException e) {
                 LogContext.getLogger().severe("Error saving trial: " + e);
             }
-        }
-        
-        block.incTrial();
-        if (block.isDone()) {
-            incBlock();
-        }        
+        }       
         
         _session.execute(new StatusUpdaterRunnable(t));
     }
@@ -344,9 +366,10 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         
         public void run() {
             try {
-                // load next trial
-                _scheduler.setStimulusSource(_trial);
-                
+            	// next trial set on playback completion, but have to set
+            	// here on first trial
+            	if (finishedTrial() == null) _scheduler.setStimulusSource(_trial);
+            	
             	SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
                         setEnabled(false);
@@ -371,26 +394,28 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
                 
                 SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
-                    	B block = currBlock();
-                    	AnimationPanel _aniPanel = _scheduler.getAnimationPanel();
-                    	_aniPanel.setSize(_session.getScreenWidth(), _session.getScreenHeight());
-
-                    	if (block.getType() == AVBlockType.AUDIO_ANIMATION) {
-                        	// create and add animation panel if not done
-                        	//if (_aniPanel == null) {
-                                //_aniPanel = new AnimationPanel(_renderer, 
-                                //		new Dimension(_session.getScreenWidth(), _session.getScreenHeight()));
-                    			getContentPanel().remove(_aniPanel);
-                                getContentPanel().add(_aniPanel, BorderLayout.CENTER);
-                        	//}
-                    		_aniPanel.start();
+                    	// gather block type information
+                    	B prevBlock = finishedBlock();
+                    	B block = nextBlock();
+                    	AVBlockType prevType = prevBlock != null ? prevBlock.getType() : null;
+                    	AVBlockType currType = block.getType();
+                    	
+                    	if (currType == AVBlockType.AUDIO_ANIMATION) {
+                    		AnimationPanel aniPanel = _scheduler.getAnimationPanel();
+                        	if (prevType != currType) {
+                    			aniPanel.setSize(_session.getScreenWidth(), _session.getScreenHeight());
+                            	getContentPanel().add(aniPanel, BorderLayout.CENTER);
+                    		}
+                    		
+                    		aniPanel.start();
                     	}
-                    	else {//if (_aniPanel != null) {
-                    		getContentPanel().remove(_aniPanel);
-                    		//_aniPanel = null;
+                    	else if (prevType == AVBlockType.AUDIO_ANIMATION) {
+                    		// XXX: removing and re-adding this every time causes 
+                    		// white flash on screen!
+                    		getContentPanel().remove(_scheduler.getAnimationPanel());
                     	}
                     	
-                    	if (block.getType() == AVBlockType.VIDEO_ONLY) {
+                    	if (currType == AVBlockType.VIDEO_ONLY) {
                     		// create and add video panel if not done
                     		if (_vidPanel == null) {
                     			_vidPanel = new VideoPanel();
@@ -403,6 +428,7 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
                     	else if (_vidPanel != null) {
                     		getContentPanel().remove(_vidPanel);
                     	}
+                    	
                         _statusText.setText(_session.getString(ConfigKeys.duringTrialText, ""));
                     }
                 });
@@ -425,7 +451,6 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
      * @since   Feb 28, 2007
      */
     private class PlaybackRunnable implements Runnable {
-        private final T _trial;
         private AVStimulusListener _listener = new AVStimulusListener() {
 			@Override
 			public void stimuliComplete() {
@@ -433,11 +458,8 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
 			}
         };
         
-        public PlaybackRunnable(T trial) {
-            _trial = trial;
+        public PlaybackRunnable() {
             _scheduler.addStimulusListener(_listener);
-            //_trial.addPlaybackListener(_listener);
-            //_trial.preparePlayback(_renderer);
         }
          
         public void run() {
@@ -446,7 +468,6 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
                 	@Override
                 	public void run() {
                 		_scheduler.start();
-                		//_trial.play();
                 	}
                 });
             }
@@ -456,13 +477,18 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         }
         
         private synchronized void trialPlaybackDone() {
+        	// stop processing items
+        	_scheduler.stop();
+        	_scheduler.removeStimulusListener(_listener);
+        	_scheduler.getAnimationPanel().stop();
+            
+            // move to the next trial
+        	determineBlockAndTrial();
+        	_scheduler.setStimulusSource(nextTrial());
+        	
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                	AnimationPanel _aniPanel = _scheduler.getAnimationPanel();
-                	if (_aniPanel != null) _aniPanel.stop();
-                	//_trial.removePlaybackListener(_listener);
-                	_scheduler.stop();
-                	_scheduler.removeStimulusListener(_listener);
+                	// update UI
                     _statusText.setText(_session.getString(ConfigKeys.enterResponseText, null));
                     setEnabled(true);
                     _response.requestFocusInWindow();

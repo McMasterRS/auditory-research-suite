@@ -28,7 +28,7 @@ import edu.mcmaster.maplelab.common.LogContext;
  */
 public abstract class MediaType<T extends MediaSource> {
 	
-	private enum ParameterKeys {
+	public enum ParameterKeys {
 		videoParams,
 		videoFileFormat,
 		animationParams,

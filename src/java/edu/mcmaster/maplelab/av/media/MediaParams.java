@@ -46,14 +46,34 @@ public class MediaParams {
 		return getAvailableValues(param);
 	}
 	
+	public enum LabelKeys {
+		LABEL {
+			@Override
+			public String getKey(String param) {
+				return param + ".label";
+			}
+		},
+		VAL_LABELS {
+			@Override
+			public String getKey(String param) {
+				return param + ".labels";
+			}
+		};
+		
+		public abstract String getKey(String param);
+	}
+	
 	private final String _name;
+	private final String _displayName;
 	private final List<MediaParamValue> _values;
 	
 	private MediaParams(String name, AVSession<?, ?, ?> session) {
 		_name = name;
 		_values = new ArrayList<MediaParamValue>();
+		String label = session.getString(LabelKeys.LABEL.getKey(_name), null);
+		_displayName = label != null ? label : _name;
         List<String> strValues = session.getStringList(_name, (String[]) null);
-        List<String> strLabels = session.getStringList(_name + ".labels", (String[]) null);
+        List<String> strLabels = session.getStringList(LabelKeys.VAL_LABELS.getKey(_name), (String[]) null);
 		if (strValues != null) {
 		    int idx = 0;
 			for (String str : strValues) {
@@ -73,6 +93,10 @@ public class MediaParams {
 	
 	public String paramName() {
 		return _name;
+	}
+	
+	public String displayLabel() {
+		return _displayName;
 	}
 	
 	@Override

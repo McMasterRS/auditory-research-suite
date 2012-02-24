@@ -870,6 +870,16 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      * @return properties file like string.
      */
     protected String toPropertiesStringWithStrings(String... keys) {
+    	return toPropertiesStringWithStrings(true, keys);
+    }
+    
+    /**
+     * Utility method for constructing value for toPropertiesString().
+     * 
+     * @param e enumeration values to iterate over.
+     * @return properties file like string.
+     */
+    protected String toPropertiesStringWithStrings(boolean allowNull, String... keys) {
         StringBuilder buf = new StringBuilder();
         for (String key : keys) {
             Object value = getProperty(key);
@@ -877,6 +887,9 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
             if(value instanceof PropertyFileValue) {
                 value = ((PropertyFileValue)value).toPropertyValueFormat();
             }
+            
+            if (!allowNull && value == null) continue;
+            
             buf.append(key);
             buf.append('=');
             buf.append(value);
