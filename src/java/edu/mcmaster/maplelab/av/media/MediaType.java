@@ -52,9 +52,10 @@ public abstract class MediaType<T extends MediaSource> {
 			return session.getAudioDirectory();
 		}
 		@Override
-		protected Playable findMediaObject(String filename, File directory, AVSession<?, ?, ?> session) {
+		protected Playable findMediaObject(String filename, File directory, 
+				AVSession<?, ?, ?> session, boolean forceReload) {
 			float volume = session.getPlaybackGain();
-			return SoundClip.findPlayable(filename, directory, volume);
+			return SoundClip.findPlayable(filename, directory, volume, forceReload);
 		}
 		@Override
 		public void initializeCount(int count) {
@@ -72,9 +73,10 @@ public abstract class MediaType<T extends MediaSource> {
 			return session.getVideoDirectory();
 		}
 		@Override
-		protected Playable findMediaObject(String filename, File directory, AVSession<?, ?, ?> session) {
+		protected Playable findMediaObject(String filename, File directory, 
+				AVSession<?, ?, ?> session, boolean forceReload) {
 			float volume = session.getPlaybackGain();
-			return QTVideoClip.findPlayable(filename, directory, volume);
+			return QTVideoClip.findPlayable(filename, directory, volume, forceReload);
 		}
 		@Override
 		public void initializeCount(int count) {}
@@ -91,11 +93,12 @@ public abstract class MediaType<T extends MediaSource> {
 			return session.getAnimationDirectory();
 		}
 		@Override
-		protected AnimationSequence findMediaObject(String filename, File directory, AVSession<?, ?, ?> session) {
+		protected AnimationSequence findMediaObject(String filename, File directory, 
+				AVSession<?, ?, ?> session, boolean forceReload) {
 			float aspect = session.getAnimationPointAspect();
 			File f = new File(directory, filename);
 			try {
-				return AnimationParser.parseFile(f, aspect);
+				return AnimationParser.parseFile(f, aspect, forceReload);
 			} 
 			catch (FileNotFoundException e) {
 				LogContext.getLogger().warning(String.format(
@@ -169,7 +172,7 @@ public abstract class MediaType<T extends MediaSource> {
 		List<String> extensions = getFileExtensions(session);
 		for (int i = 0; retval == null && i < extensions.size(); i++) {
 			File f = new File(dir, fileName + "." + extensions.get(i));
-			retval = findMediaObject(f.getName(), f.getParentFile(), session);
+			retval = findMediaObject(f.getName(), f.getParentFile(), session, false);
 		}
 		
 		if (retval == null) {
@@ -270,21 +273,26 @@ public abstract class MediaType<T extends MediaSource> {
 		return p != null ? new MediaWrapper<T>(this, p) : null;
 	}
 	
-	public MediaWrapper<T> createDemoMedia(File file, AVSession<?, ?, ?> session) {
-		return new MediaWrapper<T>(this, file, session);
+	public MediaWrapper<T> createDemoMedia(File file, AVSession<?, ?, ?> session, 
+			boolean forceReload) {
+		return new MediaWrapper<T>(this, file, session, forceReload);
 	}
 	
 	protected abstract List<String> getFileExtensions(AVSession<?, ?, ?> session);
 	protected abstract File getDirectory(AVSession<?, ?, ?> session);
-	protected abstract T findMediaObject(String filename, File directory, AVSession<?, ?, ?> session);
+	protected abstract T findMediaObject(String filename, File directory, 
+			AVSession<?, ?, ?> session, boolean forceReload);
 	public abstract void initializeCount(int count);
 	
 	public static class MediaWrapper<T extends MediaSource> {
 		private final MediaType<T> _type;
 		private final T _mediaObject;
 		
-		private MediaWrapper(MediaType<T> type, File file, AVSession<?, ?, ?> session) {
-			this(type, type.findMediaObject(file.getName(), file.getParentFile(), session));
+		private MediaWrapper(MediaType<T> type, File file, AVSession<?, ?, ?> session, 
+				boolean forceReload) {
+			
+			this(type, type.findMediaObject(file.getName(), file.getParentFile(), session, 
+					forceReload));
 		}
 		
 		private MediaWrapper(MediaType<T> type, T mediaObject) {

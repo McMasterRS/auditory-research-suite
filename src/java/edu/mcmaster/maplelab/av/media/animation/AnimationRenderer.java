@@ -14,7 +14,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import javax.media.opengl.*;
 import javax.media.opengl.glu.GLU;
@@ -32,7 +31,6 @@ public class AnimationRenderer implements GLEventListener {
 	private GLDrawDelegate _proxy = null;
 	
 	private long _startTime;		
-	private TimeUnit _timeUnit = TimeUnit.MILLISECONDS;
 	private boolean _animatedOnce = true; // set to true when 1 stroke is animated
 	private boolean _extentsDirty = true;
 	private Point _lastLoc = null;
@@ -117,7 +115,7 @@ public class AnimationRenderer implements GLEventListener {
 		AnimationSequence as = _source.getAnimationSequence();
 		
 		long currentTime = getCurrentTime();
-		if (currentTime > as.getTotalAnimationTime()) {
+		if (currentTime > as.getTotalAnimationTimeNanos()) {
 			_animatedOnce = true;
 		}
 		
@@ -143,15 +141,9 @@ public class AnimationRenderer implements GLEventListener {
 	} 
 	
 	private long getCurrentTime() {
-		long currentTime = 0;
-		if (_timeUnit == TimeUnit.MILLISECONDS) {
-			currentTime = (System.currentTimeMillis() - getStartTime());			// animate only once
-		}
-		else {
-			currentTime = TimeUnit.MILLISECONDS.convert(System.nanoTime() - getStartTime(), 
-					TimeUnit.NANOSECONDS);
-		}
-		return currentTime;
+		long time = System.nanoTime();
+		//System.out.println("renderer:\t" + time);
+		return time - getStartTime();
 	}
 	
 	protected void notifyListeners() {
@@ -267,14 +259,7 @@ public class AnimationRenderer implements GLEventListener {
 		return _startTime;
 	}
 
-	public void setStartTime(long startTime) {
-		_timeUnit = TimeUnit.MILLISECONDS;
-		_startTime = startTime;
-		_animatedOnce = false;
-	}
-
 	public void setNanoStartTime(long startTime) {
-		_timeUnit = TimeUnit.NANOSECONDS;
 		_startTime = startTime;
 		_animatedOnce = false;
 	}

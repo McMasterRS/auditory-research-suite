@@ -32,10 +32,10 @@ public class TOJTrial extends AVTrial<ConfidenceResponse> {
         if (response != null) {
         	// if offset==0, either is correct
             if (TOJResponseParameters.isDotFirst(response)) {
-                return getOffset() >= 0;
+                return getOffsetNanos() >= 0;
             }
             else {
-                return getOffset() <= 0;
+                return getOffsetNanos() <= 0;
             }
                 
         }

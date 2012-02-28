@@ -9,20 +9,20 @@ package edu.mcmaster.maplelab.av.media.animation;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * AnimationFrame represents one frame in the animation.
+ * 
  * @author Catherine Elder <cje@datamininglab.com>
  */
 public class AnimationFrame {
-	// each frame contains one of the rows in the data file
-
 	private List<AnimationPoint> _pointList;
-	private final long _time;
+	private final long _nanoTime;
 	private final Double _luminance;
 
 	public AnimationFrame(double timeInSeconds, List<AnimationPoint> pointList, Double luminance) {
-		_time = (long) (1000*timeInSeconds);				// time to animate the frame (in ms)
+		_nanoTime = TimeUnit.NANOSECONDS.convert(((long) (1000d*timeInSeconds)), TimeUnit.MILLISECONDS);
 		_pointList = pointList;
 		_luminance = luminance;
 	}
@@ -35,8 +35,8 @@ public class AnimationFrame {
 	/**
 	 * Get the time frame should be rendered after start of animation.
 	 */
-	public long getTimeInMillis() {
-		return _time;
+	public long getTimeInNanos() {
+		return _nanoTime;
 	}
 	
 	/**

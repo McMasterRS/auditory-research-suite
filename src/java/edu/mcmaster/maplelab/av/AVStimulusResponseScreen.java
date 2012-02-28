@@ -296,10 +296,11 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         if (nextTrial == null) return;
         nextTrial.setTimeStamp(new Date());
         
-        String trialDesc = _isWarmup ? "\n---- Warmup Trial ----\n-> %s: %s" : 
-        		"\n--------------------\n-> %s: %s";
+        String trialDesc = _isWarmup ? "\n---- Warmup Trial ----\n-> %s: %s: %s" : 
+        		"\n--------------------\n-> %s: %s: %s";
+        String rep = String.format("Repetition %d", _session.getCurrentRepetition());
         LogContext.getLogger().fine(String.format(trialDesc, 
-        		nextBlock, nextTrial.getDescription()));
+        		rep, nextBlock, nextTrial.getDescription()));
 
         _session.execute(new PrepareRunnable(nextTrial));
         _session.execute(new PlaybackRunnable());

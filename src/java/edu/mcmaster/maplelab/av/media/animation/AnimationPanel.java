@@ -168,7 +168,7 @@ public class AnimationPanel extends JPanel {
 
 			File dir = new File("datafiles/examples/aud");
 
-			final Playable audio = SoundClip.findPlayable(filename, dir);
+			final Playable audio = SoundClip.findPlayable(filename, dir, false);
 			
 			Runnable r = new Runnable() {
 				@Override
@@ -177,7 +177,7 @@ public class AnimationPanel extends JPanel {
 				}
 			};
 
-    		long currentTime = System.currentTimeMillis();
+    		long currentTime = System.nanoTime();
             ani.setAnimationSource(new AnimationSource() {
             	public AnimationSequence getAnimationSequence() {
             		return animation;
@@ -193,7 +193,7 @@ public class AnimationPanel extends JPanel {
             	}
             });
                
-    		ani.setStartTime(currentTime); 
+    		ani.setNanoStartTime(currentTime); 
     		SwingUtilities.invokeLater(r);
         }
         catch (Throwable ex) {

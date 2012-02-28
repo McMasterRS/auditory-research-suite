@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import edu.mcmaster.maplelab.av.media.Playable;
 import edu.mcmaster.maplelab.av.media.animation.AnimationSequence;
@@ -82,15 +83,25 @@ public class SITrialLogger extends FileTrialLogger<SISession, SIBlock, SITrial> 
         fields.put(Keys.audioFile, !vid && media != null ? media.name() : "N/A");
         fields.put(Keys.vidFile, vid && media != null ? media.name() : "N/A");
         fields.put(Keys.visFile, as != null ? as.getSourceFileName() : "N/A");
-        fields.put(Keys.audioOffset, String.valueOf(trial.getOffset()));
+        long millisVal = TimeUnit.MILLISECONDS.convert(
+        		trial.getOffsetNanos(), TimeUnit.NANOSECONDS);
+        fields.put(Keys.audioOffset, String.valueOf(millisVal));
         fields.put(Keys.numDots, String.valueOf(trial.getNumPoints()));
         if (!vid) {
-            Long start = trial.getLastAnimationStart();
-            fields.put(Keys.animationStart, start != null ? String.valueOf(start) : "N/A");
-            fields.put(Keys.aniStrikeDelay, String.valueOf(trial.getAnimationStrikeTime()));
-            start = trial.getLastMediaStart();
-            fields.put(Keys.audioStart, start != null ? String.valueOf(start) : "N/A");
-            fields.put(Keys.audioToneDelay, String.valueOf(trial.getAudioToneOnset()));
+            Long start = trial.getLastAnimationStartNanos();
+            millisVal = start != null ? 
+            		TimeUnit.MILLISECONDS.convert(start, TimeUnit.NANOSECONDS) : null;
+            fields.put(Keys.animationStart, start != null ? String.valueOf(millisVal) : "N/A");
+            millisVal = TimeUnit.MILLISECONDS.convert(
+            		trial.getAnimationStrikeTimeNanos(), TimeUnit.NANOSECONDS);
+            fields.put(Keys.aniStrikeDelay, String.valueOf(millisVal));
+            start = trial.getLastMediaStartNanos();
+            millisVal = start != null ? 
+            		TimeUnit.MILLISECONDS.convert(start, TimeUnit.NANOSECONDS) : null;
+            fields.put(Keys.audioStart, start != null ? String.valueOf(millisVal) : "N/A");
+            millisVal = TimeUnit.MILLISECONDS.convert(
+            		trial.getAudioToneOnsetNanos(), TimeUnit.NANOSECONDS);
+            fields.put(Keys.audioToneDelay, String.valueOf(millisVal));
         }
         else {
             fields.put(Keys.animationStart, "N/A");

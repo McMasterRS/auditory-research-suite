@@ -113,7 +113,7 @@ public class SoundClip implements Playable {
         return dur != AudioSystem.NOT_SPECIFIED ? (int) (dur / 1000) : 0;
     }
 
-    public int duration() {
+    public int durationMillis() {
         if (_desiredDur > 0) return _desiredDur;
         return getClipDuration();
     }
@@ -159,7 +159,7 @@ public class SoundClip implements Playable {
         // The call _clip.drain() below takes too long, messing up synchronization.
         // Just using Thread.sleep() gives us the accuracy we want. Required
         // to support blocking semantics of method.
-        Session.sleep(duration());
+        Session.sleep(durationMillis());
         
         // if desired duration was less than actual, we have to stop early
         if (_sourceID != null) {
@@ -234,16 +234,18 @@ public class SoundClip implements Playable {
      * @param name key name used in config file.
      * @return translated Playable type.
      */
-    public static Playable findPlayable(String filename, File directory) {
-    	return findPlayable(filename, directory, 1.0f);
+    public static Playable findPlayable(String filename, File directory, boolean forceReload) {
+    	return findPlayable(filename, directory, 1.0f, forceReload);
     }
     
-    public static Playable findPlayable(String filename, File directory, float volume) {
-    	return findPlayable(filename, directory, -1, volume);
+    public static Playable findPlayable(String filename, File directory, float volume, 
+    		boolean forceReload) {
+    	return findPlayable(filename, directory, -1, volume, forceReload);
     }
     
-    public static Playable findPlayable(String filename, File directory, int desiredDur, float volume) {
-        Playable p = _soundCache.get(filename);
+    public static Playable findPlayable(String filename, File directory, int desiredDur, 
+    		float volume, boolean forceReload) {
+        Playable p = forceReload ? null : _soundCache.get(filename);
         if (p == null) {
             if (filename != null) {
                 Clip clip = null;

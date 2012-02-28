@@ -42,15 +42,17 @@ public class AnimationParser {
 	private static Map<String, AnimationSequence> _animationCache = new HashMap<String, AnimationSequence>();
 
 	public static AnimationSequence parseFile(File file) throws FileNotFoundException {
-		return parseFile(file, null);
+		return parseFile(file, null, false);
 	}
 	
-	public static AnimationSequence parseFile(File file, Float aspectRatio) throws FileNotFoundException {
+	public static AnimationSequence parseFile(File file, Float aspectRatio, 
+			boolean forceReload) throws FileNotFoundException {
+		
 		// method accepts a file  and returns AnimationSequence
 		// assign frames from file contents
 		
 		String filename = file.getName();
-		AnimationSequence retval = _animationCache.get(filename);
+		AnimationSequence retval = forceReload ? null : _animationCache.get(filename);
 		if (retval != null) return retval;
 
 		BufferedReader reader = null;

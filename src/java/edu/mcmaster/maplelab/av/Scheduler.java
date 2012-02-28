@@ -52,7 +52,10 @@ public class Scheduler {
 		_clock = new TimerClock();
 	}
 	
-	public void setUpdatePeriod(long updatePeriod) {
+	/**
+	 * Set the update period in nanoseconds.
+	 */
+	public void setUpdatePeriodNanos(long updatePeriod) {
 		_updatePeriod = updatePeriod;
 	}
 

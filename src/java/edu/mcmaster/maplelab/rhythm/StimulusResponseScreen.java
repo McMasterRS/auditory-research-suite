@@ -265,9 +265,11 @@ public class StimulusResponseScreen extends BasicStep {
         if(currTrial == null) return;
         currTrial.setTimeStamp(new Date());
         
-        LogContext.getLogger().fine(
-            String.format("\n--------------------\n-> %s: %s", currBlock, currTrial));
-        
+        String trialDesc = _isWarmup ? "\n---- Warmup Trial ----\n-> %s: %s: %s" : 
+        		"\n--------------------\n-> %s: %s: %s";
+        String rep = String.format("Repetition %d", _session.getCurrentRepetition());
+        LogContext.getLogger().fine(String.format(trialDesc, 
+        		rep, currBlock, currTrial.getDescription()));
 
         _session.execute(new PrepareRunnable(currTrial));
         _session.execute(new PlaybackRunnable(currTrial));

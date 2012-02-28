@@ -34,8 +34,9 @@ public class QTVideoClip implements Playable {
 	
 	private static final Map<String, Playable> _movieCache = new HashMap<String, Playable>();
 	
-	public static Playable findPlayable(String filename, File directory, float volume) {
-        Playable p = _movieCache.get(filename);
+	public static Playable findPlayable(String filename, File directory, float volume, 
+			boolean forceReload) {
+        Playable p = forceReload ? null : _movieCache.get(filename);
         if (p == null) {
             if (filename != null) {
             	QTMovie m = null;
@@ -96,7 +97,7 @@ public class QTVideoClip implements Playable {
     	}
 		_movie.play();
 		
-		Session.sleep(duration());
+		Session.sleep(durationMillis());
         
         synchronized (_listeners) {
             if (!_listeners.isEmpty()) {
@@ -108,7 +109,7 @@ public class QTVideoClip implements Playable {
 	}
 
 	@Override
-	public int duration() {
+	public int durationMillis() {
 		QTTime time = _movie.duration();
 		// get milliseconds
 		return (int) (1000d * (double) time.timeValue / time.timeScale.doubleValue());

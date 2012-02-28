@@ -38,7 +38,7 @@ public interface Playable extends MediaSource {
     /**
      * Query duration of the source in milliseconds.
      */
-    int duration();
+    int durationMillis();
     
     /**
      * Get an identifier name.

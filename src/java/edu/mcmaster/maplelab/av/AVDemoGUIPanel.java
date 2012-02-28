@@ -26,22 +26,22 @@ import edu.mcmaster.maplelab.common.gui.FileBrowseField;
 
 public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<AVSession<?, T, ?>, T> {
 	
-    private FilePathUpdater _fUpdater = new FilePathUpdater();
+    private final FilePathUpdater _fUpdater = new FilePathUpdater();
 
-	private FileBrowseField _audFile;
-	private FileBrowseField _visFile;
-	private FileBrowseField _vidFile;
+	private final FileBrowseField _audFile;
+	private final FileBrowseField _visFile;
+	private final FileBrowseField _vidFile;
 	
-	private JFormattedTextField _delayText;
-	private JFormattedTextField _frameAdvance;
-	private JFormattedTextField _renderCallAhead;
-	private JFormattedTextField _audioCallAhead;
-	private JSpinner _numPts;
-	private JCheckBox _connect;
-	private JCheckBox _loop;
-	private JCheckBox _useVideo;
-	
-	private JButton _startButton;
+	private final JFormattedTextField _delayText;
+	private final JFormattedTextField _frameAdvance;
+	private final JFormattedTextField _renderCallAhead;
+	private final JFormattedTextField _audioCallAhead;
+	private final JSpinner _numPts;
+	private final JCheckBox _connect;
+	private final JCheckBox _forceReload;
+	private final JCheckBox _loop;
+	private final JCheckBox _useVideo;
+	private final JButton _startButton;
 	
 	private StimulusScheduler _scheduler;
 	private Boolean _video = null;
@@ -50,8 +50,8 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	private AnimationPanel _aniPanel;
 	private VideoPanel _vidPanel;
 	
-	private Map<MediaType<?>, Map<String, JComboBox> > _paramSelectors = new HashMap<MediaType<?>, Map<String,JComboBox>>();
-	
+	private Map<MediaType<?>, Map<String, JComboBox> > _paramSelectors = 
+			new HashMap<MediaType<?>, Map<String,JComboBox>>();
 	
 	//read data from user entries and create a trial
 	
@@ -116,17 +116,22 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
         // visual info
         add(new JLabel("Video"), "newline, split, span, gaptop 10");
         add(new JSeparator(), "growx, wrap, gaptop 10");
+        
+        p = genParamControls(session, MediaType.VIDEO);
+        add(p, "newline, spany 2, right");
 
         add(new JLabel("Video Enabled:"), "right, split, span");
         _useVideo = new JCheckBox();
         add(_useVideo, "left, grow, wrap");
-        
-        p = genParamControls(session, MediaType.VIDEO);
-        add(p, "newline, right");
 		
 		// files 
 		add(new JLabel("Files"), "newline, split, span, gaptop 10");
 		add(new JSeparator(), "growx, wrap, gaptop 10");
+		
+		add(new JLabel("Force file reload (disable caching)"), 
+				"left, split 2, gaptop 10, gapbottom 15");
+		_forceReload = new JCheckBox();
+		add(_forceReload, "left, gaptop 10, gapbottom 15, wrap");
 		
 		add(new JLabel("Audio File"), "right, span, split");
 		_audFile = new FileBrowseField(false);
@@ -182,11 +187,13 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 	public synchronized T getTrial() {
 		AVSession<?, ?, ?> session = getSession();
 		final boolean vid = _useVideo.isSelected();
-		MediaWrapper<Playable> media = vid ? MediaType.VIDEO.createDemoMedia(_vidFile.getFile(), session) :
-				MediaType.AUDIO.createDemoMedia(_audFile.getFile(), session);
+		boolean forceReload = _forceReload.isSelected();
+		MediaWrapper<Playable> media = vid ? 
+				MediaType.VIDEO.createDemoMedia(_vidFile.getFile(), session, forceReload) :
+				MediaType.AUDIO.createDemoMedia(_audFile.getFile(), session, forceReload);
 		try {
 			AnimationSequence aniSeq = !vid ? AnimationParser.parseFile(
-					_visFile.getFile(), session.getAnimationPointAspect()) : null;
+					_visFile.getFile(), session.getAnimationPointAspect(), forceReload) : null;
 			Object val = _delayText.getValue();
 			Long delay = Long.valueOf(val instanceof String ? (String) val : ((Number) val).toString());
 			Long mediaDelay = session.getToneOnsetTime(media.getName());
@@ -364,11 +371,8 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		        LogContext.getLogger().fine("\n--------------------\n-> " + next.getDescription());
 		        prepareNext(next);
 		        updateCallAheads();
-		        //next.preparePlayback(_renderer);
 		        _scheduler.setStimulusSource(next);
-		        //next.addPlaybackListener(new LoopListener(next));
 		        _scheduler.addStimulusListener(new LoopListener());
-		        //next.play();
 		        _scheduler.start();
 		    }
 		    catch (Exception e) {
@@ -385,7 +389,6 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-					//_trial.removePlaybackListener(LoopListener.this);
 					if (_loop.isSelected()) {
 						SwingUtilities.invokeLater(new PrepareAndRun());
 					}

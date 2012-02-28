@@ -14,9 +14,11 @@ import javax.vecmath.*;
 import edu.mcmaster.maplelab.av.media.MediaSource;
 
 /**
- * This class creates a sequence of frames to be animated
+ * This class contains a sequence of frames to be animated.
+ * 
+ * XXX: ALL TIME WITHIN THIS CLASS IS IN NANOSECONDS!
+ * 
  * @author Catherine Elder <cje@datamininglab.com>
- *
  */
 public class AnimationSequence implements MediaSource {
 	/** Animation extents buffer (each of the 4 sides). */
@@ -38,14 +40,23 @@ public class AnimationSequence implements MediaSource {
 		calculateExtents();
 	}
 	
+	/**
+	 * Get the name of the source animation file.
+	 */
 	public String getSourceFileName() {
 		return _fileName;
 	}
 	
+	/**
+	 * Get the point aspect ratio to use in rendering.
+	 */
 	public float getPointAspect() {
 		return _aspect;
 	}
 
+	/**
+	 * Get the frame at the given index.
+	 */
 	public AnimationFrame getFrameAtIndex(int currentFrame) { 
 		if(currentFrame < 0 || currentFrame >= getNumFrames()) {
 			throw new IllegalArgumentException(String.format("Frame number must be between 0 and %d.\n", getNumFrames()));
@@ -55,39 +66,40 @@ public class AnimationSequence implements MediaSource {
 
 	/**
 	 * Get a frame for the given time, interpolating if necessary.
-	 * @param 
-	 * @return a new frame using interpolation. time in ms.
+	 * 
+	 * @param time in nanoseconds
+	 * @return a new frame using interpolation.
 	 */
 	public AnimationFrame getFrameAtTime(long time) {
-		if (time < getFrameAtIndex(0).getTimeInMillis() || 
-				time > getFrameAtIndex(getNumFrames()-1).getTimeInMillis()) {
+		if (time < getFrameAtIndex(0).getTimeInNanos() || 
+				time > getFrameAtIndex(getNumFrames()-1).getTimeInNanos()) {
 			return null;
 		}
 		
 		// get frames
 		AnimationFrame frame1 = null;
 		AnimationFrame frame2 = getFrameAtIndex(0);
-		for (int i = 1; i < getNumFrames() && time > frame2.getTimeInMillis(); i++) {
+		for (int i = 1; i < getNumFrames() && time > frame2.getTimeInNanos(); i++) {
 			frame1 = getFrameAtIndex(i-1);
 			frame2 = getFrameAtIndex(i);
 		}
-		if (frame2.getTimeInMillis() == time) return frame2;
+		if (frame2.getTimeInNanos() == time) return frame2;
 		
 		return interpolate(frame1, frame2, time);
-		
 	}
 	
 	/**
-	 * Interpolate between the two given frames to produce a new frame at the given time.
+	 * Interpolate between the two given frames to produce a new frame at the given nano time.
+	 * 
 	 * @param frame1 the first-occurring frame to interpolate
 	 * @param frame2 the second-occurring frame to interpolate
-	 * @param time the time for which to interpolate a frame (should fall between the two
-	 *             given frames' times)
-	 * @return a new, interpolate frame
+	 * @param time the nanosecond time for which to interpolate a frame 
+	 * 			(should fall between the two given frames' times)
+	 * @return a new, interpolated frame
 	 */
 	private AnimationFrame interpolate(AnimationFrame frame1, AnimationFrame frame2, long time) {
-		double alpha = (time - frame1.getTimeInMillis()) / 
-				(frame2.getTimeInMillis() - frame1.getTimeInMillis());
+		double alpha = (time - frame1.getTimeInNanos()) / 
+				(frame2.getTimeInNanos() - frame1.getTimeInNanos());
 		
 		ArrayList<AnimationPoint> dotList = new ArrayList<AnimationPoint>();
 		
@@ -153,21 +165,21 @@ public class AnimationSequence implements MediaSource {
 	}
 
 	/**
-	 * @return the totalAnimationTime
+	 * @return the totalAnimationTime in nanoseconds
 	 */
-	public long getTotalAnimationTime() {
+	public long getTotalAnimationTimeNanos() {
 		int numFrames = _aniFrames.size();
 		if (numFrames == 0) return 0;
 		
-		return _aniFrames.get(numFrames - 1).getTimeInMillis();
+		return _aniFrames.get(numFrames - 1).getTimeInNanos();
 	}
 	
 	/**
 	 * Get the time stamp of the frame at which the strike occurs.
 	 */
-	public long getStrikeTime() {
+	public long getStrikeTimeNanos() {
 		if (_lowestFrame == null) calculateExtents();
-		return _lowestFrame != null ? _lowestFrame.getTimeInMillis() : 0;
+		return _lowestFrame != null ? _lowestFrame.getTimeInNanos() : 0;
 	}
 	
 	/**

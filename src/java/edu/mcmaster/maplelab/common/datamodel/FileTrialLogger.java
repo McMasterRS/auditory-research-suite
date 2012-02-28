@@ -51,9 +51,11 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
     
 	private enum CountKeys {
 		trial_num,
+		block_num,
+		block_instance,
         repetition_num,
         trial_in_repetition,
-        block_num, 
+        block_in_repetition, 
         trial_in_block,
         time_stamp
 	}
@@ -386,12 +388,16 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
         EnumMap<CountKeys, String> fields = new EnumMap<CountKeys, String>(CountKeys.class);
 
         // Calculate trial numbers and parameters
+        int overall_block = (session.getCurrentRepetition()-1)*session.getNumBlocks() + block.getNum();
         int trial_in_rep = (block.getNum()-1)*block.getNumTrials() + trial.getNum();
         int overall_trial = (session.getCurrentRepetition()-1)*session.getNumBlocks()*block.getNumTrials() + trial_in_rep;
     	fields.put(CountKeys.trial_num, String.valueOf(overall_trial));
+    	fields.put(CountKeys.block_num, String.valueOf(overall_block));
+    	// for now, the next two items are the same
+    	fields.put(CountKeys.block_instance, String.valueOf(session.getCurrentRepetition()));
         fields.put(CountKeys.repetition_num, String.valueOf(session.getCurrentRepetition()));
         fields.put(CountKeys.trial_in_repetition, String.valueOf(trial_in_rep));
-        fields.put(CountKeys.block_num, String.valueOf(block.getNum()));
+        fields.put(CountKeys.block_in_repetition, String.valueOf(block.getNum()));
         fields.put(CountKeys.trial_in_block, String.valueOf(trial.getNum()));
         fields.put(CountKeys.time_stamp, trial.getTimeStamp());
         

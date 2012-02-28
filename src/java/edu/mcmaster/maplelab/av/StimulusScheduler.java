@@ -28,7 +28,6 @@ import edu.mcmaster.maplelab.av.media.animation.AnimationListener;
 import edu.mcmaster.maplelab.av.media.animation.AnimationPanel;
 import edu.mcmaster.maplelab.av.media.animation.AnimationRenderer;
 import edu.mcmaster.maplelab.av.media.animation.AnimationRenderer.GLDrawDelegate;
-import edu.mcmaster.maplelab.av.media.animation.AnimationTrigger;
 import edu.mcmaster.maplelab.av.media.animation.ScheduledAnimationTrigger;
 import edu.mcmaster.maplelab.common.LogContext;
 
@@ -37,7 +36,7 @@ import edu.mcmaster.maplelab.common.LogContext;
  *
  */
 public class StimulusScheduler {
-	private static final int PERIOD_OFFSET_MULTIPLIER = 3;
+	private static final int PERIOD_OFFSET_MULTIPLIER = 1;
 	private static final boolean APPLE_MODE = true;
 	private static final int MAX_STIMULUS_COUNT = 12;
 	private static final long REFRESH_PERIOD;
@@ -59,12 +58,13 @@ public class StimulusScheduler {
 	private final AnimationCompletionListener _animationListener;
 	private final MediaCompletionListener _mediaListener;
 	private final VSyncedScheduleStarter _starter;
-	private final VSyncedRefreshCalculator _refreshCalculator;
+	private final VSyncedRefreshCalcScheduler _refreshCalculator;
 	private final List<AVStimulusListener> _listeners;
 	private final AnimationPanel _aniPanel;
 	private long _audioCallAhead;
 	private long _animationFrameAdvance;
 	private AVTrial<?> _trial;
+	private CountDownLatch _schedulingGuard;
 	private CountDownLatch _completionLatch;
 	private boolean _running = false;
 	private Long _lastStart = null;
@@ -83,7 +83,7 @@ public class StimulusScheduler {
 		_listeners = new ArrayList<AVStimulusListener>();
 		_aniPanel = new AnimationPanel(_renderer, _trigger);
 		_starter = new VSyncedScheduleStarter();
-		_refreshCalculator = new VSyncedRefreshCalculator();
+		_refreshCalculator = new VSyncedRefreshCalcScheduler();
 	}
 	
 	public AnimationPanel getAnimationPanel() {
@@ -123,30 +123,38 @@ public class StimulusScheduler {
 		_trial = trial;
 		
 		if (_trial == null) return;
-		
+
+		_schedulingGuard = new CountDownLatch(1);
+		calculateRefreshAndSchedule();
+		_completionLatch = new CountDownLatch(_trial.getNumMediaObjects());
+	}
+	
+	/**
+	 * Schedule the trial for the given refresh period.
+	 */
+	private void scheduleTrial(long period) {
 		Playable p = _trial.isVideo() ? _trial.getVideoPlayable() : _trial.getAudioPlayable();
 		long adjust = 0;
 		if (_trial.getAnimationSequence() != null) {
 			_renderer.setAnimationSource(_trial);
-			calculateRefresh();
 			
-			long time = TimeUnit.NANOSECONDS.convert(_trial.getAnimationDelay(), TimeUnit.MILLISECONDS);
-			adjust = time % REFRESH_PERIOD;
-			_scheduler.scheduleAlarmOnly(_animationStart, time - adjust, TimeUnit.NANOSECONDS);
+			long aniDelay = _trial.getAnimationDelayNanos();
+			adjust = (_trial.getAnimationStrikeTimeNanos() + aniDelay) % period;
+			_scheduler.scheduleAlarmOnly(_animationStart, aniDelay - adjust, TimeUnit.NANOSECONDS);
 		}
 		if (p != null) {
 			p.addListener(_mediaListener);
-			long time = (TimeUnit.NANOSECONDS.convert(_trial.getMediaDelay(), TimeUnit.MILLISECONDS)
-					- adjust) + (PERIOD_OFFSET_MULTIPLIER*REFRESH_PERIOD); // XXX: ~2+ periods for vsync buffering
+			long time = (_trial.getMediaDelayNanos() - adjust) + 
+					(PERIOD_OFFSET_MULTIPLIER*period); // XXX: ~2+ periods for vsync buffering
 			_scheduler.scheduleAlarmOnly(_mediaStart, time, TimeUnit.NANOSECONDS);
 		}
-		_completionLatch = new CountDownLatch(_trial.getNumMediaObjects());
+		_schedulingGuard.countDown();
 	}
 	
 	/**
 	 * Run the refresh period calculation renderer.
 	 */
-	private void calculateRefresh() {
+	private void calculateRefreshAndSchedule() {
 		// is this the best way to do this?
 		_renderer.setDisplayProxy(_refreshCalculator);
 		Thread t = new Thread(new Runnable() {
@@ -159,80 +167,59 @@ public class StimulusScheduler {
 		t.start();
 	}
 	
-	/**
-	 * XXX
-	 * Schedule the trial for the given refresh period.
-	 */
-	/*private void scheduleTrial(long period) {
-		Playable p = _trial.isVideo() ? _trial.getVideoPlayable() : _trial.getAudioPlayable();
-		long adjust = 0;
-		if (_trial.getAnimationSequence() != null) {
-			_renderer.setAnimationSource(_trial);
-			
-			long aniDelay = TimeUnit.NANOSECONDS.convert(_trial.getAnimationDelay(), TimeUnit.MILLISECONDS);
-			adjust = (TimeUnit.NANOSECONDS.convert(_trial.getAnimationStrikeTime(), TimeUnit.MILLISECONDS) +
-					aniDelay) % period;
-			_scheduler.scheduleAlarmOnly(_animationStart, aniDelay - adjust, TimeUnit.NANOSECONDS);
-		}
-		if (p != null) {
-			p.addListener(_mediaListener);
-			long time = (TimeUnit.NANOSECONDS.convert(_trial.getMediaDelay(), TimeUnit.MILLISECONDS)
-					- adjust) + (PERIOD_OFFSET_MULTIPLIER*period); // XXX: ~2+ periods for vsync buffering
-			_scheduler.scheduleAlarmOnly(_mediaStart, time, TimeUnit.NANOSECONDS);
-		}
-	}*/
-	
 	public void start() {
 		if (_running || _trial == null) return;
 		_running = true;
 
 		_lastStart = null;
 		
-		if (_trial.getNumMediaObjects() > 1) {
-			_renderer.setDisplayProxy(_starter);
-			_trigger.forceDisplay();
-		}
-		else {
-			_scheduler.start();
-		}
+		Thread t = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					_schedulingGuard.await();
+				} 
+				catch (InterruptedException e) {} // ignore*/
+				
+				if (_trial.getNumMediaObjects() > 1) {
+					_renderer.setDisplayProxy(_starter);
+					_trigger.forceDisplay();
+				}
+				else {
+					_scheduler.start();
+				}
+			}}) {{
+			setPriority(Thread.MAX_PRIORITY);
+		}};
+		t.start();
 	}
 	
 	/**
-	 * Stop the scheduler and return the reference start time used on the last run in milliseconds.
+	 * Stop the scheduler and return the reference start time used on the last run in nanoseconds.
 	 */
 	public Long stop() {
 		if (_lastStart == null) {
-			_lastStart = TimeUnit.MILLISECONDS.convert(_scheduler.stop(), TimeUnit.NANOSECONDS);
+			_lastStart = _scheduler.stop();
 		}
 		
 		String runDesc = "\t---- Trial run complete. ---\n\tReference start time: %d\n" +
 				"%s%s--------------------------\n\n";
 		String aniDesc = "";
 		String medDesc = "";
+		long millisVal = 0;
 		if (_trial.getNumMediaObjects() > 1) {
-			aniDesc = String.format("\tRelative animation start time: %d\n", 
-					_trial.getLastAnimationStart() - _lastStart);
-			medDesc = String.format("\tRelative media start time: %d\n", 
-					_trial.getLastMediaStart() - _lastStart);
+			millisVal = TimeUnit.MILLISECONDS.convert(
+					_trial.getLastAnimationStartNanos() - _lastStart, TimeUnit.NANOSECONDS);
+			aniDesc = String.format("\tRelative animation start time: %d\n", millisVal);
+			millisVal = TimeUnit.MILLISECONDS.convert(
+					_trial.getLastMediaStartNanos() - _lastStart, TimeUnit.NANOSECONDS);
+			medDesc = String.format("\tRelative media start time: %d\n", millisVal);
 		}
-		LogContext.getLogger().fine(String.format(runDesc, _lastStart, aniDesc, medDesc));
+		millisVal = TimeUnit.MILLISECONDS.convert(_lastStart, TimeUnit.NANOSECONDS);
+		LogContext.getLogger().fine(String.format(runDesc, millisVal, aniDesc, medDesc));
 
 		_running = false;
 		return _lastStart;
-	}
-	
-	/**
-	 * Get the animation trigger used by this scheduler.
-	 */
-	public AnimationTrigger getAnimationTrigger() {
-		return _trigger;
-	}
-	
-	/**
-	 * Get the animation renderer used by this scheduler.
-	 */
-	public AnimationRenderer getAnimationRenderer() {
-		return _renderer;
 	}
 	
 	/**
@@ -266,18 +253,10 @@ public class StimulusScheduler {
 		public void markTime(ScheduleEvent e) {}
 		@Override
 		public void alarm(ScheduleEvent e) {
-			/*if (_trial.getNumMediaObjects() > 1) {
-				CountDownLatch latch = new CountDownLatch(1);
-				_renderer.setControlLatch(latch);
-				// TODO - use time from event?
-				_trial.markMediaStart(System.currentTimeMillis());
-				_trial.getMedia().getMediaObject().play(latch);
-			}
-			else {*/
-				_trial.markMediaStart(System.currentTimeMillis());
-				//System.out.println("audio play request: " + System.nanoTime());
-				_trial.getMedia().getMediaObject().play();
-			//}
+			long time = System.nanoTime();
+			//System.out.println("media:\t" + time);
+			_trial.markMediaStartNanos(time);
+			_trial.getMedia().getMediaObject().play();
 		}
 		@Override
 		public long callAheadNanoTime() {
@@ -294,7 +273,7 @@ public class StimulusScheduler {
 		@Override
 		public void alarm(ScheduleEvent e) {
 			// TODO - use time from event?
-			_trial.markAnimationStart(System.currentTimeMillis());
+			_trial.markAnimationStartNanos(System.nanoTime());
 			_renderer.setNanoStartTime(e.getEventTime(TimeUnit.NANOSECONDS));
 		}
 		@Override
@@ -338,7 +317,7 @@ public class StimulusScheduler {
 			} 
 			catch (InterruptedException e1) {}
 			
-			_lastStart = TimeUnit.MILLISECONDS.convert(_scheduler.stop(), TimeUnit.NANOSECONDS);
+			_lastStart = _scheduler.stop();
 			notifyListeners();
 		}
 		@Override
@@ -348,7 +327,8 @@ public class StimulusScheduler {
 	/**
 	 * Class for calculating the current refresh period on-the-fly.
 	 */
-	private class VSyncedRefreshCalculator implements GLDrawDelegate {
+	private class VSyncedRefreshCalcScheduler implements GLDrawDelegate {
+		private static final long ITERATIONS = 100;
 		@Override
 		public void draw(GLAutoDrawable drawable) {
 			_renderer.clearProxy(); // remove self
@@ -361,7 +341,7 @@ public class StimulusScheduler {
 			long total = 0;
 			
 			if (APPLE_MODE) {
-				for (int i = 0; i < 100; i++) {
+				for (int i = 0; i < ITERATIONS; i++) {
 					gl.glSwapAPPLE();
 					long tmp = System.nanoTime();
 					total += tmp - curr;
@@ -369,14 +349,18 @@ public class StimulusScheduler {
 				}
 			}
 			else {
-				for (int i = 0; i < 100; i++) {
+				for (int i = 0; i < ITERATIONS; i++) {
 					gl.glFinish(); // TODO: would this even work?
 					long tmp = System.nanoTime();
 					total += curr - tmp;
 					curr = tmp;
 				}
 			}
-			_scheduler.setUpdatePeriod(total / 100);
+			long period = total / ITERATIONS;
+			// cap the refresh period at an arbitrary, unreasonable value
+			if (period < REFRESH_PERIOD / 20) period = REFRESH_PERIOD;
+			_scheduler.setUpdatePeriodNanos(period);
+			scheduleTrial(period);
 		}
 	}
 	

@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import edu.mcmaster.maplelab.av.media.Playable;
 import edu.mcmaster.maplelab.av.media.animation.AnimationSequence;
@@ -88,14 +89,24 @@ public class TOJTrialLogger extends FileTrialLogger<TOJSession, TOJBlock, TOJTri
         AnimationSequence as = trial.getAnimationSequence();
         fields.put(Keys.audioFile, p != null ? p.name() : "N/A");
         fields.put(Keys.visFile, as != null ? as.getSourceFileName() : "N/A");
-        fields.put(Keys.audioOffset, String.valueOf(trial.getOffset()));
+        long millisVal = TimeUnit.MILLISECONDS.convert(
+        		trial.getOffsetNanos(), TimeUnit.NANOSECONDS);
+        fields.put(Keys.audioOffset, String.valueOf(millisVal));
         fields.put(Keys.numDots, String.valueOf(trial.getNumPoints()));
-        Long start = trial.getLastAnimationStart();
-        fields.put(Keys.animationStart, start != null ? String.valueOf(start) : "N/A");
-        fields.put(Keys.aniStrikeDelay, String.valueOf(trial.getAnimationStrikeTime()));
-        start = trial.getLastMediaStart();
-        fields.put(Keys.audioStart, start != null ? String.valueOf(start) : "N/A");
-        fields.put(Keys.audioToneDelay, String.valueOf(trial.getAudioToneOnset()));
+        Long start = trial.getLastAnimationStartNanos();
+        millisVal = start != null ? 
+        		TimeUnit.MILLISECONDS.convert(start, TimeUnit.NANOSECONDS) : null;
+        fields.put(Keys.animationStart, start != null ? String.valueOf(millisVal) : "N/A");
+        millisVal = TimeUnit.MILLISECONDS.convert(
+        		trial.getAnimationStrikeTimeNanos(), TimeUnit.NANOSECONDS);
+        fields.put(Keys.aniStrikeDelay, String.valueOf(millisVal));
+        start = trial.getLastMediaStartNanos();
+        millisVal = start != null ? 
+        		TimeUnit.MILLISECONDS.convert(start, TimeUnit.NANOSECONDS) : null;
+        fields.put(Keys.audioStart, start != null ? String.valueOf(millisVal) : "N/A");
+        millisVal = TimeUnit.MILLISECONDS.convert(
+        		trial.getAudioToneOnsetNanos(), TimeUnit.NANOSECONDS);
+        fields.put(Keys.audioToneDelay, String.valueOf(millisVal));
         
         // Output subject response information
         ConfidenceResponse response = trial.getResponse();

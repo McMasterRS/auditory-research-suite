@@ -31,7 +31,7 @@ public class ScheduledAnimationTrigger implements AnimationTrigger, Scheduled {
 	@Override
 	public void markTime(ScheduleEvent e) {
 		if (_running) {
-			//System.out.println("trigger: " + System.nanoTime());
+			//System.out.println("trigger:\t" + System.nanoTime());
 			_canvas.display();
 		}
 	}
