@@ -36,10 +36,11 @@ public class SoundClip implements Playable {
     private static int[] _bufferIDs = null;
     private static int[] _sourceIDs = null;
     private static int _index;
+    private static int _pollWaitMillis = 0;
     
     /**
      * Initialize the buffer and source id arrays according to the expected
-     * count;
+     * count.
      */
     public static void initializeSoundCount(int count) {
     	_index = 0;
@@ -51,6 +52,13 @@ public class SoundClip implements Playable {
         al.alGenSources(count, _sourceIDs, 0);
     }
     
+    /**
+     * Initialize wait time between polling for playback finished state.
+     */
+    public static void initializePlayPollWait(int waitMillis) {
+    	_pollWaitMillis = waitMillis;
+    }
+    
     
     
     private final Clip _clip; // javax.media version
@@ -58,7 +66,6 @@ public class SoundClip implements Playable {
     private final Integer _bufferID; // open al version
     private float _sourceVol = 1.0f;
     private final String _name;
-    private int _desiredDur = -1;
     private int _calculatedDur = Integer.MIN_VALUE;
     private ArrayList<PlayableListener> _listeners = new ArrayList<PlayableListener>();
     
@@ -76,11 +83,7 @@ public class SoundClip implements Playable {
         _bufferID = null;
     }
 
-    public void setDesiredDuration(int desiredDur) {
-        _desiredDur = desiredDur;
-    }
-
-    public int getClipDuration() {
+    public int durationMillis() {
     	if (_bufferID != null) {
     		if (_calculatedDur == Integer.MIN_VALUE) {
             	/* Frequency is in terms of samples/second.
@@ -111,11 +114,6 @@ public class SoundClip implements Playable {
     	
         long dur = _clip.getMicrosecondLength();
         return dur != AudioSystem.NOT_SPECIFIED ? (int) (dur / 1000) : 0;
-    }
-
-    public int durationMillis() {
-        if (_desiredDur > 0) return _desiredDur;
-        return getClipDuration();
     }
     
     /**
@@ -161,9 +159,14 @@ public class SoundClip implements Playable {
         // to support blocking semantics of method.
         Session.sleep(durationMillis());
         
-        // if desired duration was less than actual, we have to stop early
         if (_sourceID != null) {
-        	ALFactory.getAL().alSourceStop(_sourceID);
+        	int[] val = new int[1];
+    		al.alGetSourcei(_sourceID, AL.AL_SOURCE_STATE, val, 0);
+        	while (val[0] == AL.AL_PLAYING) {
+        		Session.sleep(_pollWaitMillis);
+        		al.alGetSourcei(_sourceID, AL.AL_SOURCE_STATE, val, 0);
+        	}
+        	//al.alSourceStop(_sourceID);
         }
         else _clip.stop();
         
@@ -240,11 +243,6 @@ public class SoundClip implements Playable {
     
     public static Playable findPlayable(String filename, File directory, float volume, 
     		boolean forceReload) {
-    	return findPlayable(filename, directory, -1, volume, forceReload);
-    }
-    
-    public static Playable findPlayable(String filename, File directory, int desiredDur, 
-    		float volume, boolean forceReload) {
         Playable p = forceReload ? null : _soundCache.get(filename);
         if (p == null) {
             if (filename != null) {
@@ -309,10 +307,6 @@ public class SoundClip implements Playable {
                 
                 // set playable parameters and cache
                 if (p != null) {
-                    if (desiredDur > 0) {
-                        ((SoundClip) p).setDesiredDuration(desiredDur);
-                    }
-                    
                     // don't change the volume unless necessary
                     if (Float.compare(1.0f, volume) != 0) p.setVolume(volume);
                     

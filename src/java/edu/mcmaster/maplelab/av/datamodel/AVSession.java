@@ -42,7 +42,8 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		videoFileExtensions,
 		animationFileExtensions,
 		audioFileExtensions,
-		synchronizeParameters
+		synchronizeParameters,
+		audioPollWait
 	}
 	
 	private Properties _audioFileMetaData = null;
@@ -79,6 +80,13 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	 */
 	public Long getRenderCallAhead() {
 		return getLong(ConfigKeys.renderCallAhead, 0);
+	}
+	
+	/**
+	 * Get the poll wait time for audio playback completion.
+	 */
+	public int getAudioPollWait() {
+		return getInteger(ConfigKeys.audioPollWait, 0);
 	}
 	
 	/**

@@ -61,6 +61,10 @@ public abstract class MediaType<T extends MediaSource> {
 		public void initializeCount(int count) {
 			SoundClip.initializeSoundCount(count);
 		}
+		@Override
+		public void initializeWait(int waitMillis) {
+			SoundClip.initializePlayPollWait(waitMillis);
+		}
 	};
 	public static final MediaType<Playable> VIDEO = new MediaType<Playable>("video", 
 				ParameterKeys.videoParams, ParameterKeys.videoFileFormat) {
@@ -80,6 +84,8 @@ public abstract class MediaType<T extends MediaSource> {
 		}
 		@Override
 		public void initializeCount(int count) {}
+		@Override
+		public void initializeWait(int waitMillis) {}
 	};
 	public static final MediaType<AnimationSequence> ANIMATION = 
 				new MediaType<AnimationSequence>("animation", ParameterKeys.animationParams, 
@@ -108,6 +114,8 @@ public abstract class MediaType<T extends MediaSource> {
 		}
 		@Override
 		public void initializeCount(int count) {}
+		@Override
+		public void initializeWait(int waitMillis) {}
 	};
 	
 	private final String _name;
@@ -283,6 +291,7 @@ public abstract class MediaType<T extends MediaSource> {
 	protected abstract T findMediaObject(String filename, File directory, 
 			AVSession<?, ?, ?> session, boolean forceReload);
 	public abstract void initializeCount(int count);
+	public abstract void initializeWait(int waitMillis);
 	
 	public static class MediaWrapper<T extends MediaSource> {
 		private final MediaType<T> _type;

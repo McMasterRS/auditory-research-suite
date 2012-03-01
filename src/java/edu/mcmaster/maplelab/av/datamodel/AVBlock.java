@@ -55,6 +55,7 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 		List<Map<String, MediaParamValue>> audioCombinations = MediaType.AUDIO.buildParameterMaps(session);
 		if (session.includeAudioBlock()) {
 			MediaType.AUDIO.initializeCount(audioCombinations.size());
+			MediaType.AUDIO.initializeWait(session.getAudioPollWait());
 			_initAudioCount = true;
 		}
 		
@@ -106,6 +107,7 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 				animationCombinations.removeAll(animationRemovals);
 				if (!_initAudioCount) {
 					MediaType.AUDIO.initializeCount(audioCombinations.size());
+					MediaType.AUDIO.initializeWait(session.getAudioPollWait());
 					_initAudioCount = true;
 				}
 				
@@ -131,6 +133,7 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 			else {
 				if (!_initAudioCount) {
 					MediaType.AUDIO.initializeCount(audioCombinations.size());
+					MediaType.AUDIO.initializeWait(session.getAudioPollWait());
 					_initAudioCount = true;
 				}
 				List<Map<String, MediaParamValue>> animationCombinations = MediaType.ANIMATION.buildParameterMaps(session);
