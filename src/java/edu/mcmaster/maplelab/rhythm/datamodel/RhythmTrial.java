@@ -140,7 +140,7 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
 	
 	@Override
 	public String getDescription() {
-		String format = "Trial %d:\n\tIOI: %s\n\tOffset: %d\n\tTap: %s";
+		String format = "Trial %d:\n\tIOI: %d\n\tOffset: %1.2f\n\tTap: %b";
 		return String.format(format, getNum(), getBaseIOI(), getOffsetDegree(), isWithTap());
 	}
 
@@ -149,7 +149,8 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
      * @see edu.mcmaster.maplelab.common.datamodel.Trial#toString()
      */
     public String toString() {
-        return String.format("Trial %d [ioi=%d,offset=%1.2f,tap=%b]", getNum(), getBaseIOI(), getOffsetDegree(), isWithTap());
+        return String.format("Trial %d [ioi=%d,offset=%1.2f,tap=%b]", getNum(), 
+        		getBaseIOI(), getOffsetDegree(), isWithTap());
     }
 
 
