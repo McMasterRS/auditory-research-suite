@@ -48,6 +48,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
     private boolean _allowCompKeyInput;
     private Boolean _lastKeyDown = null;
     private boolean _userInputOn = true;
+    private boolean _withTap = true;
     
     /** Items for suppression window implementation. */
     private Long _lastOnTick = null;
@@ -66,10 +67,18 @@ public class TapRecorder implements AWTEventListener, Receiver {
     }
     
     /**
-     * Enable/disable user input (tapping on/off).
+     * Enable/disable user input (tap recording on/off).
      */
     public void enableUserInput(boolean userInput) {
         _userInputOn = userInput;
+    }
+    
+    /**
+     * Set the tapping mode (tap / non-tap).  This does NOT control whether 
+     * user tapping is recorded.
+     */
+    public void setWithTap(boolean withTap) {
+    	_withTap = withTap;
     }
     
     /**
@@ -160,7 +169,8 @@ public class TapRecorder implements AWTEventListener, Receiver {
             	// XXX: This allocates resources on every call
     			_feedbackReceiver = MidiSystem.getReceiver();
     			if (_session != null) {
-        			MidiEvent[] prep = ToneGenerator.initializationEvents(_session.subjectTapGain(), 
+    				float vol = _withTap ? _session.subjectTapGain() : _session.subjectNoTapGain();
+        			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
         					(short) _session.subjectTapGM(), (short) 0);
         			for (MidiEvent me : prep) {
         				_feedbackReceiver.send(me.getMessage(), me.getTick());

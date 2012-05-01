@@ -422,6 +422,7 @@ public class StimulusResponseScreen extends BasicStep {
                 	// this is not intuitive, but we still want the 
                 	// tap recorder to handle computer taps
                 	//_tapRecorder.enableUserInput(_trial.isWithTap());
+                	_tapRecorder.setWithTap(_trial.isWithTap());
                     _tapRecorder.start(_currSequence);
                 }
             }

@@ -16,6 +16,7 @@ import java.util.*;
 import edu.mcmaster.maplelab.common.datamodel.Session;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.sound.Pitch;
+import edu.mcmaster.maplelab.common.util.MathUtils;
 import edu.mcmaster.maplelab.rhythm.RhythmExperiment;
 import edu.mcmaster.maplelab.rhythm.RhythmTrialLogger;
 
@@ -54,6 +55,7 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
         subjectTapVelocity,
         subjectTapNote,
         subjectTapGain,
+        subjectNoTapGain,
         subjectTapGM
     }
     
@@ -109,6 +111,15 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
      */
     public float subjectTapGain() {
     	return getClampedFloat(ConfigKeys.subjectTapGain, 1.0f, 0.0f, 1.0f);
+    }
+    
+    /**
+     * Fractional gain [0.0, 1.0] for subject tap feedback notes DURING NON-TAP TRIALS.
+     */
+    public float subjectNoTapGain() {
+    	Float retval = getFloat(ConfigKeys.subjectNoTapGain, -1.0f);
+    	if (retval < 0) return subjectTapGain();
+    	else return MathUtils.clamp(retval, 0.0f, 1.0f);
     }
     
     /**
