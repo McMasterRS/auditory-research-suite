@@ -24,6 +24,7 @@ import javax.sound.midi.MidiDevice.Info;
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.sound.MidiInterpreter;
+import edu.mcmaster.maplelab.common.sound.MultiMidiEvent;
 import edu.mcmaster.maplelab.common.sound.ToneGenerator;
 import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession;
 
@@ -167,7 +168,11 @@ public class TapRecorder implements AWTEventListener, Receiver {
         if (_session == null || _session.playSubjectTaps()) {
         	try {
             	// XXX: This allocates resources on every call
-    			_feedbackReceiver = MidiSystem.getReceiver();
+        		// used to just get the default receiver w/ MidiSystem.getReceiver(),
+        		// but the default changes depending on devices available
+    			MidiDevice dev = MidiSystem.getSynthesizer();
+    			dev.open();
+    			_feedbackReceiver = dev.getReceiver();
     			if (_session != null) {
     				float vol = _withTap ? _session.subjectTapGain() : _session.subjectNoTapGain();
         			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
@@ -224,7 +229,15 @@ public class TapRecorder implements AWTEventListener, Receiver {
      */
     public void stop() {
         Toolkit.getDefaultToolkit().removeAWTEventListener(this);
-        if (_feedbackReceiver != null) _feedbackReceiver.close();
+        if (_feedbackReceiver != null) {
+        	try {
+				for (MidiEvent me : ToneGenerator.deinitializationEvents()) {
+					_feedbackReceiver.send(me.getMessage(), me.getTick());
+				}
+			} 
+        	catch (InvalidMidiDataException e) {}
+        	_feedbackReceiver.close();
+        }
         _sequencer.stopRecording();        
         _sequencer.recordDisable(_track);
         _track = null;
@@ -239,23 +252,49 @@ public class TapRecorder implements AWTEventListener, Receiver {
      * to those specified in the properties.
      */
     private MidiEvent convertEvent(MidiEvent event) {
-    	MidiEvent retval = event;
-    	MidiMessage curr = event.getMessage();
+    	// declare events
+    	MidiEvent retval = null;
+    	MidiEvent modifiedSource = null;
     	
+    	// gather current message properties
+    	MidiMessage curr = event.getMessage();
     	int currOp = MidiInterpreter.getOpcode(curr);
     	int newOp = currOp == ShortMessage.NOTE_ON && MidiInterpreter.getVelocity(curr) == 0 ? 
     			ShortMessage.NOTE_OFF : currOp;
     	int key = MidiInterpreter.getKey(curr);
     	int vel = MidiInterpreter.getVelocity(curr);
-    	if (_session != null && _session.playSubjectTaps()) {
-    		key = _session.subjectTapNote();
-    		int val = _session.subjectTapVelocity();
-    		if (val > -1) vel = val;
+    	
+    	// prepare modified message properties
+    	int recKey = key;
+    	int recVel = vel;
+    	if (_session != null) {
+    		// gather specified properties
+    		int subjKey = _session.subjectTapNote();
+    		int subjVel = _session.subjectTapVelocity();
+    		if (subjVel < 0) subjVel = vel;
+    		
+    		// set record and play properties
+    		if (!_session.recordActualTapNote()) {
+    			recKey = subjKey;
+    		}
+    		if (!_session.recordActualTapVelocity()) {
+    			recVel = subjVel;
+    		}
+    		if (_session.playSubjectTaps()) {
+    			key = subjKey;
+        		vel = subjVel;
+    		}
     	}
-    	ShortMessage sm = new ShortMessage();
+    	
+    	// build messages from properties, then build primary event
+    	ShortMessage playMessage = new ShortMessage();
+    	ShortMessage recMessage = new ShortMessage();
+    	int channel = MidiInterpreter.getChannel(curr);
 		try {
-			sm.setMessage(newOp, MidiInterpreter.getChannel(curr), key, vel);
-			retval = new MidiEvent(sm, event.getTick());
+			recMessage.setMessage(newOp, channel, recKey, recVel);
+			modifiedSource = new MidiEvent(recMessage, event.getTick());
+			playMessage.setMessage(newOp, channel, key, vel);
+			retval = new MultiMidiEvent(event, modifiedSource, playMessage, event.getTick());
 		}
 		catch (InvalidMidiDataException e) {} // don't convert
 		
@@ -269,10 +308,10 @@ public class TapRecorder implements AWTEventListener, Receiver {
      */
     private void recordEvent(MidiEvent event) {
     	if (_track == null || !_sequencer.isRecording()) return;
-        
-        event = convertEvent(event);
+
         long ticks = _sequencer.getTickPosition();
         event.setTick(ticks);
+        event = convertEvent(event);
         
         long window = _lastOnTick != null ? ticks - _lastOnTick : Long.MAX_VALUE;
         
@@ -315,7 +354,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
         	finalizeEvent(event);
         }
         
-        // always send the event to the receiver (either debug or console)
+        // always send the event to the log receiver (either debug or console)
         if(_logReceiver != null) {
             _logReceiver.send(event.getMessage(), event.getTick());
         }

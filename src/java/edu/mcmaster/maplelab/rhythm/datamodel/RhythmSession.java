@@ -53,7 +53,9 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
         suppressionWindow,
         subjectTapSound,
         subjectTapVelocity,
+        recordActualTapVelocity,
         subjectTapNote,
+        recordActualTapNote,
         subjectTapGain,
         subjectNoTapGain,
         subjectTapGM
@@ -131,6 +133,14 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
     }
     
     /**
+     * Indicate if the actual tap velocity (if available) should be
+     * recorded even if different from the velocity played.
+     */
+    public boolean recordActualTapVelocity() {
+    	return getBoolean(ConfigKeys.recordActualTapVelocity, true);
+    }
+    
+    /**
      * General midi bank to play for subject tap feedback.
      */
     public int subjectTapGM() {
@@ -143,6 +153,14 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
     public int subjectTapNote() {
     	String pitch = getString(ConfigKeys.subjectTapNote, "C5");
         return Pitch.fromString(pitch).toMidiNoteNumber();
+    }
+    
+    /**
+     * Indicate if the actual tap note (if available) should be
+     * recorded even if different from the note played.
+     */
+    public boolean recordActualTapNote() {
+    	return getBoolean(ConfigKeys.recordActualTapNote, true);
     }
     
     /**
@@ -276,8 +294,8 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
 	     
 	     for (Integer ioi : baseIOIs) {
 	    	 // just set generic id - we will renumber
-	         retval.add(new RhythmBlock(this, 0, true, ioi)); 
-	         retval.add(new RhythmBlock(this, 0, false, ioi)); 
+	         retval.add(new RhythmBlock(this, 0, true, ioi, false)); 
+	         retval.add(new RhythmBlock(this, 0, false, ioi, false)); 
 	     }
 	     
 	     // Shuffle and renumber blocks
@@ -294,7 +312,7 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
       */
      @Override
      public List<RhythmBlock> generateWarmup() {
-         RhythmBlock warmup = new RhythmBlock(this, 1, true, getBaseIOIs().get(0));
+         RhythmBlock warmup = new RhythmBlock(this, 1, true, getBaseIOIs().get(0), true);
          warmup.clipTrials(getNumWarmupTrials());
          List<RhythmBlock> retval = new ArrayList<RhythmBlock>(1);
          retval.add(warmup);

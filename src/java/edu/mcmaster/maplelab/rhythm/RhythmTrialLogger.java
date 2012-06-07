@@ -23,6 +23,7 @@ import edu.mcmaster.maplelab.common.datamodel.FileTrialLogger;
 import edu.mcmaster.maplelab.common.datamodel.FileType;
 import edu.mcmaster.maplelab.common.datamodel.ConfidenceResponse;
 import edu.mcmaster.maplelab.common.sound.MidiInterpreter;
+import edu.mcmaster.maplelab.common.sound.MultiMidiEvent;
 import edu.mcmaster.maplelab.rhythm.datamodel.*;
 
 /**
@@ -270,7 +271,8 @@ public class RhythmTrialLogger extends
                         // Saving current event data as class members is a
                         // hack to allow us to reuse the marshalToMap
                         // method, just because it's conceptually clean
-                    	_currEvent = track.get(j);
+                    	MultiMidiEvent mme = MultiMidiEvent.getMultiEvent(track.get(j));
+                    	_currEvent = mme.hasModifiedSource() ? mme.getModifiedSourceEvent() : mme;
                         
                         if (!MidiInterpreter.isNoteOnEvent(_currEvent) && 
                         		(!getSession().recordNoteOffEvents() || !MidiInterpreter.isNoteOffEvent(_currEvent))) {

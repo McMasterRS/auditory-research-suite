@@ -30,10 +30,10 @@ public abstract class Block<S extends Session<?, ?, ?>, T extends Trial<?>> {
         _blockNum = blockNum;
     }
     
-    protected void assignTrialNumbers() {
+    protected void assignTrialNumbers(boolean isWarmup) {
         int i = 1;
         for(Trial<?> t : getTrials()) {
-            t.setNum(i++);
+            t.setNum(isWarmup ? -1*i++ : i++);
         }
     }
     

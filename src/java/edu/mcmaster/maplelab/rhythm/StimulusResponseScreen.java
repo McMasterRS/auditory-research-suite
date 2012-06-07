@@ -81,10 +81,10 @@ public class StimulusResponseScreen extends BasicStep {
         setStepManager(steps);        
         _session = session;
         setTitleText(_session.getString(
-            isWarmup ? ConfigKeys.warmupScreenTrialTitle : ConfigKeys.testScreenTrialTitle, 
+            _isWarmup ? ConfigKeys.warmupScreenTrialTitle : ConfigKeys.testScreenTrialTitle, 
                 null));
         setInstructionText(_session.getString(
-            isWarmup ? ConfigKeys.warmupScreenTrialText : ConfigKeys.testScreenTrialText, 
+            _isWarmup ? ConfigKeys.warmupScreenTrialText : ConfigKeys.testScreenTrialText, 
                 null));
         
         JPanel bottom = new JPanel(new GridLayout(1, 0));
@@ -118,9 +118,9 @@ public class StimulusResponseScreen extends BasicStep {
         });
         
         try {
-            if(!isWarmup) {
+            //if(!_isWarmup) {
                 _tapRecorder = new TapRecorder(_session);
-                _tapRecorder.setMIDIInputID(session.getMIDIInputDeviceID());
+                _tapRecorder.setMIDIInputID(_session.getMIDIInputDeviceID());
                 // We have to add a key listener to make sure this gets
                 // registered to receive events.
                 
@@ -139,7 +139,7 @@ public class StimulusResponseScreen extends BasicStep {
                 if(_session.isDebug()) {
                     _tapRecorder.setLogReceiver(new DebugTapForwarder());
                 }
-            }
+            //}
         }
         catch (MidiUnavailableException ex) {
             LogContext.getLogger().log(Level.SEVERE, "Tap recorder error", ex);
@@ -289,14 +289,14 @@ public class StimulusResponseScreen extends BasicStep {
         LogContext.getLogger().fine(
             String.format("---> response: %s" , t.getResponse()));
         
-        if (!_isWarmup) {
+        //if (!_isWarmup) {
             try {
                 _session.getTrialLogger().submit(block, t);
             }
             catch (IOException e) {
                 LogContext.getLogger().severe("Error saving trial: " + e);
             }
-        }
+        //}
         
         block.incTrial();
         if (block.isDone()) {

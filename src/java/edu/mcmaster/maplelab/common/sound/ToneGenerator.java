@@ -26,12 +26,15 @@ import edu.mcmaster.maplelab.common.LogContext;
  * @since   Apr 17, 2006
  */
 public class ToneGenerator {
+	private static final int ENABLED_CHANNEL_COUNT = 12;
+	
 	private static final int GENERATOR_CHANNEL = 0;
     private static final int MIDI_MAX_VOLUME = 127;
     private static final int MIDI_NOTE_VELOCITY_CMD = 64;
     private static final int PITCH_BEND_MAX = 16383;
     private static final int PITCH_BEND_NONE = 8192;
     
+    private static final int NOTES_OFF = 123;
     private static final int MIDI_VOLUME_CMD = 7;
     private static final short MIDI_BANK_MSB_FLUTE = 0;
     private static final short MIDI_BANK_LSB_FLUTE = 74;
@@ -267,15 +270,30 @@ public class ToneGenerator {
     public static MidiEvent[] initializationEvents(float volumePct, short midiBankLSB, 
     		short midiBankMSB) throws InvalidMidiDataException {
     	
-    	MidiEvent[] retval = new MidiEvent[2];
-    	ShortMessage msg = new ShortMessage();
-        msg.setMessage(ShortMessage.CONTROL_CHANGE, 0, MIDI_VOLUME_CMD, 
-        		(int) (volumePct*MIDI_MAX_VOLUME));
-        retval[0] = new MidiEvent(msg, 0);
+    	MidiEvent[] retval = new MidiEvent[2 * ENABLED_CHANNEL_COUNT];
+    	for (int i = 0; i < ENABLED_CHANNEL_COUNT; i++) {
+    		int idx = 2*i;
+        	ShortMessage msg = new ShortMessage();
+            msg.setMessage(ShortMessage.CONTROL_CHANGE, i, MIDI_VOLUME_CMD, 
+            		(int) (volumePct*MIDI_MAX_VOLUME));
+            retval[idx] = new MidiEvent(msg, 0);
+            
+            msg = new ShortMessage();
+            msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, midiBankLSB, midiBankMSB);
+            retval[idx+1] = new MidiEvent(msg, 0);
+    	}
         
-        msg = new ShortMessage();
-        msg.setMessage(ShortMessage.PROGRAM_CHANGE, 0, midiBankLSB, midiBankMSB);
-        retval[1] = new MidiEvent(msg, 0);
+        return retval;
+    }
+    
+    public static MidiEvent[] deinitializationEvents() throws InvalidMidiDataException {
+    	
+    	MidiEvent[] retval = new MidiEvent[ENABLED_CHANNEL_COUNT];
+    	for (int i = 0; i < ENABLED_CHANNEL_COUNT; i++) {
+        	ShortMessage msg = new ShortMessage();
+            msg.setMessage(ShortMessage.CONTROL_CHANGE, i, NOTES_OFF, 0);
+            retval[i] = new MidiEvent(msg, 0);
+    	}
         
         return retval;
     }

@@ -24,7 +24,8 @@ import edu.mcmaster.maplelab.common.datamodel.Block;
 public class RhythmBlock extends Block<RhythmSession, RhythmTrial> {
     private List<RhythmTrial> _trials;
 
-    public RhythmBlock(RhythmSession session, int blockNum, boolean withTap, int baseIOI) {
+    public RhythmBlock(RhythmSession session, int blockNum, boolean withTap, int baseIOI,
+    		boolean isWarmup) {
         super(session, blockNum);
         
         _trials = new ArrayList<RhythmTrial>();
@@ -38,7 +39,7 @@ public class RhythmBlock extends Block<RhythmSession, RhythmTrial> {
         
         if (session.randomizeTrials()) Collections.shuffle(_trials);
         
-        assignTrialNumbers();
+        assignTrialNumbers(isWarmup);
     }
 
     /**
