@@ -39,7 +39,8 @@ import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession;
 public class TapRecorder implements AWTEventListener, Receiver {
     private static final int ARTIFICIAL_MIDI_NOTE = 72;
     
-    private static Receiver _feedbackReceiver;
+    private Receiver _feedbackReceiver;
+    private MidiDevice _midiSynthDev;
     private RhythmSession _session = null;
     private Sequencer _sequencer;
     private Track _track;
@@ -115,7 +116,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
         	Toolkit.getDefaultToolkit().addAWTEventListener(this, AWTEvent.KEY_EVENT_MASK);
         }
         
-        _track = _sequencer.getSequence().createTrack();
+       _track = _sequencer.getSequence().createTrack();
         
         // Send a program change just so we have our own unique sound.
         try {
@@ -139,11 +140,11 @@ public class TapRecorder implements AWTEventListener, Receiver {
                 info = devices[_midiDevID];
                 MidiDevice device = MidiSystem.getMidiDevice(info);
                 
-                if (_midiInput != device) {
+                if (_midiInput != device || (_midiInput != null && !_midiInput.isOpen())) {
                 	_midiInput = device;
                 	
                 	if (_midiInput != null) {
-                		_midiInput.open();
+                		if (!_midiInput.isOpen()) _midiInput.open();
                         // test == 0 only because -1 indicates unlimited:
                         if (_midiInput.getMaxTransmitters() == 0) {
                             throw new MidiUnavailableException(String.format(
@@ -170,9 +171,11 @@ public class TapRecorder implements AWTEventListener, Receiver {
             	// XXX: This allocates resources on every call
         		// used to just get the default receiver w/ MidiSystem.getReceiver(),
         		// but the default changes depending on devices available
-    			MidiDevice dev = MidiSystem.getSynthesizer();
-    			dev.open();
-    			_feedbackReceiver = dev.getReceiver();
+        		
+        		_midiSynthDev = MidiSystem.getSynthesizer();
+    			//_feedbackReceiver.
+    			if (!_midiSynthDev.isOpen()) _midiSynthDev.open();
+    			_feedbackReceiver = _midiSynthDev.getReceiver();
     			if (_session != null) {
     				float vol = _withTap ? _session.subjectTapGain() : _session.subjectNoTapGain();
         			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
@@ -240,6 +243,8 @@ public class TapRecorder implements AWTEventListener, Receiver {
         }
         _sequencer.stopRecording();        
         _sequencer.recordDisable(_track);
+        if (_midiSynthDev != null) _midiSynthDev.close();
+        if (_midiInput != null) _midiInput.close();
         _track = null;
         _lastOnTick = null;
         _skippedOnEvents.clear(); // in case stop preceded a corresponding note-off
