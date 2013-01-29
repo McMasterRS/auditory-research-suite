@@ -74,7 +74,7 @@ public class EllipticalArc
   private static final double twoPi = 2 * Math.PI;
 
   // coefficients for error estimation
-  // while using quadratic Bézier curves for approximation
+  // while using quadratic BÃˆzier curves for approximation
   // 0 < b/a < 1/4
   private static final double[][][] coeffs2Low = new double[][][] {
     {
@@ -91,7 +91,7 @@ public class EllipticalArc
   };
 
   // coefficients for error estimation
-  // while using quadratic Bézier curves for approximation
+  // while using quadratic BÃˆzier curves for approximation
   // 1/4 <= b/a <= 1
   private static final double[][][] coeffs2High = new double[][][] {
     {
@@ -114,7 +114,7 @@ public class EllipticalArc
   };
 
   // coefficients for error estimation
-  // while using cubic Bézier curves for approximation
+  // while using cubic BÃˆzier curves for approximation
   // 0 < b/a < 1/4
   private static final double[][][] coeffs3Low = new double[][][] {
     {
@@ -131,7 +131,7 @@ public class EllipticalArc
   };
 
   // coefficients for error estimation
-  // while using cubic Bézier curves for approximation
+  // while using cubic BÃˆzier curves for approximation
   // 1/4 <= b/a <= 1
   private static final double[][][] coeffs3High = new double[][][] {
     {
@@ -215,10 +215,10 @@ public class EllipticalArc
   /** Indicator for center to endpoints line inclusion. */
   protected boolean isPieSlice;
 
-  /** Maximal degree for Bézier curve approximation. */
+  /** Maximal degree for BÃˆzier curve approximation. */
   private int maxDegree;
 
-  /** Default flatness for Bézier curve approximation. */
+  /** Default flatness for BÃˆzier curve approximation. */
   private double defaultFlatness;
 
   protected double f;
@@ -357,7 +357,7 @@ public class EllipticalArc
 
   }
 
-  /** Set the maximal degree allowed for Bézier curve approximation.
+  /** Set the maximal degree allowed for BÃˆzier curve approximation.
    * @param maxDegree maximal allowed degree (must be between 1 and 3)
    * @exception IllegalArgumentException if maxDegree is not between 1 and 3
    */
@@ -368,7 +368,7 @@ public class EllipticalArc
     this.maxDegree = maxDegree;
   }
 
-  /** Set the default flatness for Bézier curve approximation.
+  /** Set the default flatness for BÃˆzier curve approximation.
    * @param defaultFlatness default flatness (must be greater than 1.0e-10)
    * @exception IllegalArgumentException if defaultFlatness is lower
    * than 1.0e-10
@@ -483,10 +483,10 @@ public class EllipticalArc
   }
 
   /** Estimate the approximation error for a sub-arc of the instance.
-   * @param degree degree of the Bézier curve to use (1, 2 or 3)
+   * @param degree degree of the BÃˆzier curve to use (1, 2 or 3)
    * @param tA start angle of the sub-arc
    * @param tB end angle of the sub-arc
-   * @return upper bound of the approximation error between the Bézier
+   * @return upper bound of the approximation error between the BÃˆzier
    * curve and the real ellipse
    */
   protected double estimateError(int degree, double etaA, double etaB) {
@@ -808,7 +808,7 @@ public class EllipticalArc
   }
 
   /** Build an approximation of the instance outline.
-   * @param degree degree of the Bézier curve to use
+   * @param degree degree of the BÃˆzier curve to use
    * @param threshold acceptable error
    * @param at affine transformation to apply
    * @return a path iterator
@@ -816,7 +816,7 @@ public class EllipticalArc
   private PathIterator buildPathIterator(int degree, double threshold,
                                          AffineTransform at) {
 
-    // find the number of Bézier curves needed
+    // find the number of BÃˆzier curves needed
     boolean found = false;
     int n = 1;
     while ((! found) && (n < 1024)) {

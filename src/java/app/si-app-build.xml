@@ -83,6 +83,9 @@
 
 	
 	<target name="clean">
+		<delete dir="${basedir}">
+			<include name="SIExperiment.zip" />
+		</delete>
 		<delete verbose="true" includeEmptyDirs="true">
 			<fileset dir="SI Experiment.app" />
 		</delete>

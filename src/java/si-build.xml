@@ -128,7 +128,7 @@
 	</target>
 	
     <target name="compile">
-	    <javac nowarn="yes" source="1.6" destdir="${build}">
+	    <javac nowarn="yes" source="1.6" target="1.6" destdir="${build}">
 	    	<src path="${src}/common"/>
 	        <src path="${src}/av"/>
 	        <src path="${src}/si"/>
@@ -143,6 +143,7 @@
 			<include name="./**/*.class"/>
 			<include name="./**/**/*.class"/>
 		</delete>
+	    <ant antfile="${basedir}/app/si-app-build.xml" dir="${basedir}/app" target="clean"/>
 	</target>
 
 </project>

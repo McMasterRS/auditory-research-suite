@@ -23,7 +23,7 @@ import javax.vecmath.Vector3f;
  * GL_TRIANGLES 	Draws triangles on screen. Every three vertices specified compose a triangle.
  * GL_TRIANGLE_STRIP 	Draws connected triangles on screen. Every vertex specified after first three vertices creates a triangle.
  * GL_TRIANGLE_FAN 	Draws connected triangles like GL_TRIANGLE_STRIP, except draws triangles in fan shape.
- * GL_QUADS 	Draws quadrilaterals (4 Ð sided shapes) on screen. Every four vertices specified compose a quadrilateral. FILLED!
+ * GL_QUADS 	Draws quadrilaterals (4 â€“ sided shapes) on screen. Every four vertices specified compose a quadrilateral. FILLED!
  * GL_QUAD_STRIP 	Draws connected quadrilaterals on screen. Every two vertices specified after first four compose a connected quadrilateral.
  * GL_POLYGON 	Draws a polygon on screen. Polygon can be composed of as many sides as you want.
  */
