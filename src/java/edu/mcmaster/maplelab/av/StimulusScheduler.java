@@ -155,16 +155,22 @@ public class StimulusScheduler {
 	 * Run the refresh period calculation renderer.
 	 */
 	private void calculateRefreshAndSchedule() {
-		// is this the best way to do this?
-		_renderer.setDisplayProxy(_refreshCalculator);
-		Thread t = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				_trigger.forceDisplay();
-			}}) {{
-			setPriority(Thread.MAX_PRIORITY);
-		}};
-		t.start();
+		if (_trial.getNumMediaObjects() > 1) {
+			// is this the best way to do this?
+			_renderer.setDisplayProxy(_refreshCalculator);
+			//XXX: executor service?
+			Thread t = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					_trigger.forceDisplay();
+				}}) {{
+				setPriority(Thread.MAX_PRIORITY);
+			}};
+			t.start();
+		}
+		else {
+			scheduleTrial(0);
+		}
 	}
 	
 	public void start() {

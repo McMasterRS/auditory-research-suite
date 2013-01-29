@@ -83,18 +83,23 @@ public class SITrialLogger extends FileTrialLogger<SISession, SIBlock, SITrial> 
         fields.put(Keys.audioFile, !vid && media != null ? media.name() : "N/A");
         fields.put(Keys.vidFile, vid && media != null ? media.name() : "N/A");
         fields.put(Keys.visFile, as != null ? as.getSourceFileName() : "N/A");
-        long millisVal = TimeUnit.MILLISECONDS.convert(
+        Long millisVal = TimeUnit.MILLISECONDS.convert(
         		trial.getOffsetNanos(), TimeUnit.NANOSECONDS);
         fields.put(Keys.audioOffset, String.valueOf(millisVal));
         fields.put(Keys.numDots, String.valueOf(trial.getNumPoints()));
         if (!vid) {
             Long start = trial.getLastAnimationStartNanos();
-            millisVal = start != null ? 
-            		TimeUnit.MILLISECONDS.convert(start, TimeUnit.NANOSECONDS) : null;
-            fields.put(Keys.animationStart, start != null ? String.valueOf(millisVal) : "N/A");
-            millisVal = TimeUnit.MILLISECONDS.convert(
-            		trial.getAnimationStrikeTimeNanos(), TimeUnit.NANOSECONDS);
-            fields.put(Keys.aniStrikeDelay, String.valueOf(millisVal));
+            if (start != null) {
+                millisVal = TimeUnit.MILLISECONDS.convert(start, TimeUnit.NANOSECONDS);
+                fields.put(Keys.animationStart, String.valueOf(millisVal));
+                millisVal = TimeUnit.MILLISECONDS.convert(
+                		trial.getAnimationStrikeTimeNanos(), TimeUnit.NANOSECONDS);
+                fields.put(Keys.aniStrikeDelay, String.valueOf(millisVal));
+            }
+            else {
+                fields.put(Keys.animationStart, "N/A");
+                fields.put(Keys.aniStrikeDelay, "N/A");
+            }
             start = trial.getLastMediaStartNanos();
             millisVal = start != null ? 
             		TimeUnit.MILLISECONDS.convert(start, TimeUnit.NANOSECONDS) : null;
