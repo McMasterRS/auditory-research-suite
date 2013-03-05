@@ -30,6 +30,7 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		numAnimationPoints,
 		includeAudioBlock,
 		includeVideoBlock,
+		includeAnimationBlock,
 		includeAudioAnimationBlock,
 		connectDots,
 		oscilloscopeSensorMode,
@@ -54,6 +55,7 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		int count = 0;
 		count += includeAudioBlock() ? 1 : 0;
 		count += includeVideoBlock() ? 1 : 0;
+		count += includeAnimationBlock() ? 1 : 0;
 		count += includeAudioAnimationBlock() ? 1 : 0;
 		setNumBlocks(count);
 		
@@ -197,6 +199,10 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		return getBoolean(ConfigKeys.includeVideoBlock, true);
 	}
 	
+	public boolean includeAnimationBlock() {
+		return getBoolean(ConfigKeys.includeAnimationBlock, true);
+	}
+	
 	public boolean includeAudioAnimationBlock() {
 		return getBoolean(ConfigKeys.includeAudioAnimationBlock, true);
 	}
@@ -270,6 +276,8 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 				"\t\t\t" + AVBlockType.AUDIO_ONLY.getUIName() + " block\n" : "";
 		blockTypes += includeVideoBlock() ? 
 				"\t\t\t" + AVBlockType.VIDEO_ONLY.getUIName() + " block\n" : "";
+		blockTypes += includeAnimationBlock() ? 
+				"\t\t\t" + AVBlockType.ANIMATION_ONLY.getUIName() + " block\n" : "";
 		blockTypes += includeAudioAnimationBlock() ? 
 				"\t\t\t" + AVBlockType.AUDIO_ANIMATION.getUIName() + " block\n" : "";
 		blockTypes = String.format("\t%d block(s), repeated %d time(s), includes:\n", 
@@ -286,6 +294,7 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		
 		// trial counts - init to 1 for loop purposes, correct later
 		int audioOnlyCount = 1;
+		int aniOnlyCount = 1;
 		int audAniCount = 1;
 		int videoCount = 1;
 		
@@ -320,11 +329,13 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		}
 		
 		String aniDesc = "";
-		if (!includeAudioAnimationBlock()) {
+		if (!includeAnimationBlock() && !includeAudioAnimationBlock()) {
 			audAniCount = 0;
+			aniOnlyCount = 0;
 		}
 		else {
-			audAniCount *= audioOnlyCount * points.size();
+			aniOnlyCount *= points.size();
+			audAniCount *= audioOnlyCount * aniOnlyCount;
 			boolean shared = synchronizeParameters();
 			aniDesc = "\tAnimation data:\n";
 			for (String s : animationParams) {
@@ -344,8 +355,9 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 			aniDesc += String.format("\t\tAnimation extensions: %s\n", listString(aniExt));
 		}
 		
-		// audio correction, after used by animation
+		// corrections, after use by combined block
 		if (!includeAudioBlock()) audioOnlyCount = 0;
+		if (!includeAnimationBlock()) aniOnlyCount = 0;
 		
 		String videoDesc = "";
 		if (!includeVideoBlock()) {
@@ -369,12 +381,14 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		return String.format("\n********** Experiment Session Trial Details **********\n%s\n" +
 				(includeAudioBlock() ? 
 						String.format("\tAudio-only trial count: %d\n", audioOnlyCount) : "") +
+				(includeAnimationBlock() ? 
+						String.format("\tAnimation-only trial count: %d\n", aniOnlyCount) : "") +
 				(includeAudioAnimationBlock() ? 
 						String.format("\tAudio and animation trial count: %d\n", audAniCount) : "") +
 				(includeVideoBlock() ? 
 						String.format("\tVideo trial count: %d\n", videoCount) : "") +
-				String.format("\tTotal trials: %d\n\n", audioOnlyCount + audAniCount + videoCount) + 
-				audioDesc + aniDesc + videoDesc +
+				String.format("\tTotal trials: %d\n\n", audioOnlyCount + audAniCount + videoCount + 
+						aniOnlyCount) + audioDesc + aniDesc + videoDesc +
 				"**************************************************\n\n", blockTypes);
 	}
 

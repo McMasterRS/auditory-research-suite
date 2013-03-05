@@ -33,6 +33,9 @@ public class SISession extends AVSession<SIBlock, SITrial, SITrialLogger> {
         if (includeVideoBlock()) {
         	retval.add(new SIBlock(this, 0, AVBlockType.VIDEO_ONLY, getSoundOffsets(), getNumAnimationPoints()));
         }
+        if (includeAnimationBlock()) {
+        	retval.add(new SIBlock(this, 0, AVBlockType.ANIMATION_ONLY, getSoundOffsets(), getNumAnimationPoints()));
+        }
         if (includeAudioAnimationBlock()) {
         	retval.add(new SIBlock(this, 0, AVBlockType.AUDIO_ANIMATION, getSoundOffsets(), getNumAnimationPoints()));
         }

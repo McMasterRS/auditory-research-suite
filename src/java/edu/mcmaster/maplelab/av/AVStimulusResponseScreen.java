@@ -82,7 +82,7 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
     private final S _session;
 	private final boolean _isWarmup;
 	private final StimulusScheduler _scheduler;
-	private VideoPanel _vidPanel;
+	private final VideoPanel _vidPanel;
 	private final ResponseKeyListener _keyListener;
 
 	public AVStimulusResponseScreen(StepManager steps, S session, boolean isWarmup) {
@@ -95,7 +95,7 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
 		_scheduler.setAnimationFrameAdvance(_session.getAnimationFrameAdvance(), TimeUnit.MILLISECONDS);
 		_scheduler.setAudioCallAhead(_session.getAudioCallAhead(), TimeUnit.MILLISECONDS);
 		_scheduler.setRenderCallAhead(_session.getRenderCallAhead(), TimeUnit.MILLISECONDS);
-		//_renderer = _scheduler.getAnimationRenderer();
+		_vidPanel = new VideoPanel();
 		_keyListener = new ResponseKeyListener();
 		
 		setTitleText(_session.getString(isWarmup ? 
@@ -400,34 +400,27 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
                     	B block = nextBlock();
                     	AVBlockType prevType = prevBlock != null ? prevBlock.getType() : null;
                     	AVBlockType currType = block.getType();
+
+                		getContentPanel().remove(_vidPanel);
                     	
-                    	if (currType == AVBlockType.AUDIO_ANIMATION) {
+                    	if (currType != AVBlockType.VIDEO_ONLY) {
                     		AnimationPanel aniPanel = _scheduler.getAnimationPanel();
-                        	if (prevType != currType) {
+                        	if (prevType == null || prevType == AVBlockType.VIDEO_ONLY) {
                     			aniPanel.setSize(_session.getScreenWidth(), _session.getScreenHeight());
                             	getContentPanel().add(aniPanel, BorderLayout.CENTER);
                     		}
                     		
-                    		aniPanel.start();
+                    		if (currType.usesAnimation()) aniPanel.start();
                     	}
-                    	else if (prevType == AVBlockType.AUDIO_ANIMATION) {
-                    		// XXX: removing and re-adding this every time causes 
-                    		// white flash on screen!
-                    		getContentPanel().remove(_scheduler.getAnimationPanel());
-                    	}
-                    	
-                    	if (currType == AVBlockType.VIDEO_ONLY) {
-                    		// create and add video panel if not done
-                    		if (_vidPanel == null) {
-                    			_vidPanel = new VideoPanel();
-                    		}
-
-                			getContentPanel().remove(_vidPanel);
+                    	else {
+                    		if (prevType != AVBlockType.VIDEO_ONLY) {
+                        		// XXX: removing and re-adding this every time causes 
+                        		// white flash on screen!
+                        		getContentPanel().remove(_scheduler.getAnimationPanel());
+                        	}
+                    		
                 			getContentPanel().add(_vidPanel, BorderLayout.CENTER);
                     		_vidPanel.setMovie(_trial.getVideoPlayable());
-                    	}
-                    	else if (_vidPanel != null) {
-                    		getContentPanel().remove(_vidPanel);
                     	}
                     	
                         _statusText.setText(_session.getString(ConfigKeys.duringTrialText, ""));

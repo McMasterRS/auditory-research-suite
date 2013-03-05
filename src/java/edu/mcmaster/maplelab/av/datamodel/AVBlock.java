@@ -21,7 +21,18 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 	public enum AVBlockType {
 		AUDIO_ONLY("Audio only"),
 		VIDEO_ONLY("Video"),
-		AUDIO_ANIMATION("Audio and animation");
+		AUDIO_ANIMATION("Audio and animation") {
+			@Override
+			public boolean usesAnimation() {
+				return true;
+			}
+		},
+		ANIMATION_ONLY("Animation only") {
+			@Override
+			public boolean usesAnimation() {
+				return true;
+			}
+		};
 		
 		private final String _uiName;
 		
@@ -34,6 +45,13 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 		 */
 		public String getUIName() {
 			return _uiName;
+		}
+		
+		/**
+		 * Indicate if this type uses animation.
+		 */
+		public boolean usesAnimation() {
+			return false;
 		}
 	}
 	
@@ -53,6 +71,7 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 		boolean connect = session.connectDots();
 
 		List<Map<String, MediaParamValue>> audioCombinations = MediaType.AUDIO.buildParameterMaps(session);
+		List<Map<String, MediaParamValue>> animationCombinations = MediaType.ANIMATION.buildParameterMaps(session);
 		if (session.includeAudioBlock()) {
 			MediaType.AUDIO.initializeCount(audioCombinations.size());
 			MediaType.AUDIO.initializeWait(session.getAudioPollWait());
@@ -64,7 +83,7 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 			for (Map<String, MediaParamValue> map : videoCombinations) {
 				MediaWrapper<Playable> video = MediaType.VIDEO.createMedia(session, map.values());
 				if (video == null) continue;
-				T trial = createTrial(null, true, video, 0l, 0, pointSize, connect, Long.valueOf(0));
+				T trial = createTrial(null, true, video, 0l, 0, pointSize, connect, 0l);
 				_trials.add(trial);
 			}
 		}
@@ -79,14 +98,24 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 				}
 			}
 		}
+		else if (type == AVBlockType.ANIMATION_ONLY) {
+			for (Map<String, MediaParamValue> animationMap : animationCombinations) {
+				MediaWrapper<AnimationSequence> ani = 
+						MediaType.ANIMATION.createMedia(session, animationMap.values());
+				if (ani == null) continue;
+				for (int pts : numPoints) {
+					T trial = createTrial(ani.getMediaObject(), false, null, 0l, 
+							pts, pointSize, connect, 0l);
+					_trials.add(trial);
+				}
+			}
+		}
 		else if (type == AVBlockType.AUDIO_ANIMATION) {
 			
 			if (session.synchronizeParameters()) {
 				Set<String> sharedParams = new HashSet<String>();
 				sharedParams.addAll(MediaType.AUDIO.getParams(session));
 				sharedParams.retainAll(MediaType.ANIMATION.getParams(session));
-				
-				List<Map<String, MediaParamValue>> animationCombinations = MediaType.ANIMATION.buildParameterMaps(session);
 				
 				// have to do this in two steps to figure out total counts
 				List<Map<String, MediaParamValue>> audioRemovals = new ArrayList<Map<String, MediaParamValue>>();
@@ -136,7 +165,6 @@ public abstract class AVBlock<S extends AVSession<?,?,?>, T extends AVTrial<?>> 
 					MediaType.AUDIO.initializeWait(session.getAudioPollWait());
 					_initAudioCount = true;
 				}
-				List<Map<String, MediaParamValue>> animationCombinations = MediaType.ANIMATION.buildParameterMaps(session);
 				for (Map<String, MediaParamValue> audioMap : audioCombinations) {
 					for (Map<String, MediaParamValue> animationMap : animationCombinations) {
 						MediaWrapper<Playable> audio = MediaType.AUDIO.createMedia(session, audioMap.values());

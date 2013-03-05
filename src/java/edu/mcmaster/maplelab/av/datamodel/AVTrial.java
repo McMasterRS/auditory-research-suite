@@ -138,6 +138,13 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 	public boolean isVideo() {
 		return _isVideo;
 	}
+
+	/**
+	 * Indicate if this trial contains an animation.
+	 */
+	public boolean isAnimation() {
+		return _animationSequence != null;
+	}
 	
 	/**
 	 * Get the timing offset value between animation and audio.
@@ -218,7 +225,7 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 	@Override
 	public String getDescription() {
 		if (isVideo()) {
-			String video = _media != null && isVideo() ? _media.getName() : "N/A";
+			String video = _media != null ? _media.getName() : "N/A";
 			String format = "Trial %d:\n\tVideo file: %s";
 			return String.format(format, getNum(), video);
 		}
@@ -229,33 +236,63 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 	 * Get full description that includes separate animation and audio parameters, if applicable.
 	 */
 	private String getExtendedDescription() {
-		String ani = _animationSequence != null ? _animationSequence.getSourceFileName() : "N/A";
-		String frames = _animationSequence != null ? 
-				String.valueOf(_animationSequence.getNumFrames()) : "N/A";
-		Long timeMillis = _animationSequence != null ? TimeUnit.MILLISECONDS.convert(
-				getAnimationStrikeTimeNanos(), TimeUnit.NANOSECONDS) : null;
-		String hits = timeMillis != null ? timeMillis.toString() : "N/A";
-		String aspect = _animationSequence != null ? 
-				String.valueOf(_animationSequence.getPointAspect()) : "N/A";
-		String audio = _media != null && !isVideo() ? _media.getName() : "N/A";
-		timeMillis = _inherentMediaDelay != null ? TimeUnit.MILLISECONDS.convert(
-				_inherentMediaDelay, TimeUnit.NANOSECONDS) : null;
-		String audioOnset = timeMillis != null ? timeMillis.toString() : "0";
-		String delays = "";
-		if (_relativeAnimationDelay != 0) {
-			delays = String.format("\tAudio begins at time 0\n\tAnimation delayed by %d ms", 
-					TimeUnit.MILLISECONDS.convert(_relativeAnimationDelay, TimeUnit.NANOSECONDS));
+		String retval = String.format("Trial %d", getNum());
+		
+		String ani = null, audio = null;
+		Long timeMillis = null;
+		if (_animationSequence != null && _media != null) {
+			ani = _animationSequence.getSourceFileName();
+			String frames = String.valueOf(_animationSequence.getNumFrames());
+			timeMillis = TimeUnit.MILLISECONDS.convert(
+					getAnimationStrikeTimeNanos(), TimeUnit.NANOSECONDS);
+			String hits = timeMillis != null ? timeMillis.toString() : "N/A";
+			String aspect = String.valueOf(_animationSequence.getPointAspect());
+			audio = _media != null ? _media.getName() : "N/A";
+			timeMillis = _inherentMediaDelay != null ? TimeUnit.MILLISECONDS.convert(
+					_inherentMediaDelay, TimeUnit.NANOSECONDS) : null;
+			String audioOnset = timeMillis != null ? timeMillis.toString() : "0";
+			
+			String delays = "";
+			if (_relativeAnimationDelay != 0) {
+				delays = String.format("\tAudio begins at time 0\n\tAnimation delayed by %d ms", 
+						TimeUnit.MILLISECONDS.convert(_relativeAnimationDelay, TimeUnit.NANOSECONDS));
+			}
+			else if (_relativeMediaDelay != 0) {
+				delays = String.format("\tAnimation begins at time 0\n\tAudio delayed by %d ms", 
+						TimeUnit.MILLISECONDS.convert(_relativeMediaDelay, TimeUnit.NANOSECONDS));
+			}
+			
+			timeMillis = TimeUnit.MILLISECONDS.convert(getOffsetNanos(), TimeUnit.NANOSECONDS);
+			String format = ":\n\tAudio file: %s\n\tOffset: %d\n\tTone onset delay: %s\n" +
+					"\tAnimation file: %s\n\tFrame count: %s\n\tAnimation points: %d\n" +
+					"\tAnimation hit point(s): %s\n\tConnect points: %b\n\tPoint aspect: %s\n%s";
+			retval += String.format(format, audio, timeMillis, audioOnset, ani, frames, 
+					_numPoints, hits, _connectDots, aspect, delays);
 		}
-		else if (_relativeMediaDelay != 0) {
-			delays = String.format("\tAnimation begins at time 0\n\tAudio delayed by %d ms", 
-					TimeUnit.MILLISECONDS.convert(_relativeMediaDelay, TimeUnit.NANOSECONDS));
+		else if (_animationSequence != null) {
+			ani = _animationSequence.getSourceFileName();
+			String frames = String.valueOf(_animationSequence.getNumFrames());
+			timeMillis = TimeUnit.MILLISECONDS.convert(
+					getAnimationStrikeTimeNanos(), TimeUnit.NANOSECONDS);
+			String hits = timeMillis != null ? timeMillis.toString() : "N/A";
+			String aspect = String.valueOf(_animationSequence.getPointAspect());
+			
+			String format = ":\n\tAnimation file: %s\n\tFrame count: %s\n\tAnimation points: %d\n" +
+					"\tAnimation hit point(s): %s\n\tConnect points: %b\n\tPoint aspect: %s\n";
+			retval += String.format(format, ani, frames, _numPoints, hits, _connectDots, aspect);
 		}
-		timeMillis = TimeUnit.MILLISECONDS.convert(getOffsetNanos(), TimeUnit.NANOSECONDS);
-		String format = "Trial %d:\n\tAudio file: %s\n\tOffset: %d\n\tTone onset delay: %s\n" +
-				"\tAnimation file: %s\n\tFrame count: %s\n\tAnimation points: %d\n" +
-				"\tAnimation hit point(s): %s\n\tConnect points: %b\n\tPoint aspect: %s\n%s";
-		return String.format(format, getNum(), audio, timeMillis, audioOnset, ani, frames, 
-				_numPoints, hits, _connectDots, aspect, delays);
+		else if (_media != null) {
+			audio = _media.getName();
+			timeMillis = _inherentMediaDelay != null ? TimeUnit.MILLISECONDS.convert(
+					_inherentMediaDelay, TimeUnit.NANOSECONDS) : null;
+			String audioOnset = timeMillis != null ? timeMillis.toString() : "0";
+
+			timeMillis = TimeUnit.MILLISECONDS.convert(getOffsetNanos(), TimeUnit.NANOSECONDS);
+			String format = ":\n\tAudio file: %s\n\tOffset: %d\n\tTone onset delay: %s\n";
+			retval += String.format(format, audio, timeMillis, audioOnset);
+		}
+		
+		return retval;
 	}
 	
 	/**

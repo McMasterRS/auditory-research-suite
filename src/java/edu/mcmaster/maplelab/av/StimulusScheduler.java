@@ -155,7 +155,7 @@ public class StimulusScheduler {
 	 * Run the refresh period calculation renderer.
 	 */
 	private void calculateRefreshAndSchedule() {
-		if (_trial.getNumMediaObjects() > 1) {
+		if (_trial.isAnimation()) {
 			// is this the best way to do this?
 			_renderer.setDisplayProxy(_refreshCalculator);
 			//XXX: executor service?
@@ -187,7 +187,7 @@ public class StimulusScheduler {
 				} 
 				catch (InterruptedException e) {} // ignore*/
 				
-				if (_trial.getNumMediaObjects() > 1) {
+				if (_trial.isAnimation()) {
 					_renderer.setDisplayProxy(_starter);
 					_trigger.forceDisplay();
 				}
@@ -341,13 +341,18 @@ public class StimulusScheduler {
 			
 			GL2 gl = drawable.getGL().getGL2();
 			gl.setSwapInterval(1);
-			gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
+			
+			gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
 			long curr = System.nanoTime();
 			long total = 0;
 			
 			if (APPLE_MODE) {
-				for (int i = 0; i < ITERATIONS; i++) {
+				for (int i = 0; i < ITERATIONS; i++) { 
+					float alpha = 1.0f - (float) (.01 * i % 2);
+					gl.glClearColor(0.0f, 0.0f, 0.0f, alpha);
+					gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 					gl.glSwapAPPLE();
 					long tmp = System.nanoTime();
 					total += tmp - curr;
@@ -355,7 +360,10 @@ public class StimulusScheduler {
 				}
 			}
 			else {
-				for (int i = 0; i < ITERATIONS; i++) {
+				for (int i = 0; i < ITERATIONS; i++) { 
+					float alpha = 1.0f - (float) (.01 * i % 2);
+					gl.glClearColor(0.0f, 0.0f, 0.0f, alpha);
+					gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 					gl.glFinish(); // TODO: would this even work?
 					long tmp = System.nanoTime();
 					total += curr - tmp;

@@ -36,6 +36,9 @@ public class TOJSession extends AVSession<TOJBlock, TOJTrial, TOJTrialLogger> {
         if (includeVideoBlock()) {
         	retval.add(new TOJBlock(this, 0, AVBlockType.VIDEO_ONLY, getSoundOffsets(), getNumAnimationPoints()));
         }
+        if (includeAnimationBlock()) {
+        	retval.add(new TOJBlock(this, 0, AVBlockType.ANIMATION_ONLY, getSoundOffsets(), getNumAnimationPoints()));
+        }
         if (includeAudioAnimationBlock()) {
         	retval.add(new TOJBlock(this, 0, AVBlockType.AUDIO_ANIMATION, getSoundOffsets(), getNumAnimationPoints()));
         }
