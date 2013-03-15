@@ -22,6 +22,7 @@ import java.io.IOException;
  * @param <T> Trial type
  */
 public interface TrialLogger<B extends Block<?,?>, T extends Trial<?>> {
+	public static final String NA = "N/A";
 
     /**
      * Save the current state of the session object to the database.

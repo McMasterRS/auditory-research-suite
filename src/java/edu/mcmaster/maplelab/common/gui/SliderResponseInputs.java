@@ -18,12 +18,11 @@ import net.miginfocom.swing.MigLayout;
 import edu.mcmaster.maplelab.common.datamodel.Answer;
 import edu.mcmaster.maplelab.common.datamodel.ContinuousResponseParameters;
 import edu.mcmaster.maplelab.common.datamodel.MultiResponse;
-import edu.mcmaster.maplelab.common.datamodel.Response;
 import edu.mcmaster.maplelab.common.datamodel.ResponseParameters;
 
 public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 	/** Sliders. */
-	private List<JSlider> _sliders;
+	private List<SliderGroup> _sliders;
 	/** Action listeners. */
 	private final List<ActionListener> _listeners = new ArrayList<ActionListener>();
 	/** Action forwarder. */
@@ -45,7 +44,7 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 											ContinuousResponseParameters<?, ?>... interpreters) {
         super(true, enableKeyEvents, interpreters);
         
-        if (interpreters.length > 2 || interpreters[0].isDiscrete()) {
+        if (interpreters.length > 2 || (interpreters.length > 0 && interpreters[0].isDiscrete())) {
         	throw new IllegalArgumentException("Can only handle up to 2 continuous response parameters.");
         }
     }
@@ -54,7 +53,7 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 		if (_sliders == null) {
 			ContinuousResponseParameters<?, ?>[] params = 
 				(ContinuousResponseParameters<?, ?>[]) getResponseParams();
-			_sliders = new ArrayList<JSlider>(getResponseParams().length);
+			_sliders = new ArrayList<SliderGroup>(params.length);
 			
 			for (int i = 0; i < params.length; i++) {
 				ContinuousResponseParameters<?, ?> crp = params[i];
@@ -67,44 +66,49 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 				s.setPaintTicks(true);
 				s.setPaintLabels(false);
 				s.addChangeListener(_forwarder);
-				_sliders.add(s);
+				// expect 2 answers, but just use the first 2
+				Answer[] answers = crp.getAnswers();
+				_sliders.add(new SliderGroup(s, new JLabel(answers[0].toString()), 
+						new JLabel(answers[1].toString())));
 			}
 		}
 	}
 
 	@Override
 	protected void setEnabledState(boolean enabled) {
-		for (JSlider s : _sliders) {
-			s.setEnabled(enabled);
+		for (SliderGroup s : _sliders) {
+			s.getSlider().setEnabled(enabled);
 		}
+	}
+	
+	public void setInputVisibility(int inputIndex, boolean visible) {
+		if (inputIndex < 0 || inputIndex >= _sliders.size()) return;
+		_sliders.get(inputIndex).setVisible(visible);
 	}
 
 	@Override
 	protected JPanel createTop() {
 		createSliders();
 		
-		JPanel outer = new JPanel(new MigLayout("insets 0, fill"));
-		JPanel p = new JPanel(new MigLayout("fill", "[right][center][left]", "[][]"));
+		JPanel outer = new JPanel(new MigLayout("insets 0, fill, hidemode 0"));
+		JPanel p = new JPanel(new MigLayout("fill, hidemode 0", "[right][center][left]", "[][]"));
 		outer.add(p);
 		outer.setBorder(BorderFactory.createTitledBorder("Response"));
 		
 		// first slider
-		ResponseParameters<?, ?>[] paramArray = getResponseParams();
-		ResponseParameters<?, ?> params = paramArray[0];
-		Answer[] answers = params.getAnswers();
+		if (_sliders.size() == 0) return outer;
+		SliderGroup sg = _sliders.get(0);
 		// expect 2 answers, but just use the first 2
-		p.add(new JLabel(answers[0].toString()));
-		p.add(_sliders.get(0), "grow");
-		p.add(new JLabel(answers[1].toString()), "wrap");
+		p.add(sg.getLeft());
+		p.add(sg.getSlider(), "grow");
+		p.add(sg.getRight(), "wrap");
 		
 		// second slider, if valid
-		if (paramArray.length == 2) {
-			params = paramArray[1];
-			answers = params.getAnswers();
-			// expect 2 answers, but just use the first 2
-			p.add(new JLabel(answers[0].toString()));
-			p.add(_sliders.get(1), "grow");
-			p.add(new JLabel(answers[1].toString()));
+		if (_sliders.size() == 2) {
+			sg = _sliders.get(1);
+			p.add(sg.getLeft());
+			p.add(sg.getSlider(), "grow");
+			p.add(sg.getRight());
 		}
 		
 		return outer;
@@ -118,8 +122,9 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 
 	@Override
 	public void setSelection(KeyEvent e) {
-		JSlider top = _sliders.get(0);
-		JSlider bottom = _sliders.size() > 1 ? _sliders.get(1) : null;
+		if (_sliders.size() == 0) return;
+		JSlider top = _sliders.get(0).getSlider();
+		JSlider bottom = _sliders.size() > 1 ? _sliders.get(1).getSlider() : null;
 		
 		switch (e.getKeyCode()) {
 			case KeyEvent.VK_LEFT: {
@@ -150,7 +155,7 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 		ContinuousResponseParameters<?, ?>[] params = 
 				(ContinuousResponseParameters<?, ?>[]) getResponseParams();
 		for (int i = 0; i < params.length; i++) {
-			_sliders.get(i).setValue(params[i].getMiddleValue());
+			_sliders.get(i).getSlider().setValue(params[i].getMiddleValue());
 		}
 	}
 
@@ -166,7 +171,7 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 		
 		for (int i = 0; i < params.length; i++) {
 			ContinuousResponseParameters<?, ?> crp = (ContinuousResponseParameters<?, ?>) params[i];
-			int val = _sliders.get(i).getValue();
+			int val = _sliders.get(i).getSlider().getValue();
 			retval.setResponse(i, crp.getResponseForValue(val));
 		}
 		
@@ -184,6 +189,25 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 	public void removeActionListener(ActionListener l) {
 		synchronized (_listeners) {
 			_listeners.remove(l);
+		}
+	}
+	
+	private static class SliderGroup {
+		private final JSlider _slider;
+		private final JLabel[] _labels = new JLabel[2];;
+		public SliderGroup(JSlider s, JLabel left, JLabel right) {
+			_slider = s;
+			_labels[0] = left;
+			_labels[1] = right;
+		}
+		public JSlider getSlider() { return _slider; }
+		public JLabel getLeft() { return _labels[0]; }
+		public JLabel getRight() { return _labels[1]; }
+		public void setVisible(boolean visible) {
+			_slider.setVisible(visible);
+			for (JLabel l : _labels) {
+				l.setVisible(visible);
+			}
 		}
 	}
 	

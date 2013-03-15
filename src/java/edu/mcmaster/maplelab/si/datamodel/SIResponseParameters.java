@@ -8,6 +8,24 @@ import edu.mcmaster.maplelab.common.datamodel.IntegerResponse;
 
 public abstract class SIResponseParameters<T> extends ContinuousResponseParameters<SISession, T> {
 	
+	public static ContinuousResponseParameters<?, ?>[] getResponseParameters(SISession s) {
+		boolean dur = s.getString(ConfigLabels.durationLow, null) != null;
+		boolean agree =  s.getString(ConfigLabels.agreementLow, null) != null;
+		
+		if (dur && agree) {
+			return new ContinuousResponseParameters<?, ?>[] { new SIDurationResponseParameters(s), 
+					new SIAgreementResponseParameters(s) };
+		}
+		else if (dur) {
+			return new ContinuousResponseParameters<?, ?>[] { new SIDurationResponseParameters(s) };
+		}
+		else if (agree) {
+			return new ContinuousResponseParameters<?, ?>[] { new SIAgreementResponseParameters(s) };
+		}
+		
+		return new ContinuousResponseParameters<?, ?>[0];
+	}
+	
 	private enum ConfigLabels {
 		durationLow,
 		durationHigh,
@@ -32,7 +50,7 @@ public abstract class SIResponseParameters<T> extends ContinuousResponseParamete
 	public abstract Answer[] getAnswers();
 	
 	// TODO: consider using Duration and DurationResponse here
-	public static class SIDurationResponseParameters extends SIResponseParameters<Integer> {
+	private static class SIDurationResponseParameters extends SIResponseParameters<Integer> {
 		private final String _durLow;
 		private final String _durHigh;
 
@@ -56,7 +74,7 @@ public abstract class SIResponseParameters<T> extends ContinuousResponseParamete
 		}
 	}
 	
-	public static class SIAgreementResponseParameters extends SIResponseParameters<Integer> {
+	private static class SIAgreementResponseParameters extends SIResponseParameters<Integer> {
 		private final String _agreeLow;
 		private final String _agreeHigh;
 

@@ -40,7 +40,8 @@ public abstract class ResponseInputs<T> extends JPanel {
         setSize(300, 200);
         
         MigLayout layout = vertical ? 
-        		new MigLayout("insets 0, fill") : new MigLayout("insets 0, fill", "[]0px[]", "");
+        		new MigLayout("insets 0, fill, hidemode 2") : 
+        			new MigLayout("insets 0, fill, hidemode 2", "[]0px[]", "");
         setLayout(layout);
         add(getTop(), vertical ? "north" : "sgy, grow");
         add(getBottom(), vertical ? "" : "sgy, grow");

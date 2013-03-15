@@ -148,6 +148,11 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
 	 * Create a response inputs panel specific to this experiment.
 	 */
 	public abstract ResponseInputs<R> createResponseInputs(S session);
+	
+	/**
+	 * Update the response inputs as necessary for the next trial.
+	 */
+	public abstract void updateResponseInputs(T trial);
     
     /**
      * {@inheritDoc} 
@@ -293,6 +298,7 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         
         B nextBlock = nextBlock();
         T nextTrial = nextTrial();
+        updateResponseInputs(nextTrial);
         if (nextTrial == null) return;
         nextTrial.setTimeStamp(new Date());
         

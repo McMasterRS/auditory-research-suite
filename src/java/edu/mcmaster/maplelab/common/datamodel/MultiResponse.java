@@ -13,6 +13,7 @@ public class MultiResponse {
 	}
 	
 	public Response<?> getResponse(int index) {
+		if (index < 0 || index >= _responses.length) return null;
 		return _responses[index];
 	}
 	

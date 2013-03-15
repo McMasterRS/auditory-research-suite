@@ -80,9 +80,9 @@ public class SITrialLogger extends FileTrialLogger<SISession, SIBlock, SITrial> 
         boolean vid = trial.isVideo();
         Playable media = vid ? trial.getVideoPlayable() : trial.getAudioPlayable();
         AnimationSequence as = trial.getAnimationSequence();
-        fields.put(Keys.audioFile, !vid && media != null ? media.name() : "N/A");
-        fields.put(Keys.vidFile, vid && media != null ? media.name() : "N/A");
-        fields.put(Keys.visFile, as != null ? as.getSourceFileName() : "N/A");
+        fields.put(Keys.audioFile, !vid && media != null ? media.name() : NA);
+        fields.put(Keys.vidFile, vid && media != null ? media.name() : NA);
+        fields.put(Keys.visFile, as != null ? as.getSourceFileName() : NA);
         Long millisVal = TimeUnit.MILLISECONDS.convert(
         		trial.getOffsetNanos(), TimeUnit.NANOSECONDS);
         fields.put(Keys.audioOffset, String.valueOf(millisVal));
@@ -97,32 +97,44 @@ public class SITrialLogger extends FileTrialLogger<SISession, SIBlock, SITrial> 
                 fields.put(Keys.aniStrikeDelay, String.valueOf(millisVal));
             }
             else {
-                fields.put(Keys.animationStart, "N/A");
-                fields.put(Keys.aniStrikeDelay, "N/A");
+                fields.put(Keys.animationStart, NA);
+                fields.put(Keys.aniStrikeDelay, NA);
             }
             start = trial.getLastMediaStartNanos();
             millisVal = start != null ? 
             		TimeUnit.MILLISECONDS.convert(start, TimeUnit.NANOSECONDS) : null;
-            fields.put(Keys.audioStart, start != null ? String.valueOf(millisVal) : "N/A");
+            fields.put(Keys.audioStart, start != null ? String.valueOf(millisVal) : NA);
             millisVal = TimeUnit.MILLISECONDS.convert(
             		trial.getAudioToneOnsetNanos(), TimeUnit.NANOSECONDS);
             fields.put(Keys.audioToneDelay, String.valueOf(millisVal));
         }
         else {
-            fields.put(Keys.animationStart, "N/A");
-            fields.put(Keys.aniStrikeDelay, "N/A");
-            fields.put(Keys.audioStart, "N/A");
-            fields.put(Keys.audioToneDelay, "N/A");
+            fields.put(Keys.animationStart, NA);
+            fields.put(Keys.aniStrikeDelay, NA);
+            fields.put(Keys.audioStart, NA);
+            fields.put(Keys.audioToneDelay, NA);
         }
         
         // Output subject response information
         MultiResponse response = trial.getResponse();
         IntegerResponse dr = (IntegerResponse) response.getResponse(0);
+        if (dr != null) {
+            fields.put(Keys.subjDurationResponse, dr.getAnswer().toString());
+            fields.put(Keys.subjDurationValue, String.valueOf(dr.getValue()));
+        }
+        else {
+            fields.put(Keys.subjDurationResponse, NA);
+            fields.put(Keys.subjDurationValue, NA);
+        }
         IntegerResponse ir = (IntegerResponse) response.getResponse(1);
-        fields.put(Keys.subjDurationResponse, dr.getAnswer().toString());
-        fields.put(Keys.subjDurationValue, String.valueOf(dr.getValue()));
-        fields.put(Keys.subjAgreementResponse, ir.getAnswer().toString());
-        fields.put(Keys.subjAgreementValue, String.valueOf(ir.getValue()));
+        if (ir != null) {
+            fields.put(Keys.subjAgreementResponse, ir.getAnswer().toString());
+            fields.put(Keys.subjAgreementValue, String.valueOf(ir.getValue()));
+        }
+        else {
+            fields.put(Keys.subjAgreementResponse, NA);
+            fields.put(Keys.subjAgreementValue, NA);
+        }
 
         return fields;
     }

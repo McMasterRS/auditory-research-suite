@@ -31,4 +31,9 @@ public class TOJStimulusResponseScreen extends AVStimulusResponseScreen<Confiden
 	public ResponseInputs<ConfidenceResponse> createResponseInputs(TOJSession session) {
 		return new AnswerConfidenceResponseInputs(false, true, new TOJResponseParameters(session));
 	}
+
+	@Override
+	public void updateResponseInputs(TOJTrial trial) {
+		// no-op
+	}
 }
