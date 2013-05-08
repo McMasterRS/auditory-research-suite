@@ -42,8 +42,7 @@ import edu.mcmaster.maplelab.common.datamodel.*;
  * @author         <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since         May 10, 2006
  */
-public abstract class ExperimentFrame
-    <T extends Session<Q, R, L>,  Q extends Block<T, R>, R extends Trial<?>, L extends TrialLogger <Q, R> > 
+public abstract class ExperimentFrame <T extends Session<?, R, L>,  R extends Trial<?>, L extends TrialLogger <R>> 
     extends JFrame {
 	
 	private static final int SHUTDOWN_MODIFIER_MASK = KeyEvent.SHIFT_MASK | KeyEvent.META_MASK;

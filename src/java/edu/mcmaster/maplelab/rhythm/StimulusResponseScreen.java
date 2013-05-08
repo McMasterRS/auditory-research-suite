@@ -12,6 +12,11 @@
 
 package edu.mcmaster.maplelab.rhythm;
 
+import static edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.RelativeTrialPosition.BLOCK_IN_METABLOCK;
+import static edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.RelativeTrialPosition.REPETITION;
+import static edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.RelativeTrialPosition.TRIAL_IN_BLOCK;
+import static edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.TrialHierarchy.METABLOCK;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -65,14 +70,14 @@ public class StimulusResponseScreen extends BasicStep {
     
     private final RhythmSession _session;
     private AnswerConfidenceResponseInputs _response;
-    private List<RhythmBlock> _blocks;
-    private int _blockIndex = 0;
     private final boolean _isWarmup;
     private final JLabel _statusText;
     private TapRecorder _tapRecorder;
     private JComponent _tapTarget;
     private JLabel _results;
     
+    private RhythmTrialManager _trialManager;
+    private RhythmTrial _currTrial;
     private int _completed = 0;
     private int _correct = 0;
 
@@ -80,6 +85,7 @@ public class StimulusResponseScreen extends BasicStep {
         _isWarmup = isWarmup;
         setStepManager(steps);        
         _session = session;
+        _trialManager = _session.getTrialManager(_isWarmup);
         setTitleText(_session.getString(
             _isWarmup ? ConfigKeys.warmupScreenTrialTitle : ConfigKeys.testScreenTrialTitle, 
                 null));
@@ -155,24 +161,8 @@ public class StimulusResponseScreen extends BasicStep {
      */
     @Override
     protected void onVisible() {
-        initialize(_isWarmup);
+        incrementTrial();
         doNextTrial();
-    }
-
-    /**
-     * Prepare screen to run tests.
-     * 
-     * @param isWarmup if this is a warmup run.
-     */
-    private void initialize(boolean isWarmup) {
-        if (isWarmup) {
-            _blocks = _session.generateWarmup();
-        }
-        else {
-            _blocks = _session.generateBlocks();
-            LogContext.getLogger().fine(_session.getCombinatorialDescription(_blocks));
-        }
-        
     }
     
     /**
@@ -205,7 +195,8 @@ public class StimulusResponseScreen extends BasicStep {
     	getPrevNextButtons().setEnabled(false);
     	
     	recordResponse();
-        if (!isDone()) {
+        if (_trialManager.hasNext()) {
+            incrementTrial(); 
             doNextTrial();
         }
         else {      
@@ -220,68 +211,35 @@ public class StimulusResponseScreen extends BasicStep {
         }
     }
     
-    private RhythmBlock currBlock() {
-        if(_blockIndex >= _blocks.size()) return null;
-        
-        return _blocks.get(_blockIndex);
-    }
-    
     /**
      * Convenience method to get the next trial
      * 
      * @return next trial or null if none.
      */
-    private RhythmTrial currTrial() {
-        RhythmBlock block = currBlock();
-        return block != null ? block.currTrial() : null;
-    }
-    
-    /**
-     * Increment to the next block
-     */
-    private void incBlock() {
-        _blockIndex++;       
-        
-        if (_blockIndex < _blocks.size()) {
-            RhythmBlock block = currBlock();
-            LogContext.getLogger().fine("* New block: " + block);
-        }
-        else if (!_isWarmup) {
-        	_session.incrementRepetition();
-        	if (_session.hasMoreRepetitions()) {
-	    		_blockIndex = 0;
-	        	_blocks = _session.generateBlocks();
-	            LogContext.getLogger().fine(_session.getCombinatorialDescription(_blocks));
-        	}
-        }
+    private RhythmTrial currentTrial() {
+        return _currTrial;
     }
     
     private void doNextTrial() {
-        _response.reset();
+    	_response.reset();
         
-        RhythmBlock currBlock = currBlock();
-
-        RhythmTrial currTrial = currTrial();
-        if(currTrial == null) return;
-        currTrial.setTimeStamp(new Date());
+        RhythmTrial trial = currentTrial();
+        if (trial == null) return;
+        trial.setTimeStamp(new Date());
         
-        String trialDesc = _isWarmup ? "\n---- Warmup Trial ----\n-> %s: %s: %s" : 
-        		"\n--------------------\n-> %s: %s: %s";
-        String rep = String.format("Repetition %d", _session.getCurrentRepetition());
-        LogContext.getLogger().fine(String.format(trialDesc, 
-        		rep, currBlock, currTrial.getDescription()));
+        String trialDesc = String.format("Metablock %d: Repetition %d: Block %d: %s", 
+        		trial.getNumber(METABLOCK), trial.getNumber(REPETITION), 
+        		trial.getNumber(BLOCK_IN_METABLOCK), trial.getDescription());
+        
+        String delim = _isWarmup ? "\n---- Warmup Trial ----\n-> " : "\n--------------------\n-> ";
+        LogContext.getLogger().fine(delim + String.format(trialDesc, trial.getDescription()));
 
-        _session.execute(new PrepareRunnable(currTrial));
-        _session.execute(new PlaybackRunnable(currTrial));
-    }
-
-    private boolean isDone() {
-        return currTrial() == null;
+        _session.execute(new PrepareRunnable(trial));
+        _session.execute(new PlaybackRunnable(trial));
     }
     
     private void recordResponse() {
-    	RhythmBlock block = currBlock();
-        RhythmTrial t = currTrial();
+        RhythmTrial t = currentTrial();
         if(t == null) return;
         
         t.setResponse(_response.getResponse());
@@ -291,19 +249,18 @@ public class StimulusResponseScreen extends BasicStep {
         
         //if (!_isWarmup) {
             try {
-                _session.getTrialLogger().submit(block, t);
+                _session.getTrialLogger().submit(t);
             }
             catch (IOException e) {
                 LogContext.getLogger().severe("Error saving trial: " + e);
             }
-        //}
-        
-        block.incTrial();
-        if (block.isDone()) {
-            incBlock();
-        }        
+        //}  
         
         _session.execute(new StatusUpdaterRunnable(t));
+    }
+    
+    private void incrementTrial() {
+    	_currTrial = _trialManager.next();
     }
     
     /**
@@ -449,7 +406,7 @@ public class StimulusResponseScreen extends BasicStep {
                 if (_tapRecorder != null) {
                     _tapRecorder.stop();
                     
-                    RhythmTrial trial = currTrial();
+                    RhythmTrial trial = currentTrial();
                     trial.setRecording(_currSequence);
                     
                     _currSequence = null;
@@ -470,17 +427,16 @@ public class StimulusResponseScreen extends BasicStep {
     }  
     
     private class StatusUpdaterRunnable implements Runnable {
-        private final RhythmTrial _currTrial;
+        private final RhythmTrial _trial;
 
         public StatusUpdaterRunnable(RhythmTrial currTrial) {
-            _currTrial = currTrial;
- 
+            _trial = currTrial;
         }
 
         public void run() {
         	_completed++;
             
-            final boolean wasCorrect = _currTrial.isResponseCorrect();
+            final boolean wasCorrect = _trial.isResponseCorrect();
 
             if(wasCorrect) {
                 _correct++;

@@ -34,7 +34,7 @@ import edu.mcmaster.maplelab.rhythm.datamodel.*;
  * @since Nov 3, 2006
  */
 public class RhythmTrialLogger extends
-    FileTrialLogger<RhythmSession, RhythmBlock, RhythmTrial> {
+    FileTrialLogger<RhythmSession, RhythmTrial> {
 
     public enum Keys {
     	baseIOI, 
@@ -85,8 +85,7 @@ public class RhythmTrialLogger extends
 	}
 
     @Override
-    protected EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(
-    		RhythmBlock block, RhythmTrial trial) {
+    protected EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(RhythmTrial trial) {
     	
         EnumMap<Keys, String> fields = new EnumMap<Keys, String>(Keys.class);
         
@@ -107,15 +106,14 @@ public class RhythmTrialLogger extends
     }
 
 	@Override
-	protected EnumMap<? extends Enum<?>, String> marshalGeneralDataToMap(
-			RhythmBlock block, RhythmTrial trial) {
+	protected EnumMap<? extends Enum<?>, String> marshalGeneralDataToMap(RhythmTrial trial) {
 		return null;
 	}
     
     @Override
-    public void submit(RhythmBlock block, RhythmTrial trial) throws IOException {
-        super.submit(block, trial);
-        _tapLogger.submit(block, trial);
+    public void submit(RhythmTrial trial) throws IOException {
+        super.submit(trial);
+        _tapLogger.submit(trial);
     }
     
     @Override
@@ -128,7 +126,7 @@ public class RhythmTrialLogger extends
      * Delegate logger for recording tap data when available. Uses
      * FileTrialLogger base class mostly out of convenience.
      */
-    private static class TapLogger extends FileTrialLogger<RhythmSession, RhythmBlock, RhythmTrial> {
+    private static class TapLogger extends FileTrialLogger<RhythmSession, RhythmTrial> {
     	private static final String TAP_TEXT_FILE = "tap_text";
     	private static final String TAP_MIDI_FILE = "tap_midi";
     	private static final String TAP_TEXT_ALL_FILE = "tap_all";
@@ -189,13 +187,12 @@ public class RhythmTrialLogger extends
         /**
          * Create a file for midi output for the given block and trial.
          */
-        private File createMidiFile(RhythmBlock block, RhythmTrial trial) {
-        	return getOutputFile(getSession(), FileType.get(TAP_MIDI_FILE), block, trial);
+        private File createMidiFile(RhythmTrial trial) {
+        	return getOutputFile(getSession(), FileType.get(TAP_MIDI_FILE), trial);
         }
         
         @Override
-        protected EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(
-        		RhythmBlock block, RhythmTrial trial) {
+        protected EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(RhythmTrial trial) {
         	
             EnumMap<TapKeys, String> fields = new EnumMap<TapKeys, String>(TapKeys.class);
             
@@ -233,25 +230,25 @@ public class RhythmTrialLogger extends
          *      edu.mcmaster.maplelab.common.datamodel.Trial)
          */
         @Override
-        public void submit(RhythmBlock block, RhythmTrial trial) throws IOException {
+        public void submit(RhythmTrial trial) throws IOException {
             Sequence recording = trial.getRecording();
             if (recording == null) return;
             
-            writeMidiFile(recording, block, trial);
-            writeTextFile(recording, block, trial);
+            writeMidiFile(recording, trial);
+            writeTextFile(recording, trial);
         }
         
         /**
          * Write the designated midi file to contain tracks for experiment and participant events.
          */
-        private void writeMidiFile(Sequence recording, RhythmBlock block, RhythmTrial trial) throws IOException {
-        	MidiSystem.write(recording, 1, createMidiFile(block, trial));
+        private void writeMidiFile(Sequence recording, RhythmTrial trial) throws IOException {
+        	MidiSystem.write(recording, 1, createMidiFile(trial));
 		}
 
 		/**
          * Write a text file containing a table of all block and trial information.
          */
-        private void writeTextFile(Sequence recording, RhythmBlock block, RhythmTrial trial) throws IOException {
+        private void writeTextFile(Sequence recording, RhythmTrial trial) throws IOException {
             File textFile = getFile();
 
             boolean addHeader = !textFile.exists();
@@ -285,7 +282,7 @@ public class RhythmTrialLogger extends
                             _type = TapType.critical;
                         }
 
-                        writeRow(buildDataSets(block, trial), out);
+                        writeRow(buildDataSets(trial), out);
                     }
                 }
             }
@@ -305,8 +302,7 @@ public class RhythmTrialLogger extends
 		}
 
 		@Override
-		protected EnumMap<? extends Enum<?>, String> marshalGeneralDataToMap(
-				RhythmBlock block, RhythmTrial trial) {
+		protected EnumMap<? extends Enum<?>, String> marshalGeneralDataToMap(RhythmTrial trial) {
         	
             EnumMap<MidiKeys, String> fields = new EnumMap<MidiKeys, String>(MidiKeys.class);
             

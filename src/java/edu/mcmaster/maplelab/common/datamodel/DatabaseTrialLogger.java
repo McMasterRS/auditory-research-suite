@@ -27,7 +27,7 @@ import edu.mcmaster.maplelab.common.LogContext;
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  Sep 7, 2006
  */
-public abstract class DatabaseTrialLogger<S extends Session<?,?,?>, T extends Trial<?>, B extends Block<?,?>> implements TrialLogger<B,T> {
+public abstract class DatabaseTrialLogger<S extends Session<?,?,?>, T extends Trial<?>> implements TrialLogger<T> {
 
     private final URL _base;
     /**
@@ -109,11 +109,10 @@ public abstract class DatabaseTrialLogger<S extends Session<?,?,?>, T extends Tr
      * Convert given block and trial objects into a key-value map to be encoded
      * as x-www-form-urlencoded data.
      * 
-     * @param block Current block
      * @param trial Current trail, with response data.
      * @return key-value map
      */
-    protected abstract Map<String, String> marshalToMap(B block, T trial);
+    protected abstract Map<String, String> marshalToMap(T trial);
 
     
     /**
@@ -191,7 +190,7 @@ public abstract class DatabaseTrialLogger<S extends Session<?,?,?>, T extends Tr
      * {@inheritDoc} 
      * @see edu.mcmaster.maplelab.common.datamodel.TrialLogger#submit(edu.mcmaster.maplelab.common.datamodel.Block, edu.mcmaster.maplelab.common.datamodel.Trial)
      */
-    public void submit(final B block, final T trial) {
+    public void submit(final T trial) {
         _submitExecutor.execute(new Runnable() {
             public void run() {
                 // NB: In development mode we set a negative experiment id
@@ -205,7 +204,7 @@ public abstract class DatabaseTrialLogger<S extends Session<?,?,?>, T extends Tr
                     conn.setDoOutput(true);
                     conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
                     
-                    Map<String, String> fields = marshalToMap(block, trial);
+                    Map<String, String> fields = marshalToMap(trial);
                     
                     String row = encode(fields);
                     

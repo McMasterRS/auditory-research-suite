@@ -13,11 +13,10 @@ import edu.mcmaster.maplelab.common.datamodel.FileTrialLogger;
 import edu.mcmaster.maplelab.common.datamodel.FileType;
 import edu.mcmaster.maplelab.common.datamodel.IntegerResponse;
 import edu.mcmaster.maplelab.common.datamodel.MultiResponse;
-import edu.mcmaster.maplelab.si.datamodel.SIBlock;
 import edu.mcmaster.maplelab.si.datamodel.SISession;
 import edu.mcmaster.maplelab.si.datamodel.SITrial;
 
-public class SITrialLogger extends FileTrialLogger<SISession, SIBlock, SITrial> {
+public class SITrialLogger extends FileTrialLogger<SISession, SITrial> {
 
 	public enum Keys {
         audioFile,
@@ -60,8 +59,7 @@ public class SITrialLogger extends FileTrialLogger<SISession, SIBlock, SITrial> 
 	}
 
 	@Override
-	protected EnumMap<? extends Enum<?>, String> marshalGeneralDataToMap(
-			SIBlock block, SITrial trial) {
+	protected EnumMap<? extends Enum<?>, String> marshalGeneralDataToMap(SITrial trial) {
 		return null;
 	}
 
@@ -71,8 +69,7 @@ public class SITrialLogger extends FileTrialLogger<SISession, SIBlock, SITrial> 
 	}
 
     @Override
-    protected EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(SIBlock block, 
-    		SITrial trial) {
+    protected EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(SITrial trial) {
     	
         EnumMap<Keys, String> fields = new EnumMap<Keys, String>(Keys.class);
         

@@ -1,5 +1,6 @@
 package edu.mcmaster.maplelab.si.datamodel;
 
+import edu.mcmaster.maplelab.av.datamodel.AVBlockType;
 import edu.mcmaster.maplelab.av.datamodel.AVTrial;
 import edu.mcmaster.maplelab.av.media.Playable;
 import edu.mcmaster.maplelab.av.media.MediaType.MediaWrapper;
@@ -8,10 +9,10 @@ import edu.mcmaster.maplelab.common.datamodel.MultiResponse;
 
 public class SITrial extends AVTrial<MultiResponse> {
 
-	public SITrial(AnimationSequence animationSequence, boolean isVideo, MediaWrapper<Playable> media, 
+	public SITrial(AVBlockType type, AnimationSequence animationSequence, MediaWrapper<Playable> media, 
 			Long timingOffset, int animationPoints, float diskRadius, boolean connectDots, Long mediaDelay) {
 		
-		super(animationSequence, isVideo, media, timingOffset, animationPoints, 
+		super(type, animationSequence, media, timingOffset, animationPoints, 
 				diskRadius, connectDots, mediaDelay);
 	}
 

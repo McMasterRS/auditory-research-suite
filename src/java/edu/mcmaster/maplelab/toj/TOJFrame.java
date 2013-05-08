@@ -10,15 +10,10 @@ package edu.mcmaster.maplelab.toj;
 import java.awt.Color;
 import java.awt.Container;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
-import java.util.logging.Level;
 
-import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.gui.ExperimentFrame;
-import edu.mcmaster.maplelab.toj.datamodel.TOJBlock;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
 
@@ -27,7 +22,7 @@ import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
  * @author Catherine Elder <cje@datamininglab.com>
  *
  */
-public class TOJFrame extends ExperimentFrame<TOJSession, TOJBlock, TOJTrial, TOJTrialLogger> {
+public class TOJFrame extends ExperimentFrame<TOJSession, TOJTrial, TOJTrialLogger> {
 
 	public TOJFrame(TOJSetupScreen setup) {
         super(setup); 

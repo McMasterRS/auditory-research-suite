@@ -12,7 +12,11 @@
 package edu.mcmaster.maplelab.common.datamodel;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+
+import edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.RelativeTrialPosition;
+import edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.TrialPositionItem;
 
 /**
  * Abstract base class for trial data.
@@ -21,8 +25,8 @@ import java.util.Date;
  * @since  Sep 14, 2006
  */
 public abstract class Trial<T> {
-    private int _trialNum;
     private String _timeStamp;
+    private final int[] _tracker;
     
     /**
      * @uml.property  name="response"
@@ -30,25 +34,36 @@ public abstract class Trial<T> {
     private T _response;
 
     public Trial() {
+    	_tracker = new int[TrialPositionHierarchy.values().length];
+    	Arrays.fill(_tracker, 0);
     }
     
     public String toString() {
-        return String.format("Trial %d", _trialNum);
+        return String.format("Trial %d", getTrialNumber());
+    }
+    
+	public void setNumber(TrialPositionItem key, int position) {
+		_tracker[key.index()] = position;
+	}
+	
+	public int getNumber(TrialPositionItem key) {
+		return _tracker[key.index()];
+	}
+
+    /**
+     * Get the block number. 
+     * 
+     */
+    public final int getBlockNumber() {
+        return getNumber(RelativeTrialPosition.BLOCK_IN_METABLOCK);
     }
 
     /**
      * Get the trail number. 
      * 
      */
-    public final int getNum() {
-        return _trialNum;
-    }
-    
-    /**
-     * Set the trial number.
-     */
-    public final void setNum(int trialNum) {
-        _trialNum = trialNum;
+    public final int getTrialNumber() {
+        return getNumber(RelativeTrialPosition.TRIAL_IN_BLOCK);
     }
     
     /**

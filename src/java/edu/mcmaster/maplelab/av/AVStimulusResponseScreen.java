@@ -7,6 +7,10 @@
  */
 package edu.mcmaster.maplelab.av;
 
+import static edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.RelativeTrialPosition.BLOCK_IN_METABLOCK;
+import static edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.RelativeTrialPosition.REPETITION;
+import static edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.TrialHierarchy.METABLOCK;
+
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Font;
@@ -18,7 +22,6 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -29,10 +32,10 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
-import edu.mcmaster.maplelab.av.datamodel.AVBlock;
+import edu.mcmaster.maplelab.av.datamodel.AVBlockType;
 import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.av.datamodel.AVTrial;
-import edu.mcmaster.maplelab.av.datamodel.AVBlock.AVBlockType;
+import edu.mcmaster.maplelab.av.datamodel.AVTrialManager;
 import edu.mcmaster.maplelab.av.media.VideoPanel;
 import edu.mcmaster.maplelab.av.media.animation.AnimationPanel;
 import edu.mcmaster.maplelab.common.LogContext;
@@ -45,8 +48,8 @@ import edu.mcmaster.maplelab.common.gui.StepManager;
 /**
  * Primary trial run screen for the AV experiments.
  */
-public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T extends AVTrial<R>, 
-			L extends TrialLogger<B, T>, S extends AVSession<B, T, L>> extends BasicStep {
+public abstract class AVStimulusResponseScreen<R, T extends AVTrial<R>, L extends TrialLogger<T>, 
+			S extends AVSession<? extends AVTrialManager<S, T>, T, L>> extends BasicStep {
 	/**
 	 * AVStimulusResponseScreen handles the user's response to AV stimulus.
      * @version   $Revision$
@@ -71,10 +74,10 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
     private final ResponseInputs<R> _response;
     private final JLabel _statusText;
     private final JLabel _results;
-    private List<B> _blocks;
-    private int _blockIndex = 0;
-    private B _finishedBlock;
-    private T _finishedTrial;
+    
+    private AVTrialManager<S, T> _trialManager;
+    private T _currTrial;
+    private T _completedTrial;
     
     private int _completed = 0;
     private int _correct = 0;
@@ -91,6 +94,7 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
 		
 		_session = session;
 		_isWarmup = isWarmup;
+		_trialManager = _session.getTrialManager(_isWarmup);
 		_scheduler = new StimulusScheduler();
 		_scheduler.setAnimationFrameAdvance(_session.getAnimationFrameAdvance(), TimeUnit.MILLISECONDS);
 		_scheduler.setAudioCallAhead(_session.getAudioCallAhead(), TimeUnit.MILLISECONDS);
@@ -160,23 +164,8 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
      */
     @Override
     protected void onVisible() {
-        initialize(_isWarmup);
-        doNextTrial();
-    }
-
-    /**
-     * Prepare screen to run tests.
-     * 
-     * @param isWarmup if this is a warmup run.
-     */
-	private void initialize(boolean isWarmup) {
-        if (isWarmup) {
-            _blocks = _session.generateWarmup();
-        }
-        else {
-            _blocks = _session.generateBlocks();
-            LogContext.getLogger().fine(_session.getCombinatorialDescription(_blocks));
-        }
+        incrementTrial();
+        doTrial();
     }
     
     /**
@@ -208,8 +197,8 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
     	setEnabled(false);
     	
     	recordResponse();
-        if (!isDone()) {
-            doNextTrial();
+        if (_trialManager.hasNext()) {
+            doTrial();
         }
         else {      
             // Hack that needs to be cleaned up with better abstraction.
@@ -223,24 +212,9 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         }
     }
     
-    private void determineBlockAndTrial() {
-    	// get finished items
-    	_finishedBlock = nextBlock();
-        _finishedTrial = nextTrial();       
-
-        // increment
-        _finishedBlock.incTrial();
-        if (_finishedBlock.isDone()) {
-            incBlock();
-        }
-    }
-    
-    /**
-     * Get the next block.  Assumes that it has already been incremented, if
-     * necessary.
-     */
-    private B nextBlock() {
-        return _blockIndex < _blocks.size() ? _blocks.get(_blockIndex) : null;
+    private void incrementTrial() {
+    	_completedTrial = _currTrial;
+    	_currTrial = _trialManager.next();
     }
     
     /**
@@ -248,9 +222,8 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
      * 
      * @return next trial or null if none.
      */
-    private T nextTrial() {
-    	B block = nextBlock();
-        return block != null ? block.currTrial() : null;
+    private T currentTrial() {
+    	return _currTrial;
     }
     
     /**
@@ -258,84 +231,48 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
      * 
      * @return finished trial or null if none.
      */
-    private T finishedTrial() {
-        return _finishedTrial;
+    private T completedTrial() {
+        return _completedTrial;
     }
     
-    /**
-     * Convenience method to get the block of the just-played trial.
-     * May be the same as the next block.
-     * 
-     * @return finished block or null if none.
-     */
-    private B finishedBlock() {
-        return _finishedBlock;
-    }
-    
-    /**
-     * Increment to the next block
-     */
-	private void incBlock() {
-        _blockIndex++;       
-        
-        if (_blockIndex < _blocks.size()) {
-            AVBlock<?, ?> block = nextBlock();
-            LogContext.getLogger().fine(String.format("> New block: %s: %d trials", 
-            		block, block.getNumTrials()));
-        }
-        else if (!_isWarmup) {
-        	_session.incrementRepetition();
-        	if (_session.hasMoreRepetitions()) {
-	    		_blockIndex = 0;
-	        	_blocks = _session.generateBlocks();
-	            LogContext.getLogger().fine(_session.getCombinatorialDescription(_blocks));
-        	}
-        }
-    }
-    
-    private void doNextTrial() {
+    private void doTrial() {
         _response.reset();
         
-        B nextBlock = nextBlock();
-        T nextTrial = nextTrial();
-        updateResponseInputs(nextTrial);
-        if (nextTrial == null) return;
-        nextTrial.setTimeStamp(new Date());
+        T trial = currentTrial();
+        if (trial == null) return;
+        updateResponseInputs(trial);
+        trial.setTimeStamp(new Date());
         
-        String trialDesc = _isWarmup ? "\n---- Warmup Trial ----\n-> %s: %s: %s" : 
-        		"\n--------------------\n-> %s: %s: %s";
-        String rep = String.format("Repetition %d", _session.getCurrentRepetition());
-        LogContext.getLogger().fine(String.format(trialDesc, 
-        		rep, nextBlock, nextTrial.getDescription()));
+        String trialDesc = String.format("Metablock %d: Repetition %d: Block %d: %s", 
+        		trial.getNumber(METABLOCK), trial.getNumber(REPETITION), 
+        		trial.getNumber(BLOCK_IN_METABLOCK), trial.getDescription());
+        
+        String delim = _isWarmup ? "\n---- Warmup Trial ----\n-> " : "\n--------------------\n-> ";
+        LogContext.getLogger().fine(delim + trialDesc);
 
-        _session.execute(new PrepareRunnable(nextTrial));
+        _session.execute(new PrepareRunnable(trial));
         _session.execute(new PlaybackRunnable());
-    }
-
-    private boolean isDone() {
-        return nextTrial() == null;
     }
     
     private void recordResponse() {
-    	B block = finishedBlock();
-    	T t = finishedTrial();
-        if (t == null) return;
+    	T trial = completedTrial();
+        if (trial == null) return;
         
-        t.setResponse(_response.getResponse());
+        trial.setResponse(_response.getResponse());
         
         LogContext.getLogger().fine(
-            String.format("-> %s" , t.getResponse()));
+            String.format("-> %s" , trial.getResponse()));
         
         if (!_isWarmup) {
             try {
-                _session.getTrialLogger().submit(block, t);
+                _session.getTrialLogger().submit(trial);
             }
             catch (IOException e) {
                 LogContext.getLogger().severe("Error saving trial: " + e);
             }
         }       
         
-        _session.execute(new StatusUpdaterRunnable(t));
+        _session.execute(new StatusUpdaterRunnable(trial));
     }
     
     /**
@@ -375,7 +312,7 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
             try {
             	// next trial set on playback completion, but have to set
             	// here on first trial
-            	if (finishedTrial() == null) _scheduler.setStimulusSource(_trial);
+            	if (completedTrial() == null) _scheduler.setStimulusSource(_trial);
             	
             	SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
@@ -402,10 +339,10 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
                 SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
                     	// gather block type information
-                    	B prevBlock = finishedBlock();
-                    	B block = nextBlock();
-                    	AVBlockType prevType = prevBlock != null ? prevBlock.getType() : null;
-                    	AVBlockType currType = block.getType();
+                    	T completed = completedTrial();
+                    	T currTrial = currentTrial();
+                    	AVBlockType prevType = completed != null ? completed.getType() : null;
+                    	AVBlockType currType = currTrial.getType();
 
                 		getContentPanel().remove(_vidPanel);
                     	
@@ -483,8 +420,8 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
         	_scheduler.getAnimationPanel().stop();
             
             // move to the next trial
-        	determineBlockAndTrial();
-        	_scheduler.setStimulusSource(nextTrial());
+        	incrementTrial();
+        	_scheduler.setStimulusSource(currentTrial());
         	
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
@@ -532,16 +469,16 @@ public abstract class AVStimulusResponseScreen<R, B extends AVBlock<S, T>, T ext
     }
     
     private class StatusUpdaterRunnable implements Runnable {
-        private final T _currTrial;
+        private final T _trial;
 
         public StatusUpdaterRunnable(T currTrial) {
-            _currTrial = currTrial;
+            _trial = currTrial;
         }
 
         public void run() {
         	_completed++;
             
-            final boolean wasCorrect = _currTrial.isResponseCorrect();
+            final boolean wasCorrect = _trial.isResponseCorrect();
 
             if(wasCorrect) {
                 _correct++;

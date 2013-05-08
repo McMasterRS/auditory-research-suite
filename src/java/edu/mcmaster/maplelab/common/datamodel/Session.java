@@ -33,7 +33,8 @@ import edu.mcmaster.maplelab.common.util.MathUtils;
  * @param <B> Block type
  * @param <T> Trial type
  */
-public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extends TrialLogger<B, T>> implements Executor {
+public abstract class Session<TM extends TrialManager<?, T>, T extends Trial<?>, 
+											L extends TrialLogger<T>> implements Executor {
 	/**
      * @version   $Revision$
      * @author   <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
@@ -48,8 +49,8 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         db_experiment_id,
         experimentID, 
         subExperimentID,
-        numBlocks,
         blockSetRepetitions,
+        metablocks,
         numWarmupTrials,
         randomizeBlocks,
         randomizeTrials,
@@ -66,31 +67,6 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
         speedMode,
         propertyPrefix
     }
-	
-	/**
-	 * Utility method to generate a nicely formatted string list from a generic list of objects.
-	 */
-	protected static String listString(List<?> list) {
-		return listString(list, -1, 0);
-	}
-	
-	/**
-	 * Utility method to generate a nicely formatted string list from a generic list of objects.
-	 * Breakafter indicates where a line break should fall, and tabs is the tab depth.
-	 */
-	protected static String listString(List<?> list, int breakAfter, int tabs) {
-		String retval = "[";
-		for (int i = 0; i < list.size(); i++) {
-			if (breakAfter > 0 && i > 0 && i % breakAfter == 0) {
-				retval += "\n";
-				for (int j = 0; j <= tabs; j++) {
-					retval += "\t";
-				}
-			}
-			retval += list.get(i).toString() + ", ";
-		}
-		return retval.substring(0, retval.length()-2) + "]";
-	}
 
     /**
      * @uml.property  name="properties"
@@ -98,19 +74,14 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
      */
     private final Map<String, Object> _properties = new HashMap<String, Object>();
     private final ExecutorService _executorService;
-
+    
+    private TM _trialManager;
+    private TM _warmupTM;
     private L _trialLogger;
     /**
      * @uml.property  name="applet"
      */
-    private Applet _applet = null;    
-    /** 
-     * Value indicating the current repetition number.
-     * A 'repetition' is a full set of experiment blocks.
-     * See getBlockSetRepetitions().
-     */
-    private int _repetition = 1;
-    
+    private Applet _applet = null;
     
     /**
      * Default ctor.
@@ -127,30 +98,21 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
     }
     
     /**
-     * Increment the repetition counter.
-     * A 'repetition' is a full set of experiment blocks.
-     * See getBlockSetRepetitions().
+     * Initialize the trial manager to be used with this session.
      */
-    public void incrementRepetition() {
-    	++_repetition;
-    }
+    protected abstract TM initializeTrialManager(boolean warmup);
     
     /**
-     * Get the current repetition count.
-     * A 'repetition' is a full set of experiment blocks.
-     * See getBlockSetRepetitions().
+     * Get the trial manager for this session.
      */
-    public int getCurrentRepetition() {
-    	return _repetition;
-    }
-    
-    /**
-     * Convenience method to determine if the session
-     * has more repetitions.
-     * A 'repetition' is a full set of experiment blocks.
-     */
-    public boolean hasMoreRepetitions() {
-    	return getCurrentRepetition() <= getBlockSetRepetitions();
+    public TM getTrialManager(boolean warmup) {
+    	if (warmup && _warmupTM == null) {
+    		_warmupTM = initializeTrialManager(true);
+    	}
+    	if (!warmup && _trialManager == null) {
+    		_trialManager = initializeTrialManager(false);
+    	}
+    	return warmup ? _warmupTM : _trialManager;
     }
     
     /**
@@ -311,33 +273,18 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
     }    
     
     /**
-     * Get the number of times a set of blocks (the full
-     * range of the experiment) should be repeated.
+     * Get the number of times a set of blocks should be repeated.
      */
     public int getBlockSetRepetitions() {
     	return getInteger(ConfigKeys.blockSetRepetitions, 1);
     }
     
     /**
-     * Get NumBlocks property
-     * @return Value for NumBlocks
+     * Get the number of metablocks (full sets of repetitions).
      */
-    public int getNumBlocks() {
-        return getInteger(ConfigKeys.numBlocks, 7);
+    public int getMetaBlocks() {
+    	return getInteger(ConfigKeys.metablocks, 1);
     }
-    
-    /**
-     * Set the number of blocks, when determined.
-     */
-    protected void setNumBlocks(int numBlocks) {
-    	setProperty(ConfigKeys.numBlocks, Integer.valueOf(numBlocks));
-    }
-	
-	/**
-	 * Get a description of all of the parameters that will contribute to block and
-	 * trial combinatorial generation.
-	 */
-    public abstract String getCombinatorialDescription(List<B> blocks);
     
      /**
      * Get NumWarmupTrials property
@@ -400,17 +347,7 @@ public abstract class Session<B extends Block<?,?>, T extends Trial<?>, L extend
       * get ExperimentDemoPanel
       * @return
       */
-     public abstract DemoGUIPanel<?, T> getExperimentDemoPanel(); 
-
-     /**
-      * Create a block list for warmup.
-      */
- 	public abstract List<B> generateWarmup();
- 	
- 	/**
-     * Generate the experiment blocks.
-     */
- 	public abstract List<B> generateBlocks();
+     public abstract DemoGUIPanel<?, T> getExperimentDemoPanel();
      
      /**
       * Get the playback gain as a percentage of maximum [0.0, 1.0]

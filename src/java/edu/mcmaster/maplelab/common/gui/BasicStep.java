@@ -77,13 +77,13 @@ public abstract class BasicStep extends JPanel {
         });      
     }
     
-    public ExperimentFrame<?, ?, ?, ?> getParentFrame() {
+    public ExperimentFrame<?, ?, ?> getParentFrame() {
     	Container c = getParent();
-    	while (!(c instanceof ExperimentFrame<?, ?, ?, ?>)) {
+    	while (!(c instanceof ExperimentFrame<?, ?, ?>)) {
     		if (c == null) return null;
     		c = c.getParent();
     	}
-    	return (ExperimentFrame<?, ?, ?, ?>) c;
+    	return (ExperimentFrame<?, ?, ?>) c;
     }
     
     /**

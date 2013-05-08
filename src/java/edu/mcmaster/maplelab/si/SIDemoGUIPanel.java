@@ -1,6 +1,7 @@
 package edu.mcmaster.maplelab.si;
 
 import edu.mcmaster.maplelab.av.AVDemoGUIPanel;
+import edu.mcmaster.maplelab.av.datamodel.AVBlockType;
 import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.av.media.Playable;
 import edu.mcmaster.maplelab.av.media.MediaType.MediaWrapper;
@@ -19,10 +20,10 @@ public class SIDemoGUIPanel extends AVDemoGUIPanel<SITrial> {
 	}
 
 	@Override
-	protected SITrial createTrial(AnimationSequence animationSequence,
-			boolean isVideo, MediaWrapper<Playable> media, Long timingOffset,
+	protected SITrial createTrial(AVBlockType type, AnimationSequence animationSequence,
+			MediaWrapper<Playable> media, Long timingOffset,
 			int animationPoints, float diskRadius, boolean connectDots, Long mediaDelay) {
-		return new SITrial(animationSequence, isVideo, media, timingOffset,
+		return new SITrial(type, animationSequence, media, timingOffset,
 				animationPoints, diskRadius, connectDots, mediaDelay);
 	}
 }

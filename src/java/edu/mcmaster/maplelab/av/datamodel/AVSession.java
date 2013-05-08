@@ -5,15 +5,15 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
 
-import edu.mcmaster.maplelab.av.datamodel.AVBlock.AVBlockType;
 import edu.mcmaster.maplelab.av.media.MediaParams;
 import edu.mcmaster.maplelab.av.media.MediaType;
 import edu.mcmaster.maplelab.common.datamodel.Session;
+import edu.mcmaster.maplelab.common.datamodel.Trial;
 import edu.mcmaster.maplelab.common.datamodel.TrialLogger;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 
-public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>, 
-										L extends TrialLogger<B, T>> extends Session<B, T, L> {
+public abstract class AVSession<TM extends AVTrialManager<?, T>, T extends AVTrial<?>, 
+										L extends TrialLogger<T>> extends Session<TM, T, L> {
 	
 	private static final String AUDIO_META_FILE = "sound-metadata.properties";
 	
@@ -29,9 +29,17 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		soundOffsets,
 		numAnimationPoints,
 		includeAudioBlock,
+		singleAudioBlock,
+		singleAudioFullRandom,
 		includeVideoBlock,
+		singleVideoBlock,
+		singleVideoFullRandom,
 		includeAnimationBlock,
+		singleAnimationBlock,
+		singleAnimationFullRandom,
 		includeAudioAnimationBlock,
+		singleAudioAnimationBlock,
+		singleAudioAnimationFullRandom,
 		connectDots,
 		oscilloscopeSensorMode,
 		animationFrameAdvance,
@@ -51,13 +59,6 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 
 	protected AVSession(Properties props) {
 		super(props);
-		
-		int count = 0;
-		count += includeAudioBlock() ? 1 : 0;
-		count += includeVideoBlock() ? 1 : 0;
-		count += includeAnimationBlock() ? 1 : 0;
-		count += includeAudioAnimationBlock() ? 1 : 0;
-		setNumBlocks(count);
 		
 		// must load the media parameter specification
 		MediaParams.loadMediaParams(this);
@@ -195,16 +196,48 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 		return getBoolean(ConfigKeys.includeAudioBlock, true);
 	}
 	
+	public boolean singleAudioBlock() {
+		return getBoolean(ConfigKeys.singleAudioBlock, false);
+	}
+	
+	public boolean singleAudioFullRandom() {
+		return getBoolean(ConfigKeys.singleAudioFullRandom, true);
+	}
+	
 	public boolean includeVideoBlock() {
 		return getBoolean(ConfigKeys.includeVideoBlock, true);
+	}
+	
+	public boolean singleVideoBlock() {
+		return getBoolean(ConfigKeys.singleVideoBlock, false);
+	}
+	
+	public boolean singleVideoFullRandom() {
+		return getBoolean(ConfigKeys.singleVideoFullRandom, true);
 	}
 	
 	public boolean includeAnimationBlock() {
 		return getBoolean(ConfigKeys.includeAnimationBlock, true);
 	}
 	
+	public boolean singleAnimationBlock() {
+		return getBoolean(ConfigKeys.singleAnimationBlock, false);
+	}
+	
+	public boolean singleAnimationFullRandom() {
+		return getBoolean(ConfigKeys.singleAnimationFullRandom, true);
+	}
+	
 	public boolean includeAudioAnimationBlock() {
 		return getBoolean(ConfigKeys.includeAudioAnimationBlock, true);
+	}
+	
+	public boolean singleAudioAnimationBlock() {
+		return getBoolean(ConfigKeys.singleAudioAnimationBlock, false);
+	}
+	
+	public boolean singleAudioAnimationFullRandom() {
+		return getBoolean(ConfigKeys.singleAudioAnimationFullRandom, true);
 	}
 	
 	public boolean connectDots() {
@@ -262,172 +295,12 @@ public abstract class AVSession<B extends AVBlock<?,?>, T extends AVTrial<?>,
 	public boolean isOscilloscopeSensorMode() {
 	    return getBoolean(ConfigKeys.oscilloscopeSensorMode, false);
 	}
-	
-	/**
-	 * Get a description of all of the parameters that will contribute to block and
-	 * trial combinatorial generation.
-	 */
-	@Override
-	public String getCombinatorialDescription(List<B> blocks) {
-		
-		// blocks
-		String blockTypes = "";
-		blockTypes += includeAudioBlock() ? 
-				"\t\t\t" + AVBlockType.AUDIO_ONLY.getUIName() + " block\n" : "";
-		blockTypes += includeVideoBlock() ? 
-				"\t\t\t" + AVBlockType.VIDEO_ONLY.getUIName() + " block\n" : "";
-		blockTypes += includeAnimationBlock() ? 
-				"\t\t\t" + AVBlockType.ANIMATION_ONLY.getUIName() + " block\n" : "";
-		blockTypes += includeAudioAnimationBlock() ? 
-				"\t\t\t" + AVBlockType.AUDIO_ANIMATION.getUIName() + " block\n" : "";
-		blockTypes = String.format("\t%d block(s), repeated %d time(s), includes:\n", 
-						getNumBlocks(), getBlockSetRepetitions()) + blockTypes;
-		
-		// parameters
-		List<String> audioParams = MediaType.AUDIO.getParams(this);
-		List<String> animationParams = MediaType.ANIMATION.getParams(this);
-		List<String> videoParams = MediaType.VIDEO.getParams(this);
-		
-		// additional experiment parameters
-		List<Long> offsets = getSoundOffsets();
-		List<Integer> points = getNumAnimationPoints();
-		
-		// trial counts - init to 1 for loop purposes, correct later
-		int audioOnlyCount = 1;
-		int aniOnlyCount = 1;
-		int audAniCount = 1;
-		int videoCount = 1;
-		
-		// file location info
-		File audDir = getAudioDirectory();
-		File aniDir = getAnimationDirectory();
-		File vidDir = getVideoDirectory();
-		List<String> audExt = getAudioFileExtensions();
-		List<String> aniExt = getAnimationFileExtensions();
-		List<String> vidExt = getVideoFileExtensions();
-		
-		// inclusion checks and description construction
-		String audioDesc = "";
-		if (!includeAudioBlock() && !includeAudioAnimationBlock()) {
-			audioOnlyCount = 0;
-		}
-		else {
-			audioDesc = "\tAudio data:\n";
-			for (String s : audioParams) {
-				List<String> labels = getStringList(s + ".labels", (String[]) null);
-				if (labels == null) {
-					labels = getStringList(s, (String[]) null);
-				}
-				audioOnlyCount *= labels.size();
-				String list = listString(labels, 3, 2);
-				audioDesc += "\t\t" + getString(s + ".label", s) + " " + list + "\n";
-			}
-			audioOnlyCount *= offsets.size();
-			audioDesc += String.format("\t\tAuditory offsets: %s\n", listString(offsets));
-			audioDesc += String.format("\t\tAudio subdirectory: %s\n", audDir.getName());
-			audioDesc += String.format("\t\tAudio extensions: %s\n", listString(audExt));
-		}
-		
-		String aniDesc = "";
-		if (!includeAnimationBlock() && !includeAudioAnimationBlock()) {
-			audAniCount = 0;
-			aniOnlyCount = 0;
-		}
-		else {
-			aniOnlyCount *= points.size();
-			audAniCount *= audioOnlyCount * aniOnlyCount;
-			boolean shared = synchronizeParameters();
-			aniDesc = "\tAnimation data:\n";
-			for (String s : animationParams) {
-				List<String> labels = getStringList(s + ".labels", (String[]) null);
-				if (labels == null) {
-					labels = getStringList(s, (String[]) null);
-				}
-				// check to see if this item already counted
-				if (!(shared && audioParams.contains(s))) {
-					audAniCount *= labels.size();
-				}
-				String list = listString(labels, 3, 2);
-				aniDesc += "\t\t" + getString(s + ".label", s) + " " + list + "\n";
-			}
-			aniDesc += String.format("\t\tAnimation points: %s\n", listString(points));
-			aniDesc += String.format("\t\tAnimation subdirectory: %s\n", aniDir.getName());
-			aniDesc += String.format("\t\tAnimation extensions: %s\n", listString(aniExt));
-		}
-		
-		// corrections, after use by combined block
-		if (!includeAudioBlock()) audioOnlyCount = 0;
-		if (!includeAnimationBlock()) aniOnlyCount = 0;
-		
-		String videoDesc = "";
-		if (!includeVideoBlock()) {
-			videoCount = 0;
-		}
-		else {
-			videoDesc = "\tVideo data:\n";
-			for (String s : videoParams) {
-				List<String> labels = getStringList(s + ".labels", (String[]) null);
-				if (labels == null) {
-					labels = getStringList(s, (String[]) null);
-				}
-				videoCount *= labels.size();
-				String list = listString(labels, 3, 2);
-				videoDesc += "\t\t" + getString(s + ".label", s) + " " + list + "\n";
-			}
-			videoDesc += String.format("\t\tVideo subdirectory: %s\n", vidDir.getName());
-			videoDesc += String.format("\t\tVideo extensions: %s\n", listString(vidExt));
-		}
-		
-		return String.format("\n********** Experiment Session Trial Details **********\n%s\n" +
-				(includeAudioBlock() ? 
-						String.format("\tAudio-only trial count: %d\n", audioOnlyCount) : "") +
-				(includeAnimationBlock() ? 
-						String.format("\tAnimation-only trial count: %d\n", aniOnlyCount) : "") +
-				(includeAudioAnimationBlock() ? 
-						String.format("\tAudio and animation trial count: %d\n", audAniCount) : "") +
-				(includeVideoBlock() ? 
-						String.format("\tVideo trial count: %d\n", videoCount) : "") +
-				String.format("\tTotal trials: %d\n\n", audioOnlyCount + audAniCount + videoCount + 
-						aniOnlyCount) + audioDesc + aniDesc + videoDesc +
-				"**************************************************\n\n", blockTypes);
-	}
 
 	@Override
 	public abstract String getExperimentBaseName();
 	
 	@Override
-    public abstract List<B> generateBlocks();
-
-	/**
-	 * Create warmup blocks.
-	 */
-    @Override
- 	public List<B> generateWarmup() {
-
-		List<B> retval = generateBlocks();
-		int warmupCount = getNumWarmupTrials();
-		int initialCount = 0;
-		for (B block : retval) {
-			initialCount += block.getNumTrials();
-		}
-		
-		if (initialCount > warmupCount) {
-			int remaining = warmupCount;
-			for (int i = retval.size()-1; i > 0; i--) {
-				B block = retval.get(i);
-				int localCount = block.getNumTrials();
-				if (localCount > 1) {
-					float percent = (float) localCount / (float) initialCount;
-					localCount = (int) (warmupCount * percent);
-					block.clipTrials(localCount);
-					remaining -= localCount;
-				}
-			}
-			retval.get(0).clipTrials(remaining);
-		}
-		
-		return retval;
-    }
+	public abstract TM initializeTrialManager(boolean warmup);
 
 	@Override
     public abstract DemoGUIPanel<?, T> getExperimentDemoPanel(); 

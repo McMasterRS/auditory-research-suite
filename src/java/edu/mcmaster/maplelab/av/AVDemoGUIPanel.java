@@ -1,25 +1,51 @@
 package edu.mcmaster.maplelab.av;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import javax.swing.*;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
+
+import net.miginfocom.swing.MigLayout;
 
 import org.apache.commons.lang3.StringUtils;
 
-import net.miginfocom.swing.MigLayout;
-import edu.mcmaster.maplelab.av.datamodel.*;
-import edu.mcmaster.maplelab.av.media.*;
+import edu.mcmaster.maplelab.av.datamodel.AVBlockType;
+import edu.mcmaster.maplelab.av.datamodel.AVSession;
+import edu.mcmaster.maplelab.av.datamodel.AVTrial;
+import edu.mcmaster.maplelab.av.media.MediaParams;
 import edu.mcmaster.maplelab.av.media.MediaParams.MediaParamValue;
+import edu.mcmaster.maplelab.av.media.MediaType;
 import edu.mcmaster.maplelab.av.media.MediaType.MediaWrapper;
-import edu.mcmaster.maplelab.av.media.animation.*;
+import edu.mcmaster.maplelab.av.media.Playable;
+import edu.mcmaster.maplelab.av.media.VideoPanel;
+import edu.mcmaster.maplelab.av.media.animation.AnimationPanel;
+import edu.mcmaster.maplelab.av.media.animation.AnimationParser;
+import edu.mcmaster.maplelab.av.media.animation.AnimationSequence;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.gui.FileBrowseField;
@@ -179,8 +205,8 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
         return retval;
     }
 
-    protected abstract T createTrial(AnimationSequence animationSequence,
-			boolean isVideo, MediaWrapper<Playable> media, Long timingOffset,
+    protected abstract T createTrial(AVBlockType type, AnimationSequence animationSequence,
+			MediaWrapper<Playable> media, Long timingOffset,
 			int animationPoints, float diskRadius, boolean connectDots, Long mediaDelay);
 	  
 	@Override
@@ -192,12 +218,13 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 				MediaType.VIDEO.createDemoMedia(_vidFile.getFile(), session, forceReload) :
 				MediaType.AUDIO.createDemoMedia(_audFile.getFile(), session, forceReload);
 		try {
+			AVBlockType type = vid ? AVBlockType.VIDEO_ONLY : AVBlockType.AUDIO_ANIMATION;
 			AnimationSequence aniSeq = !vid ? AnimationParser.parseFile(
 					_visFile.getFile(), session.getAnimationPointAspect(), forceReload) : null;
 			Object val = _delayText.getValue();
 			Long delay = Long.valueOf(val instanceof String ? (String) val : ((Number) val).toString());
 			Long mediaDelay = session.getToneOnsetTime(media.getName());
-			return createTrial(aniSeq, vid, media, delay, 
+			return createTrial(type, aniSeq, media, delay, 
 					(Integer)_numPts.getValue(), session.getBaseAnimationPointSize(), 
 					_connect.isSelected(), mediaDelay);
 		}

@@ -21,8 +21,8 @@ import java.io.IOException;
  * @param <B> Block type
  * @param <T> Trial type
  */
-public interface TrialLogger<B extends Block<?,?>, T extends Trial<?>> {
-	public static final String NA = "N/A";
+public interface TrialLogger<T extends Trial<?>> {
+	public static final String NA = "NA";
 
     /**
      * Save the current state of the session object to the database.
@@ -37,7 +37,7 @@ public interface TrialLogger<B extends Block<?,?>, T extends Trial<?>> {
      * 
      * @param trial object to record
      */
-    public abstract void submit(B block, T trial) throws IOException;
+    public abstract void submit(T trial) throws IOException;
 
     /**
      * To be called by the experiment when experiment is over to indicate

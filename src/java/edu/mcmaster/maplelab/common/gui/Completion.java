@@ -27,7 +27,7 @@ public class Completion extends Instructions {
         completionText
     }
 
-    private TrialLogger<?, ?> _logger;
+    private TrialLogger<?> _logger;
     
     public Completion(StepManager mgr, Session<?,?,?> session) {
         this(mgr, session, false);

@@ -8,11 +8,10 @@ import java.util.Properties;
 
 import edu.mcmaster.maplelab.common.gui.ExperimentFrame;
 import edu.mcmaster.maplelab.common.gui.SimpleSetupScreen;
-import edu.mcmaster.maplelab.si.datamodel.SIBlock;
 import edu.mcmaster.maplelab.si.datamodel.SISession;
 import edu.mcmaster.maplelab.si.datamodel.SITrial;
 
-public class SIFrame extends ExperimentFrame<SISession, SIBlock, SITrial, SITrialLogger> {
+public class SIFrame extends ExperimentFrame<SISession, SITrial, SITrialLogger> {
 
 	public SIFrame(SimpleSetupScreen<SISession> setup) {
 		super(setup);

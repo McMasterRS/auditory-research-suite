@@ -5,15 +5,12 @@ import edu.mcmaster.maplelab.common.datamodel.MultiResponse;
 import edu.mcmaster.maplelab.common.gui.ResponseInputs;
 import edu.mcmaster.maplelab.common.gui.SliderResponseInputs;
 import edu.mcmaster.maplelab.common.gui.StepManager;
-import edu.mcmaster.maplelab.si.datamodel.SIBlock;
 import edu.mcmaster.maplelab.si.datamodel.SIResponseParameters;
 import edu.mcmaster.maplelab.si.datamodel.SISession;
 import edu.mcmaster.maplelab.si.datamodel.SITrial;
 
-public class SIStimulusResponseScreen extends AVStimulusResponseScreen<MultiResponse, SIBlock, SITrial, 
+public class SIStimulusResponseScreen extends AVStimulusResponseScreen<MultiResponse, SITrial, 
 									SITrialLogger, SISession> {
-	
-	private SliderResponseInputs _responseInputs = null;
 
 	public SIStimulusResponseScreen(StepManager steps, SISession session,
 			boolean isWarmup) {

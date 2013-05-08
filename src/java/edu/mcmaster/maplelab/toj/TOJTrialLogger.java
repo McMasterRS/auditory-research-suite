@@ -19,7 +19,6 @@ import edu.mcmaster.maplelab.av.media.animation.AnimationSequence;
 import edu.mcmaster.maplelab.common.datamodel.FileTrialLogger;
 import edu.mcmaster.maplelab.common.datamodel.FileType;
 import edu.mcmaster.maplelab.common.datamodel.ConfidenceResponse;
-import edu.mcmaster.maplelab.toj.datamodel.TOJBlock;
 import edu.mcmaster.maplelab.toj.datamodel.TOJResponseParameters;
 import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
 import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
@@ -27,7 +26,7 @@ import edu.mcmaster.maplelab.toj.datamodel.TOJTrial;
  * TOJ specific extension of FileTrialLogger.
  * @author Catherine Elder <cje@datamininglab.com>
  */
-public class TOJTrialLogger extends FileTrialLogger<TOJSession, TOJBlock, TOJTrial> {
+public class TOJTrialLogger extends FileTrialLogger<TOJSession, TOJTrial> {
 
 	public enum Keys {
         audioFile,
@@ -68,8 +67,7 @@ public class TOJTrialLogger extends FileTrialLogger<TOJSession, TOJBlock, TOJTri
 	}
 
 	@Override
-	protected EnumMap<? extends Enum<?>, String> marshalGeneralDataToMap(
-			TOJBlock block, TOJTrial trial) {
+	protected EnumMap<? extends Enum<?>, String> marshalGeneralDataToMap(TOJTrial trial) {
 		return null;
 	}
 
@@ -79,16 +77,15 @@ public class TOJTrialLogger extends FileTrialLogger<TOJSession, TOJBlock, TOJTri
 	}
 
     @Override
-    protected EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(TOJBlock block, 
-    		TOJTrial trial) {
+    protected EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(TOJTrial trial) {
     	
         EnumMap<Keys, String> fields = new EnumMap<Keys, String>(Keys.class);
         
         // Calculate trial parameters
         Playable p = trial.getAudioPlayable();
         AnimationSequence as = trial.getAnimationSequence();
-        fields.put(Keys.audioFile, p != null ? p.name() : "N/A");
-        fields.put(Keys.visFile, as != null ? as.getSourceFileName() : "N/A");
+        fields.put(Keys.audioFile, p != null ? p.name() : NA);
+        fields.put(Keys.visFile, as != null ? as.getSourceFileName() : NA);
         long millisVal = TimeUnit.MILLISECONDS.convert(
         		trial.getOffsetNanos(), TimeUnit.NANOSECONDS);
         fields.put(Keys.audioOffset, String.valueOf(millisVal));
@@ -96,14 +93,14 @@ public class TOJTrialLogger extends FileTrialLogger<TOJSession, TOJBlock, TOJTri
         Long start = trial.getLastAnimationStartNanos();
         millisVal = start != null ? 
         		TimeUnit.MILLISECONDS.convert(start, TimeUnit.NANOSECONDS) : null;
-        fields.put(Keys.animationStart, start != null ? String.valueOf(millisVal) : "N/A");
+        fields.put(Keys.animationStart, start != null ? String.valueOf(millisVal) : NA);
         millisVal = TimeUnit.MILLISECONDS.convert(
         		trial.getAnimationStrikeTimeNanos(), TimeUnit.NANOSECONDS);
         fields.put(Keys.aniStrikeDelay, String.valueOf(millisVal));
         start = trial.getLastMediaStartNanos();
         millisVal = start != null ? 
         		TimeUnit.MILLISECONDS.convert(start, TimeUnit.NANOSECONDS) : null;
-        fields.put(Keys.audioStart, start != null ? String.valueOf(millisVal) : "N/A");
+        fields.put(Keys.audioStart, start != null ? String.valueOf(millisVal) : NA);
         millisVal = TimeUnit.MILLISECONDS.convert(
         		trial.getAudioToneOnsetNanos(), TimeUnit.NANOSECONDS);
         fields.put(Keys.audioToneDelay, String.valueOf(millisVal));

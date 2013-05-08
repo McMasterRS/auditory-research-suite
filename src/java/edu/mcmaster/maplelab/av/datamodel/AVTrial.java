@@ -16,6 +16,8 @@ import edu.mcmaster.maplelab.av.media.animation.AnimationSequence;
  * @author bguseman
  */
 public abstract class AVTrial<T> extends AnimationTrial<T> {
+	/** AV type of this trial's block. */
+	private final AVBlockType _type;
 	
 	/************** MEDIA OBJECTS ******************/
 	/** Number of media and/or animation objects. */
@@ -49,12 +51,13 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 	/**
 	 * Constructor.
 	 */
-	public AVTrial(AnimationSequence animationSequence, boolean isVideo, 
+	public AVTrial(AVBlockType type, AnimationSequence animationSequence, 
 			MediaWrapper<Playable> media, Long timingOffsetMillis, int animationPoints, 
 			float diskRadius, boolean connectDots, Long mediaDelayMillis) {
 		
+		_type = type;
 		_animationSequence = animationSequence;
-		_isVideo = isVideo;
+		_isVideo = _type == AVBlockType.VIDEO_ONLY;
 		_offset = TimeUnit.NANOSECONDS.convert(timingOffsetMillis, TimeUnit.MILLISECONDS);
 		_numPoints = animationPoints;
 		_media = media;
@@ -97,6 +100,13 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 				_relativeMediaDelay = (long) 0;
 			}
 		}
+	}
+	
+	/**
+	 * Get the block type of this trial.
+	 */
+	public AVBlockType getType() {
+		return _type;
 	}
 
 	@Override
@@ -227,7 +237,7 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 		if (isVideo()) {
 			String video = _media != null ? _media.getName() : "N/A";
 			String format = "Trial %d:\n\tVideo file: %s";
-			return String.format(format, getNum(), video);
+			return String.format(format, getTrialNumber(), video);
 		}
 		else return getExtendedDescription();
 	}
@@ -236,7 +246,7 @@ public abstract class AVTrial<T> extends AnimationTrial<T> {
 	 * Get full description that includes separate animation and audio parameters, if applicable.
 	 */
 	private String getExtendedDescription() {
-		String retval = String.format("Trial %d", getNum());
+		String retval = String.format("Trial %d", getTrialNumber());
 		
 		String ani = null, audio = null;
 		Long timeMillis = null;

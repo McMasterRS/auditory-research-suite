@@ -28,7 +28,7 @@ import edu.mcmaster.maplelab.rhythm.RhythmTrialLogger;
  * @author <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since May 10, 2006
  */
-public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrialLogger> {
+public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, RhythmTrialLogger> {
 	
     // NB: These are in camel case so that the "name()" matches 
     // properties file values.
@@ -43,6 +43,7 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
         gmBank,
         baseIOIs,
         offsetDegrees,
+        randomizeAcrossRepetitions,
         playbackMeasures,
         beatsPerMeasure,
         silenceMultiplier, 
@@ -67,8 +68,10 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
      */
     public RhythmSession(Properties props) {
         super(props);
-        
-        setNumBlocks(getBaseIOIs().size() * 2); // each IOI, w/ and w/o tapping
+    }
+    
+    public boolean randomizeAcrossRepetitions() {
+    	return getBoolean(ConfigKeys.randomizeAcrossRepetitions, false);
     }
     
     @Override
@@ -254,70 +257,6 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
     public void setMIDIInputDeviceID(int id) {
         setProperty(ConfigKeys.midiDevID, id);
     }
-    
-    @Override
-    public String getCombinatorialDescription(List<RhythmBlock> blocks) {
-		// blocks
-		String blockTypes = "\t\t\tBase IOIs: " + listString(getBaseIOIs()) + "\n";
-		blockTypes += "\t\t\tWith, without subject tapping\n";
-		blockTypes = String.format("\t%d block(s), repeated %d time(s), constructed from:\n", 
-						getNumBlocks(), getBlockSetRepetitions()) + blockTypes;
-		
-		// trials
-		List<Float> offsets = getOffsetDegrees();
-		String trialTypes = String.format("\tEach block contains %d trials constructed from:\n", 
-				offsets.size());
-		trialTypes += "\t\t\tOffset degrees: " + listString(offsets, 4, 4) + "\n";
-		
-		// block ordering
-		String blockList = "\tBlocks (order will change on each repetition):\n";
-		for (RhythmBlock b : blocks) {
-			RhythmTrial t = b.getTrials().get(0);
-			blockList += String.format("\t\t\t%d: IOI=%d, %s tapping\n", b.getNum(), t.getBaseIOI(), 
-					t.isWithTap() ? "with" : "without");
-		}
-		
-		return String.format("\n********** Experiment Session Trial Details **********\n%s\n%s\n%s\n" +
-				"**************************************************\n\n", blockTypes, trialTypes, blockList);
-    }
-    
-	 /**
-	  * Generate the experiment blocks. The number of blocks is a multiple of 
-	  * the number of modulus widths.
-	  */
-	@Override
-	 public List<RhythmBlock> generateBlocks() {
-	
-	     List<RhythmBlock> retval = new ArrayList<RhythmBlock>();
-	     
-	     List<Integer> baseIOIs = getBaseIOIs();
-	     
-	     for (Integer ioi : baseIOIs) {
-	    	 // just set generic id - we will renumber
-	         retval.add(new RhythmBlock(this, 0, true, ioi, false)); 
-	         retval.add(new RhythmBlock(this, 0, false, ioi, false)); 
-	     }
-	     
-	     // Shuffle and renumber blocks
-	     if (randomizeBlocks()) Collections.shuffle(retval);
-	     for (int i = 0; i < retval.size(); i++) {
-	    	 retval.get(i).setNum(i+1);
-	     }
-	     
-	     return retval;
-	 }
-	 
-     /**
-      * Generate a warmup block.
-      */
-     @Override
-     public List<RhythmBlock> generateWarmup() {
-         RhythmBlock warmup = new RhythmBlock(this, 1, true, getBaseIOIs().get(0), true);
-         warmup.clipTrials(getNumWarmupTrials());
-         List<RhythmBlock> retval = new ArrayList<RhythmBlock>(1);
-         retval.add(warmup);
-         return retval;
-     }
      
      /**
       * {@inheritDoc} 
@@ -333,5 +272,10 @@ public class RhythmSession extends Session<RhythmBlock, RhythmTrial, RhythmTrial
 	@Override
 	public DemoGUIPanel<?, RhythmTrial> getExperimentDemoPanel() {
 		return null;
+	}
+
+	@Override
+	protected RhythmTrialManager initializeTrialManager(boolean warmup) {
+		return new RhythmTrialManager(this, warmup);
 	}
 }

@@ -18,6 +18,8 @@ import java.util.logging.Level;
 
 import edu.mcmaster.maplelab.common.Experiment;
 import edu.mcmaster.maplelab.common.LogContext;
+import edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.RelativeTrialPosition;
+import edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.TrialHierarchy;
 
 
 /**
@@ -26,8 +28,7 @@ import edu.mcmaster.maplelab.common.LogContext;
  * @author  <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
  * @since  Nov 22, 2006
  */
-public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends 
-    		Block<?, ?>, R extends Trial<?>> implements TrialLogger<Q, R> {
+public abstract class FileTrialLogger<S extends Session<?, ?, ?>, T extends Trial<?>> implements TrialLogger<T> {
 	
 	protected static final String DEBUG_FILE = "debug";
 	protected static final String RESPONSE_FILE = "response";
@@ -52,24 +53,25 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
 	private enum CountKeys {
 		trial_num,
 		block_num,
+		metablock_num,
 		block_instance,
         repetition_num,
-        trial_in_repetition,
-        block_in_repetition, 
+        trial_in_metablock,
+        block_in_metablock, 
         trial_in_block,
         time_stamp
 	}
 	
-    private final T _session;
+    private final S _session;
     private final File _file;
     private final boolean _deleteTempFile;
     private static File _outputDir;
 
-    public FileTrialLogger(T session, File workingDirectory) throws IOException {
+    public FileTrialLogger(S session, File workingDirectory) throws IOException {
         this(session, workingDirectory, true, false);
     }
     
-    public FileTrialLogger(T session, File workingDirectory, boolean separateOutput, boolean deleteTempFile) throws IOException {
+    public FileTrialLogger(S session, File workingDirectory, boolean separateOutput, boolean deleteTempFile) throws IOException {
         loadFileTypes();
         loadAdditionalFileTypes();
     	
@@ -137,7 +139,7 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
      * Get session context registered at creation.
      * @uml.property  name="session"
      */
-    protected T getSession() {
+    protected S getSession() {
         return _session;
     }
     
@@ -146,7 +148,7 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
      * needing block and trial information to calculate a file name.
      */
     public File getOutputFile(FileType type) throws UnsupportedOperationException {
-    	return getOutputFile(getSession(), type, null, null);
+    	return getOutputFile(getSession(), type, null);
     }
     
     /**
@@ -159,18 +161,18 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
     				String.format("File type %s needs block and trial information " +
     						"to calculate a file name.", type));
     	}
-    	return getOutputFile(s, type, null, null);
+    	return getOutputFile(s, type, null);
     }
     
-    public File getOutputFile(FileType type, Q block, R trial) {
-    	return getOutputFile(getSession(), type, block, trial);
+    public File getOutputFile(FileType type, T trial) {
+    	return getOutputFile(getSession(), type, trial);
     }
 
     /**
      * Get the output file for the given file type.  Creates directories as
      * needed.
      */
-    public static File getOutputFile(Session<?, ?, ?> s, FileType type, Block<?, ?> block, Trial<?> trial) {
+    public static File getOutputFile(Session<?, ?, ?> s, FileType type, Trial<?> trial) {
     	String fName = null;
     	if (type.isAggregateType()) {
     		fName = String.format("ex%s-%s.%s", s.getExperimentID(), type.getSuffix(), 
@@ -179,7 +181,7 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
     	else if (type.includesBlockTrialNums()) {
     		fName = String.format("sub%s-sess%s-ex%s-subex%s-b%s-t%s-%s-%s.%s", 
     				s.getSubject(), s.getSession(), s.getExperimentID(), s.getSubExperimentID(), 
-    				block.getNum(), trial.getNum(), getTimeStamp(), type.getSuffix(), type.getExtension());
+    				trial.getBlockNumber(), trial.getTrialNumber(), getTimeStamp(), type.getSuffix(), type.getExtension());
     	}
     	else {
     		fName = String.format("sub%s-sess%s-ex%s-subex%s-%s-%s.%s", 
@@ -269,12 +271,12 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
 
     /**
      * {@inheritDoc} 
-     * @see edu.mcmaster.maplelab.common.datamodel.TrialLogger#submit(edu.mcmaster.maplelab.common.datamodel.Block, edu.mcmaster.maplelab.common.datamodel.Trial)
+     * @see edu.mcmaster.maplelab.common.datamodel.TrialLogger#submit(edu.mcmaster.maplelab.common.datamodel.Trial)
      */
-    public void submit(Q block, R trial) throws IOException {
+    public void submit(T trial) throws IOException {
         
     	List<Set<? extends Enum<?>>> hList = buildHeaderSets();
-        List<EnumMap<? extends Enum<?>,String>> list = buildDataSets(block, trial);
+        List<EnumMap<? extends Enum<?>,String>> list = buildDataSets(trial);
         
         File file = getFile();
         
@@ -347,14 +349,14 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
      * Build the list of data sets that will combine for each row.  Exposed for subclasses
      * that need to override.
      */
-    protected List<EnumMap<? extends Enum<?>, String>> buildDataSets(Q block, R trial) {
+    protected List<EnumMap<? extends Enum<?>, String>> buildDataSets(T trial) {
     	List<EnumMap<? extends Enum<?>, String>> retval = 
     		new ArrayList<EnumMap<? extends Enum<?>, String>>();
     	
-    	retval.add(marshalSessionDataToMap(block, trial));
-    	retval.add(marshalGeneralDataToMap(block, trial));
-    	retval.add(marshalTrialCountsToMap(block, trial));
-    	retval.add(marshalTrialDataToMap(block, trial));
+    	retval.add(marshalSessionDataToMap(trial));
+    	retval.add(marshalGeneralDataToMap(trial));
+    	retval.add(marshalTrialCountsToMap(trial));
+    	retval.add(marshalTrialDataToMap(trial));
     	
     	return retval;
     }
@@ -362,7 +364,7 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
     /**
      * Gather session data.
      */
-    protected EnumMap<? extends Enum<?>, String> marshalSessionDataToMap(Q block, R trial) {
+    protected EnumMap<? extends Enum<?>, String> marshalSessionDataToMap(T trial) {
     	Session<?, ?, ?> session = getSession();
     	
         EnumMap<SessionKeys, String> fields = new EnumMap<SessionKeys, String>(SessionKeys.class);
@@ -382,23 +384,17 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
     /**
      * Gather trial count data.
      */
-    protected EnumMap<? extends Enum<?>, String> marshalTrialCountsToMap(Q block, R trial) {
-    	Session<?, ?, ?> session = getSession();
-    	
+    protected EnumMap<? extends Enum<?>, String> marshalTrialCountsToMap(T trial) {
         EnumMap<CountKeys, String> fields = new EnumMap<CountKeys, String>(CountKeys.class);
-
-        // Calculate trial numbers and parameters
-        int overall_block = (session.getCurrentRepetition()-1)*session.getNumBlocks() + block.getNum();
-        int trial_in_rep = (block.getNum()-1)*block.getNumTrials() + trial.getNum();
-        int overall_trial = (session.getCurrentRepetition()-1)*session.getNumBlocks()*block.getNumTrials() + trial_in_rep;
-    	fields.put(CountKeys.trial_num, String.valueOf(overall_trial));
-    	fields.put(CountKeys.block_num, String.valueOf(overall_block));
-    	// for now, the next two items are the same
-    	fields.put(CountKeys.block_instance, String.valueOf(session.getCurrentRepetition()));
-        fields.put(CountKeys.repetition_num, String.valueOf(session.getCurrentRepetition()));
-        fields.put(CountKeys.trial_in_repetition, String.valueOf(trial_in_rep));
-        fields.put(CountKeys.block_in_repetition, String.valueOf(block.getNum()));
-        fields.put(CountKeys.trial_in_block, String.valueOf(trial.getNum()));
+        
+        fields.put(CountKeys.trial_num, String.valueOf(trial.getNumber(TrialHierarchy.TRIAL)));
+    	fields.put(CountKeys.block_num, String.valueOf(trial.getNumber(TrialHierarchy.BLOCK)));
+    	fields.put(CountKeys.metablock_num, String.valueOf(trial.getNumber(TrialHierarchy.METABLOCK)));
+    	fields.put(CountKeys.block_instance, String.valueOf(trial.getNumber(RelativeTrialPosition.BLOCK_INSTANCE)));
+        fields.put(CountKeys.repetition_num, String.valueOf(trial.getNumber(RelativeTrialPosition.REPETITION)));
+        fields.put(CountKeys.trial_in_metablock, String.valueOf(trial.getNumber(RelativeTrialPosition.TRIAL_IN_METABLOCK)));
+        fields.put(CountKeys.block_in_metablock, String.valueOf(trial.getNumber(RelativeTrialPosition.BLOCK_IN_METABLOCK)));
+        fields.put(CountKeys.trial_in_block, String.valueOf(trial.getNumber(RelativeTrialPosition.TRIAL_IN_BLOCK)));
         fields.put(CountKeys.time_stamp, trial.getTimeStamp());
         
         return fields;
@@ -413,7 +409,7 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
      * Gather general data - intended for data specific to the experiment that is still
      * general in the same way as the session data.
      */
-    protected abstract EnumMap<? extends Enum<?>, String> marshalGeneralDataToMap(Q block, R trial);
+    protected abstract EnumMap<? extends Enum<?>, String> marshalGeneralDataToMap(T trial);
  
     /**
      * Get a set of items responsible for enumerating the types of trial data.
@@ -423,6 +419,6 @@ public abstract class FileTrialLogger<T extends Session<?,?,?>, Q extends
     /**
      * Gather trial data.
      */
-    protected abstract EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(Q block, R trial);
+    protected abstract EnumMap<? extends Enum<?>, String> marshalTrialDataToMap(T trial);
 
 }

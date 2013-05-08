@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.Properties;
 
 import edu.mcmaster.maplelab.common.gui.ExperimentFrame;
-import edu.mcmaster.maplelab.rhythm.datamodel.RhythmBlock;
 import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession;
 import edu.mcmaster.maplelab.rhythm.datamodel.RhythmTrial;
 
@@ -17,7 +16,7 @@ import edu.mcmaster.maplelab.rhythm.datamodel.RhythmTrial;
  * @author bguseman
  *
  */
-public class RhythmFrame extends ExperimentFrame<RhythmSession, RhythmBlock, RhythmTrial, RhythmTrialLogger> {
+public class RhythmFrame extends ExperimentFrame<RhythmSession, RhythmTrial, RhythmTrialLogger> {
     
     public RhythmFrame(RhythmSetupScreen setup) {
         super(setup); 
