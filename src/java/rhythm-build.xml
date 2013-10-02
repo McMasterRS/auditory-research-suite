@@ -122,7 +122,7 @@
 	</target>
 	
     <target name="compile">
-	    <javac nowarn="yes" source="1.6" destdir="${build}">
+	    <javac nowarn="yes" source="1.6" destdir="${build}" encoding="UTF-8">
 	    	<src path="${src}/common"/>
 	        <src path="${src}/rhythm"/>
 	    	<include name="**/*.java"/>
