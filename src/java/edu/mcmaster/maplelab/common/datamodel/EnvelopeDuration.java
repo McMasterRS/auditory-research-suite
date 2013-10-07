@@ -37,7 +37,7 @@ public class EnvelopeDuration {
 	public enum DurationUnit {
 		ms(1),
 		s(1000),
-		µs(1/1000);
+		Âµs(1/1000);
 		
 		private final double _multiplier;
 		
