@@ -697,7 +697,10 @@ public abstract class Session<TM extends TrialManager<?, T>, T extends Trial<?>,
     	String retval = def;
         Object val = getProperty(key);
         if (val instanceof String) {
-            retval = ((String) val).trim();
+        	// Check for cases where the property is there, but unspecified, because the result "" is a String
+        	if (!((String) val).isEmpty()) {
+        		retval = ((String) val).trim();
+        	}
         }
         return retval;
     }

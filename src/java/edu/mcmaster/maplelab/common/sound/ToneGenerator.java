@@ -72,6 +72,7 @@ public class ToneGenerator {
         _sequencer.open();
     }
     
+    @Override
     protected void finalize() throws Throwable {
         super.finalize();
         try {
@@ -126,6 +127,7 @@ public class ToneGenerator {
         play(notes, volumePct, true);
     }
     
+
     /**
      * Play a series of notes on the default sequencer. Blocks until
      * sequence playback finishes, if indicated.
@@ -144,6 +146,7 @@ public class ToneGenerator {
             for (Note n : notes) {
                 int noteDuration = n.getDuration();
                 
+                // Cannot add multiple silence notes in here? fails if pitch is null
                 Pitch ps = n.getPitch();
                 if(ps != null) {
                 
@@ -339,11 +342,11 @@ public class ToneGenerator {
             ToneGenerator tg = new ToneGenerator();
             
             Note[] notes = new Note[] {
-                new Note(new Pitch(NotesEnum.C, 4), 2000),
-                new Note(null, 250),
-                new Note(new Pitch(NotesEnum.C, 4, -20), 2000),
-                new Note(new Pitch(NotesEnum.C, 4, 20), 2000),
-                new Note(new Pitch(NotesEnum.C, 4), 2000),
+                new Note(new Pitch(NotesEnum.C, 4), 64, 2000),
+                new Note(null, 64, 250),
+                new Note(new Pitch(NotesEnum.C, 4, -20), 64, 2000),
+                new Note(new Pitch(NotesEnum.C, 4, 20), 64, 2000),
+                new Note(new Pitch(NotesEnum.C, 4), 64, 2000),
             };
             
             tg.play(Arrays.asList(notes), 1.0f);

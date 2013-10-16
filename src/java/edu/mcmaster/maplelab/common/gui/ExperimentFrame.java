@@ -383,6 +383,38 @@ public abstract class ExperimentFrame <T extends Session<?, R, L>,  R extends Tr
             if(in != null)  try { in.close(); } catch (IOException e) {}
         }
         
+        /* ISSUE 6 kludgy fix, awaiting response*/
+        
+//        try {
+//        	final String beginPropFilename = setup.getPrefsPrefix() + ".properties";
+//        	File dir = setup.getDataDir();
+//        	if (dir.exists()) {
+//        		File[] files = dir.listFiles(new FilenameFilter() {
+//					@Override
+//					public boolean accept(final File dir, final String name) {
+//						return name.startsWith(beginPropFilename);
+//					}
+//				}); // Get first one
+//        		File f = files[0];
+//        		in = new FileInputStream(f);
+//        		propFile = f.getAbsolutePath();
+//        	}
+//        	else {
+//        		// Default to using the packaged properties file
+//            	URL url = getClass().getResource(beginPropFilename);
+//                in = getClass().getResourceAsStream(beginPropFilename);
+//                if (url != null) propFile = url.getPath();
+//            }
+//            props.load(in);
+//            props.put(Session.ConfigKeys.propertiesFile.name(), propFile);
+//        } 
+//        catch (Exception ex){
+//        	logError(ex, "Error reading configuration file");
+//            return null;
+//        }
+//        finally {
+//            if(in != null)  try { in.close(); } catch (IOException e) {}
+//        }
         return props;
     }
     

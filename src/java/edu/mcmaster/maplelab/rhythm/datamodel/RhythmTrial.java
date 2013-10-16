@@ -12,7 +12,9 @@
 package edu.mcmaster.maplelab.rhythm.datamodel;
 
 import java.util.ArrayList;
+import java.util.InvalidPropertiesFormatException;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.sound.midi.Sequence;
 
@@ -78,33 +80,87 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
     }
     
     /**
-     * Generate the playback rhythm seqence.
+     * Generate the playback rhythm sequence.
      */
-    public List<Note> generateSequence(RhythmSession session) {
-        List<Note> retval = new ArrayList<Note>();
-        
-        Pitch highPitch = session.getHighPitch();
-        Pitch lowPitch = session.getLowPitch();
-        
-        int measures = session.getPlaybackMeasures();
-        int bpm = session.getBeatsPerMeasure();
-      
-        for(int i = 0; i < measures; i++) {
-            retval.add(new Note(highPitch, getBaseIOI()));
-            for(int j = 1; j < bpm; j++) {
-                retval.add(new Note(lowPitch, getBaseIOI()));
-            }
-        }
-        
-        retval.add(new Note(highPitch, getBaseIOI()));
-        int silence = (int)((session.getSilenceMultiplier() + getOffsetDegree()) * getBaseIOI());
-        retval.add(new Note(silence));
-        
-        retval.add(new Note(highPitch, getBaseIOI()));
-        
-        LogContext.getLogger().fine("Sequence length (inc. lead-in silence): " + computeDuration(retval));
-        
-        return retval;
+//    public List<Note> generateSequence(RhythmSession session) {
+//        List<Note> retval = new ArrayList<Note>();
+//        
+//        Pitch highPitch = session.getHighPitch();
+//        Pitch lowPitch = session.getLowPitch();
+//        
+//        int measures = session.getPlaybackMeasures();
+//        int bpm = session.getBeatsPerMeasure();
+//      
+//        for(int i = 0; i < measures; i++) {
+//            retval.add(new Note(highPitch, getBaseIOI()));
+//            for(int j = 1; j < bpm; j++) {
+//                retval.add(new Note(lowPitch, getBaseIOI()));
+//            }
+//        }
+//        
+//        retval.add(new Note(highPitch, getBaseIOI()));
+//        int silence = (int)((session.getSilenceMultiplier() + getOffsetDegree()) * getBaseIOI());
+//        retval.add(new Note(silence));
+//        
+//        retval.add(new Note(highPitch, getBaseIOI()));
+//        
+//        LogContext.getLogger().fine("Sequence length (inc. lead-in silence): " + computeDuration(retval));
+//        
+//        return retval;
+//    }
+    
+    // New sequence generator to work with Trial specification as per Issue 2
+    public List<Note> generateSequence(RhythmSession session) throws InvalidPropertiesFormatException {
+    	List<Note> retval = new ArrayList<Note>();
+    	
+    	// Remove all whitespace and switch to lowercase
+    	String trialPattern = session.getTrialNotePattern().replaceAll("\\s", "").toLowerCase();
+    	
+    	Pitch primaryPitch = session.getPrimaryPitch();
+    	int primaryVelocity = session.getPrimaryVelocity();
+    	int primaryDuration = Math.round(session.getPrimaryDuration() * getBaseIOI());
+    	
+    	Pitch secondaryPitch = session.getSecondaryPitch();
+    	int secondaryVelocity = session.getSecondaryVelocity();
+    	int secondaryDuration = Math.round(session.getSecondaryDuration() * getBaseIOI());
+    	
+    	Pitch tertiaryPitch = session.getTertiaryPitch();
+    	int tertiaryVelocity = session.getTertiaryVelocity();
+    	int tertiaryDuration = Math.round(session.getTertiaryDuration() * getBaseIOI());
+    	
+    	Pitch probePitch = session.getProbePitch();
+    	int probeVelocity = session.getProbeVelocity();
+    	int probeDuration = Math.round(session.getProbeDuration() * getBaseIOI());
+    	
+    	int silenceDuration = Math.round(session.getSilenceDuration() * getBaseIOI());
+    	
+    	for (int i=0; i < trialPattern.length(); i++) {
+    		char note = trialPattern.charAt(i);
+    		// all characters are already lowercase
+    		switch (note) {
+    		case 'p':
+    			retval.add(new Note(primaryPitch, primaryVelocity, primaryDuration));
+    			break;
+    		case 's':
+    			retval.add(new Note(secondaryPitch, secondaryVelocity, secondaryDuration));
+    			break;
+    		case 't':
+    			retval.add(new Note(tertiaryPitch, tertiaryVelocity, tertiaryDuration));
+    			break;
+    		case '_':
+    			retval.add(new Note(silenceDuration));
+    			break;
+    		case '*':
+    			retval.add(new Note(probePitch, probeVelocity, probeDuration));
+    			break;
+    		default:
+    			LogContext.getLogger().severe("Property \"trialNotePattern\" contains invalid characters." 
+    					+ "trialNotePattern: " + trialPattern);
+    			throw new InvalidPropertiesFormatException("Property \"trialNotePattern\" contains invalid characters.");
+    		}
+    	}
+    	LogContext.getLogger().fine("Sequence length (inc. lead-in silence): " + computeDuration(retval));
+    	return retval;
     }
     
     /**

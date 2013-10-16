@@ -132,12 +132,12 @@ public class MIDITestPanel extends JPanel {
     
     private java.util.List<Note> tune(int len) {
         java.util.List<Note> tune = new LinkedList<Note>();
-        tune.add(new Note(new Pitch(NotesEnum.C, 4), len));
-        tune.add(new Note(new Pitch(NotesEnum.E, 4), len));
-        tune.add(new Note(new Pitch(NotesEnum.G, 4), len));
-        tune.add(new Note(new Pitch(NotesEnum.C, 5), len*2));
-        tune.add(new Note(new Pitch(NotesEnum.G, 4), len));
-        tune.add(new Note(new Pitch(NotesEnum.C, 5), len*3));
+        tune.add(new Note(new Pitch(NotesEnum.C, 4), 64, len));
+        tune.add(new Note(new Pitch(NotesEnum.E, 4), 64, len));
+        tune.add(new Note(new Pitch(NotesEnum.G, 4), 64, len));
+        tune.add(new Note(new Pitch(NotesEnum.C, 5), 64, len*2));
+        tune.add(new Note(new Pitch(NotesEnum.G, 4), 64, len));
+        tune.add(new Note(new Pitch(NotesEnum.C, 5), 64, len*3));
         return tune;
     }
     

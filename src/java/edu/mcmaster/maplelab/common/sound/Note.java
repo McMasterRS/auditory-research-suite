@@ -19,6 +19,7 @@ package edu.mcmaster.maplelab.common.sound;
  */
 public class Note {
     private final Pitch _pitch;
+    private final int _velocity;
     /**
      * @uml.property  name="duration"
      */
@@ -30,8 +31,9 @@ public class Note {
      * @param pitch pitch to play
      * @param duration duration of playback in milliseconds.
      */
-    public Note(Pitch pitch, int duration) {
+    public Note(Pitch pitch, int velocity, int duration) {
         _pitch = pitch;
+        _velocity = velocity;
         _duration = duration;
         
     }
@@ -42,6 +44,7 @@ public class Note {
      */
     public Note(int restDuration) {
         _pitch = null;
+        _velocity = 64; // Doesn't matter, silent
         _duration = restDuration;
     }
 
@@ -50,6 +53,13 @@ public class Note {
      */
     public Pitch getPitch() {
         return _pitch;
+    }
+    
+    /**
+     * @return Velocity in range [0, 127]
+     */
+    public int getVelocity() {
+    	return _velocity;
     }
     
     /**

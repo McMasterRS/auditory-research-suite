@@ -44,4 +44,14 @@ public class MathUtils {
     	float retval = Math.max(value, lower);
     	return Math.min(retval, upper);
     }
+    
+    /**
+     * Clamps the given number to fall within (or equal to) the two given bounds.
+     */
+    public static int clamp(int value, int bound1, int bound2) {
+    	int upper = Math.max(bound1, bound2);
+    	int lower = Math.min(bound1, bound2);
+    	int retval = Math.max(value, lower);
+    	return Math.min(retval, upper);
+    }
 }

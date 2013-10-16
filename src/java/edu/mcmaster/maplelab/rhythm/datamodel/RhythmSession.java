@@ -40,6 +40,20 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     public enum ConfigKeys {
         highPitch,
         lowPitch,
+        trialNotePattern,
+        primaryPitch,
+        primaryVelocity,
+        primaryDuration,
+        secondaryPitch,
+        secondaryVelocity,
+        secondaryDuration,
+        tertiaryPitch,
+        tertiaryVelocity,
+        tertiaryDuration,
+        probePitch,
+        probeVelocity,
+        probeDuration,
+        silenceDuration,
         gmBank,
         baseIOIs,
         offsetDegrees,
@@ -195,7 +209,77 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     public Pitch getLowPitch() {
         String pitch = getString(ConfigKeys.lowPitch, "G4");
         return Pitch.fromString(pitch);
-    }    
+    }
+    
+    /* XXX Issue 2 */
+    
+    public String getTrialNotePattern() {
+    	return getString(ConfigKeys.trialNotePattern, "");
+    }
+    
+    public Pitch getPrimaryPitch() {
+    	String pitch = getString(ConfigKeys.primaryPitch, "X");
+    	return Pitch.fromString(pitch);
+    }
+    
+    public int getPrimaryVelocity() {
+    	int velocity = getInteger(ConfigKeys.primaryVelocity, 64);
+    	return MathUtils.clamp(velocity, 0, 127); // velocity must be in [0,127]
+    }
+    
+    public float getPrimaryDuration() {
+    	return getFloat(ConfigKeys.primaryDuration, 0.0f);
+    }
+    
+    public Pitch getSecondaryPitch() {
+    	String pitch = getString(ConfigKeys.secondaryPitch, "X");
+    	return Pitch.fromString(pitch);
+    }
+    
+    public int getSecondaryVelocity() {
+    	int velocity = getInteger(ConfigKeys.secondaryVelocity, 64);
+    	return MathUtils.clamp(velocity, 0, 127); // velocity must be in [0,127]
+    }
+    
+    public float getSecondaryDuration() {
+    	return getFloat(ConfigKeys.secondaryDuration, 0.0f);
+    }
+    
+    public Pitch getTertiaryPitch() {
+    	String pitch = getString(ConfigKeys.tertiaryPitch, "X");
+    	return Pitch.fromString(pitch);
+    }
+    
+    public int getTertiaryVelocity() {
+    	int velocity = getInteger(ConfigKeys.tertiaryVelocity, 64);
+    	return MathUtils.clamp(velocity, 0, 127); // velocity must be in [0,127]
+    }
+    
+    public float getTertiaryDuration() {
+    	return getFloat(ConfigKeys.tertiaryDuration, 0.0f);
+    }
+    
+    public Pitch getProbePitch() {
+    	// Try defaulting probe pitch to primary pitch, if unspecified.
+    	String pitch = getString(ConfigKeys.probePitch, getString(ConfigKeys.primaryPitch, "X"));
+    	return Pitch.fromString(pitch);
+    }
+    
+    public int getProbeVelocity() {
+    	// Try defaulting probe velocity to primary velocity, if unspecified.
+    	int velocity = getInteger(ConfigKeys.probeVelocity, getPrimaryVelocity());
+    	return MathUtils.clamp(velocity, 0, 127); // velocity must be in [0,127]
+    }
+    
+    public float getProbeDuration() {
+    	// Try defaulting probe duration to primary duration, if unspecified.
+    	return getFloat(ConfigKeys.probeDuration, getFloat(ConfigKeys.primaryDuration, 0.0f));
+    }
+    
+    public float getSilenceDuration() {
+    	return getFloat(ConfigKeys.silenceDuration, 0.0f);
+    }
+    /* XXX Issue 2*/
     
     /**
      * Get the general midi bank number to select for playback.
