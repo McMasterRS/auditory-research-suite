@@ -81,36 +81,58 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
     
     /**
      * Generate the playback rhythm sequence.
+     * Uses legacy note specification if true.
+     * @throws InvalidPropertiesFormatException 
      */
-//    public List<Note> generateSequence(RhythmSession session) {
-//        List<Note> retval = new ArrayList<Note>();
-//        
-//        Pitch highPitch = session.getHighPitch();
-//        Pitch lowPitch = session.getLowPitch();
-//        
-//        int measures = session.getPlaybackMeasures();
-//        int bpm = session.getBeatsPerMeasure();
-//      
-//        for(int i = 0; i < measures; i++) {
-//            retval.add(new Note(highPitch, getBaseIOI()));
-//            for(int j = 1; j < bpm; j++) {
-//                retval.add(new Note(lowPitch, getBaseIOI()));
-//            }
-//        }
-//        
-//        retval.add(new Note(highPitch, getBaseIOI()));
-//        int silence = (int)((session.getSilenceMultiplier() + getOffsetDegree()) * getBaseIOI());
-//        retval.add(new Note(silence));
-//        
-//        retval.add(new Note(highPitch, getBaseIOI()));
-//        
-//        LogContext.getLogger().fine("Sequence length (inc. lead-in silence): " + computeDuration(retval));
-//        
-//        return retval;
-//    }
+    public List<Note> generateSequence(RhythmSession session, boolean useLegacyNoteSpecification) 
+    		throws InvalidPropertiesFormatException {
+    	if (useLegacyNoteSpecification) {
+    		return generateSequenceLegacy(session);
+    	}
+    	else {
+    		return generateSequence(session);
+    	}
+    }
     
+    /**
+     * Generate a List of Notes using highPitch, lowPitch, playbackMeasures, beatsPerMeasure,
+     * baseIOI, and silenceMultiplier.
+     */
+    private List<Note> generateSequenceLegacy(RhythmSession session) {
+        List<Note> retval = new ArrayList<Note>();
+        
+        Pitch highPitch = session.getHighPitch();
+        Pitch lowPitch = session.getLowPitch();
+        
+        int measures = session.getPlaybackMeasures();
+        int bpm = session.getBeatsPerMeasure();
+      
+        for(int i = 0; i < measures; i++) {
+            retval.add(new Note(highPitch, 64, getBaseIOI()));
+            for(int j = 1; j < bpm; j++) {
+                retval.add(new Note(lowPitch, 64, getBaseIOI()));
+            }
+        }
+        
+        retval.add(new Note(highPitch, 64, getBaseIOI()));
+        int silence = (int)((session.getSilenceMultiplier() + getOffsetDegree()) * getBaseIOI());
+        retval.add(new Note(silence));
+        
+        retval.add(new Note(highPitch, 64, getBaseIOI()));
+        
+        LogContext.getLogger().fine("Sequence length (inc. lead-in silence): " + computeDuration(retval));
+        
+        return retval;
+    }
+    
+    /**
+     * Generates a List of Notes using Primary, Secondary, Tertiary, Silence, and Probe values of 
+     * Pitch, Velocity, and Duration. Also uses baseIOI, parses from trialNotePattern.
+     * @param session
+     * @throws InvalidPropertiesFormatException
+     */
     // New sequence generator to work with Trial specification as per Issue 2
-    public List<Note> generateSequence(RhythmSession session) throws InvalidPropertiesFormatException {
+    private List<Note> generateSequence(RhythmSession session) throws InvalidPropertiesFormatException {
     	List<Note> retval = new ArrayList<Note>();
     	
     	// Remove all whitespace and switch to lowercase

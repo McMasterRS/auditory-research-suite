@@ -40,6 +40,7 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     public enum ConfigKeys {
         highPitch,
         lowPitch,
+        useLegacyNoteSpecification,
         trialNotePattern,
         primaryPitch,
         primaryVelocity,
@@ -197,6 +198,7 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     
     /**
      * Get the upper (stressed) pitch.
+     * (Used in legacy note specification)
      */
     public Pitch getHighPitch() {
         String pitch = getString(ConfigKeys.highPitch, "C5");
@@ -205,6 +207,7 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     
     /**
      * get the lower (unstressed) pitch.
+     * (Used in legacy note specification)
      */
     public Pitch getLowPitch() {
         String pitch = getString(ConfigKeys.lowPitch, "G4");
@@ -213,12 +216,16 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     
     /* XXX Issue 2 */
     
+    public boolean getUseLegacyNoteSpecification() {
+    	return getBoolean(ConfigKeys.useLegacyNoteSpecification, false);
+    }
+    
     public String getTrialNotePattern() {
     	return getString(ConfigKeys.trialNotePattern, "");
     }
     
     public Pitch getPrimaryPitch() {
-    	String pitch = getString(ConfigKeys.primaryPitch, "X");
+    	String pitch = getString(ConfigKeys.primaryPitch, "G4");
     	return Pitch.fromString(pitch);
     }
     
@@ -228,11 +235,11 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     }
     
     public float getPrimaryDuration() {
-    	return getFloat(ConfigKeys.primaryDuration, 0.0f);
+    	return getFloat(ConfigKeys.primaryDuration, 1.0f);
     }
     
     public Pitch getSecondaryPitch() {
-    	String pitch = getString(ConfigKeys.secondaryPitch, "X");
+    	String pitch = getString(ConfigKeys.secondaryPitch, "G4");
     	return Pitch.fromString(pitch);
     }
     
@@ -242,11 +249,11 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     }
     
     public float getSecondaryDuration() {
-    	return getFloat(ConfigKeys.secondaryDuration, 0.0f);
+    	return getFloat(ConfigKeys.secondaryDuration, 1.0f);
     }
     
     public Pitch getTertiaryPitch() {
-    	String pitch = getString(ConfigKeys.tertiaryPitch, "X");
+    	String pitch = getString(ConfigKeys.tertiaryPitch, "G4");
     	return Pitch.fromString(pitch);
     }
     
@@ -256,12 +263,12 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     }
     
     public float getTertiaryDuration() {
-    	return getFloat(ConfigKeys.tertiaryDuration, 0.0f);
+    	return getFloat(ConfigKeys.tertiaryDuration, 1.0f);
     }
     
     public Pitch getProbePitch() {
     	// Try defaulting probe pitch to primary pitch, if unspecified.
-    	String pitch = getString(ConfigKeys.probePitch, getString(ConfigKeys.primaryPitch, "X"));
+    	String pitch = getString(ConfigKeys.probePitch, getString(ConfigKeys.primaryPitch, "G4"));
     	return Pitch.fromString(pitch);
     }
     
@@ -273,11 +280,11 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     
     public float getProbeDuration() {
     	// Try defaulting probe duration to primary duration, if unspecified.
-    	return getFloat(ConfigKeys.probeDuration, getFloat(ConfigKeys.primaryDuration, 0.0f));
+    	return getFloat(ConfigKeys.probeDuration, getFloat(ConfigKeys.primaryDuration, 1.0f));
     }
     
     public float getSilenceDuration() {
-    	return getFloat(ConfigKeys.silenceDuration, 0.0f);
+    	return getFloat(ConfigKeys.silenceDuration, 1.0f);
     }
     /* XXX Issue 2*/
     
@@ -315,6 +322,7 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
 
     /**
      * Number of measures played (sounded)
+     * (Used in legacy note specification)
      */
     public int getPlaybackMeasures() {
         return getInteger(ConfigKeys.playbackMeasures, 3);
@@ -322,6 +330,7 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     
     /**
      * Number of beats per measures (first beat is the stressed one)
+     * (Used in legacy note specification)
      */
     public int getBeatsPerMeasure() {
         return getInteger(ConfigKeys.beatsPerMeasure, 4);        
@@ -329,6 +338,7 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     
     /**
      * Number of IOI units of silence after sounded measures (not including offset)
+     * (Used in legacy note specification)
      */
     public int getSilenceMultiplier() {
         return getInteger(ConfigKeys.silenceMultiplier, 3);

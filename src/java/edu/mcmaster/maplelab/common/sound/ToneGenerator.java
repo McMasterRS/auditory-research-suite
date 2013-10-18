@@ -146,7 +146,6 @@ public class ToneGenerator {
             for (Note n : notes) {
                 int noteDuration = n.getDuration();
                 
-                // Cannot add multiple silence notes in here? fails if pitch is null
                 Pitch ps = n.getPitch();
                 if(ps != null) {
                 
@@ -158,7 +157,7 @@ public class ToneGenerator {
                     if(detuneEvent != null) {
                         track.add(detuneEvent);
                     }
-                    track.add(createNoteOnEvent(midiNote, ticks));
+                    track.add(createNoteOnEvent(midiNote, n.getVelocity(), ticks));
                     track.add(createNoteOffEvent(midiNote, toTicks(cumulativeDuration+noteDuration)));
                     
                 }
@@ -214,11 +213,12 @@ public class ToneGenerator {
     /**
      * Create the event to start the note playback.
      * @param note midi note
+     * @param velocity The velocity of the note
      * @return note event
      */
-    public static MidiEvent createNoteOnEvent(int note, long ticks) throws InvalidMidiDataException {
+    public static MidiEvent createNoteOnEvent(int note, int velocity, long ticks) throws InvalidMidiDataException {
         ShortMessage msg = new ShortMessage();
-        msg.setMessage(ShortMessage.NOTE_ON, GENERATOR_CHANNEL, note, MIDI_NOTE_VELOCITY_CMD);
+        msg.setMessage(ShortMessage.NOTE_ON, GENERATOR_CHANNEL, note, velocity);
         return new MidiEvent(msg, ticks);
     }
 

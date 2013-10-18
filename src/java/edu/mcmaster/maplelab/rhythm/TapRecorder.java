@@ -38,6 +38,7 @@ import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession;
  */
 public class TapRecorder implements AWTEventListener, Receiver {
     private static final int ARTIFICIAL_MIDI_NOTE = 72;
+    private static final int ARTIFICIAL_MIDI_NOTE_VELOCITY = 64;
     
     private Receiver _feedbackReceiver;
     private MidiDevice _midiSynthDev;
@@ -391,7 +392,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
     		
     		try {
                 MidiEvent event = down ? 
-                    ToneGenerator.createNoteOnEvent(ARTIFICIAL_MIDI_NOTE, -1) :
+                    ToneGenerator.createNoteOnEvent(ARTIFICIAL_MIDI_NOTE, ARTIFICIAL_MIDI_NOTE_VELOCITY, -1) :
                         ToneGenerator.createNoteOffEvent(ARTIFICIAL_MIDI_NOTE, -1);
                 recordEvent(event);
             }
