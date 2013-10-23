@@ -38,9 +38,7 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
      * @since   Feb 28, 2007
      */
     public enum ConfigKeys {
-        highPitch,
-        lowPitch,
-        useLegacyNoteSpecification,
+        trialSpecificationStyle,
         trialNotePattern,
         primaryPitch,
         primaryVelocity,
@@ -57,6 +55,8 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
         silenceDuration,
         gmBank,
         baseIOIs,
+        highPitch,
+        lowPitch,
         offsetDegrees,
         randomizeAcrossRepetitions,
         playbackMeasures,
@@ -77,6 +77,15 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
         subjectTapGain,
         subjectNoTapGain,
         subjectTapGM
+    }
+    
+    /**
+	 * For specifying the style of constructing trial rhythms.
+     */	
+    public enum TrialSpecStyle {
+    	HighLowPitches,
+    	PatternWithNotes,
+    	MIDIFile
     }
     
     /**
@@ -199,8 +208,18 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     }
     
     /**
+	 * Get the Trial Specification Style, defaults to using {@link TrialSpecStyle.PatternWithNotes}.
+	 */
+    public TrialSpecStyle getTrialSpecificationStyle() {
+    	String style = getString(ConfigKeys.trialSpecificationStyle, TrialSpecStyle.PatternWithNotes.name());
+    	return TrialSpecStyle.valueOf(style);
+    }
+    
+    /* -- Getters for TrialSpecStyle.HighLowPitches -- */
+    
+    /**
      * Get the upper (stressed) pitch.
-     * (Used in legacy note specification)
+     * (Used in HighLowPitches style specification)
      */
     public Pitch getHighPitch() {
         String pitch = getString(ConfigKeys.highPitch, "C5");
@@ -209,22 +228,44 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     
     /**
      * get the lower (unstressed) pitch.
-     * (Used in legacy note specification)
+     * (Used in HighLowPitches style specification)
      */
     public Pitch getLowPitch() {
         String pitch = getString(ConfigKeys.lowPitch, "G4");
         return Pitch.fromString(pitch);
     }
     
-    /* XXX Issue 2 */
-    
-    public boolean getUseLegacyNoteSpecification() {
-    	return getBoolean(ConfigKeys.useLegacyNoteSpecification, false);
+    /**
+     * Number of measures played (sounded)
+     * (Used in HighLowPitches style specification)
+     */
+    public int getPlaybackMeasures() {
+        return getInteger(ConfigKeys.playbackMeasures, 3);
     }
+    
+    /**
+     * Number of beats per measures (first beat is the stressed one)
+     * (Used in HighLowPitches style specification)
+     */
+    public int getBeatsPerMeasure() {
+        return getInteger(ConfigKeys.beatsPerMeasure, 4);        
+    }
+    
+    /**
+     * Number of IOI units of silence after sounded measures (not including offset)
+     * (Used in HighLowPitches style specification)
+     */
+    public int getSilenceMultiplier() {
+        return getInteger(ConfigKeys.silenceMultiplier, 3);
+    }
+    
+    /* -- Getters for TrialSpecStyle.PatternWithNotes -- */
     
     public String getTrialNotePattern() {
     	return getString(ConfigKeys.trialNotePattern, "");
     }
+    
+    /* Primary Note getters */
     
     public Pitch getPrimaryPitch() {
     	String pitch = getString(ConfigKeys.primaryPitch, "G4");
@@ -240,6 +281,8 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     	return getFloat(ConfigKeys.primaryDuration, 1.0f);
     }
     
+    /* Secondary Note getters */
+    
     public Pitch getSecondaryPitch() {
     	String pitch = getString(ConfigKeys.secondaryPitch, "G4");
     	return Pitch.fromString(pitch);
@@ -254,6 +297,8 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     	return getFloat(ConfigKeys.secondaryDuration, 1.0f);
     }
     
+    /* Tertiary Note getters */
+    
     public Pitch getTertiaryPitch() {
     	String pitch = getString(ConfigKeys.tertiaryPitch, "G4");
     	return Pitch.fromString(pitch);
@@ -267,6 +312,8 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     public float getTertiaryDuration() {
     	return getFloat(ConfigKeys.tertiaryDuration, 1.0f);
     }
+    
+    /* Probe Note getters */
     
     public Pitch getProbePitch() {
     	// Try defaulting probe pitch to primary pitch, if unspecified.
@@ -285,10 +332,11 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     	return getFloat(ConfigKeys.probeDuration, getFloat(ConfigKeys.primaryDuration, 1.0f));
     }
     
+    /* Silence duration getter */
+    
     public float getSilenceDuration() {
     	return getFloat(ConfigKeys.silenceDuration, 1.0f);
     }
-    /* XXX Issue 2*/
     
     /**
      * Get the general midi bank number to select for playback.
@@ -320,30 +368,6 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
      */
     public List<Float> getOffsetDegrees() {
         return getFloatList(ConfigKeys.offsetDegrees, new Float[]{0.1f});        
-    }
-
-    /**
-     * Number of measures played (sounded)
-     * (Used in legacy note specification)
-     */
-    public int getPlaybackMeasures() {
-        return getInteger(ConfigKeys.playbackMeasures, 3);
-    }
-    
-    /**
-     * Number of beats per measures (first beat is the stressed one)
-     * (Used in legacy note specification)
-     */
-    public int getBeatsPerMeasure() {
-        return getInteger(ConfigKeys.beatsPerMeasure, 4);        
-    }
-    
-    /**
-     * Number of IOI units of silence after sounded measures (not including offset)
-     * (Used in legacy note specification)
-     */
-    public int getSilenceMultiplier() {
-        return getInteger(ConfigKeys.silenceMultiplier, 3);
     }
     
     public int getSynthDevID() {

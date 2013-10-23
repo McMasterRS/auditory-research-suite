@@ -23,6 +23,7 @@ import edu.mcmaster.maplelab.common.datamodel.ConfidenceResponse;
 import edu.mcmaster.maplelab.common.datamodel.Trial;
 import edu.mcmaster.maplelab.common.sound.Note;
 import edu.mcmaster.maplelab.common.sound.Pitch;
+import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession.TrialSpecStyle;
 
 
 /**
@@ -84,21 +85,29 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
      * Uses legacy note specification if true.
      * @throws InvalidPropertiesFormatException 
      */
-    public List<Note> generateSequence(RhythmSession session, boolean useLegacyNoteSpecification) 
+    public List<Note> generateSequence(RhythmSession session, TrialSpecStyle style) 
     		throws InvalidPropertiesFormatException {
-    	if (useLegacyNoteSpecification) {
-    		return generateSequenceLegacy(session);
+    	List<Note> retval = null;
+    	switch (style) {
+    	case HighLowPitches:
+    		retval = generateSequenceUsingHighLowPitches(session);
+    		break;
+    	case PatternWithNotes:
+    		retval = generateSequenceUsingPatternWithNotes(session);
+    		break;
+    	case MIDIFile:
+    		throw new InvalidPropertiesFormatException("Unrecognized Trial Specification Style.");
+    	default:
+    		retval = generateSequenceUsingPatternWithNotes(session);
     	}
-    	else {
-    		return generateSequence(session);
-    	}
+    	return retval;
     }
-    
+
     /**
      * Generate a List of Notes using highPitch, lowPitch, playbackMeasures, beatsPerMeasure,
      * baseIOI, and silenceMultiplier.
      */
-    private List<Note> generateSequenceLegacy(RhythmSession session) {
+    private List<Note> generateSequenceUsingHighLowPitches(RhythmSession session) {
         List<Note> retval = new ArrayList<Note>();
         
         Pitch highPitch = session.getHighPitch();
@@ -132,7 +141,7 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
      * @throws InvalidPropertiesFormatException
      */
     // New sequence generator to work with Trial specification as per Issue 2
-    private List<Note> generateSequence(RhythmSession session) throws InvalidPropertiesFormatException {
+    private List<Note> generateSequenceUsingPatternWithNotes(RhythmSession session) throws InvalidPropertiesFormatException {
     	List<Note> retval = new ArrayList<Note>();
     	
     	// Remove all whitespace and switch to lowercase
