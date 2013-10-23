@@ -197,10 +197,8 @@ public abstract class AVStimulusResponseScreen<R, T extends AVTrial<R>, L extend
     	setEnabled(false);
     	
     	recordResponse();
-        if (_trialManager.hasNext()) {
-            doTrial();
-        }
-        else {      
+    	// perform trial, ending experiment if needed
+        if (!doTrial()) {
             // Hack that needs to be cleaned up with better abstraction.
             // If this was the last trial, we need to include some time
             // for StatusUpdaterRunnable to finish.
@@ -214,7 +212,7 @@ public abstract class AVStimulusResponseScreen<R, T extends AVTrial<R>, L extend
     
     private void incrementTrial() {
     	_completedTrial = _currTrial;
-    	_currTrial = _trialManager.next();
+    	_currTrial = _trialManager.hasNext() ? _trialManager.next() : null;
     }
     
     /**
@@ -235,11 +233,11 @@ public abstract class AVStimulusResponseScreen<R, T extends AVTrial<R>, L extend
         return _completedTrial;
     }
     
-    private void doTrial() {
+    private boolean doTrial() {
         _response.reset();
         
         T trial = currentTrial();
-        if (trial == null) return;
+        if (trial == null) return false;
         updateResponseInputs(trial);
         trial.setTimeStamp(new Date());
         
@@ -252,6 +250,8 @@ public abstract class AVStimulusResponseScreen<R, T extends AVTrial<R>, L extend
 
         _session.execute(new PrepareRunnable(trial));
         _session.execute(new PlaybackRunnable());
+        
+        return true;
     }
     
     private void recordResponse() {
@@ -471,8 +471,8 @@ public abstract class AVStimulusResponseScreen<R, T extends AVTrial<R>, L extend
     private class StatusUpdaterRunnable implements Runnable {
         private final T _trial;
 
-        public StatusUpdaterRunnable(T currTrial) {
-            _trial = currTrial;
+        public StatusUpdaterRunnable(T completedTrial) {
+            _trial = completedTrial;
         }
 
         public void run() {

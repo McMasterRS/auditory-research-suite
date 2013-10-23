@@ -2,6 +2,7 @@ package edu.mcmaster.maplelab.av.datamodel;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -75,7 +76,6 @@ public abstract class AVTrialManager<S extends AVSession<?, T, ?>, T extends AVT
 							T trial = createTrial(AVBlockType.AUDIO_ONLY, null, audio, so, 0, 
 									pointSize, connect, delay);
 							trial.setNumber(RelativeTrialPosition.REPETITION, i + j + 1); // i or j must be 0
-							trial.setNumber(RelativeTrialPosition.BLOCK_INSTANCE, i + 1);
 							innerTrials.add(trial);
 							++trialCount;
 						}
@@ -92,7 +92,7 @@ public abstract class AVTrialManager<S extends AVSession<?, T, ?>, T extends AVT
 				}
 				
 				// add block
-				retval.add(trials);
+				if (!trials.isEmpty()) retval.add(trials);
 			}
 			
 			// VIDEO
@@ -112,7 +112,6 @@ public abstract class AVTrialManager<S extends AVSession<?, T, ?>, T extends AVT
 						T trial = createTrial(AVBlockType.VIDEO_ONLY, null, video, 0l, 0, 
 								pointSize, connect, 0l);
 						trial.setNumber(RelativeTrialPosition.REPETITION, i + j + 1); // i or j must be 0
-						trial.setNumber(RelativeTrialPosition.BLOCK_INSTANCE, i + 1);
 						innerTrials.add(trial);
 						++trialCount;
 					}
@@ -128,7 +127,7 @@ public abstract class AVTrialManager<S extends AVSession<?, T, ?>, T extends AVT
 				}
 				
 				// add block
-				retval.add(trials);
+				if (!trials.isEmpty()) retval.add(trials);
 			}
 			
 			// ANIMATION
@@ -149,7 +148,6 @@ public abstract class AVTrialManager<S extends AVSession<?, T, ?>, T extends AVT
 							T trial = createTrial(AVBlockType.ANIMATION_ONLY, ani.getMediaObject(), 
 									null, 0l, pts, pointSize, connect, 0l);
 							trial.setNumber(RelativeTrialPosition.REPETITION, i + j + 1); // i or j must be 0
-							trial.setNumber(RelativeTrialPosition.BLOCK_INSTANCE, i + 1);
 							innerTrials.add(trial);
 							++trialCount;
 						}
@@ -166,7 +164,7 @@ public abstract class AVTrialManager<S extends AVSession<?, T, ?>, T extends AVT
 				}
 				
 				// add block
-				retval.add(trials);
+				if (!trials.isEmpty()) retval.add(trials);
 			}
 			
 			// AUDIO & ANIMATION
@@ -227,7 +225,6 @@ public abstract class AVTrialManager<S extends AVSession<?, T, ?>, T extends AVT
 												ani.getMediaObject(), audio, so, 
 												pts, pointSize, connect, delay);
 										trial.setNumber(RelativeTrialPosition.REPETITION, i + j + 1); // i or j must be 0
-										trial.setNumber(RelativeTrialPosition.BLOCK_INSTANCE, i + 1);
 										innerTrials.add(trial);
 										++trialCount;
 									}
@@ -265,7 +262,6 @@ public abstract class AVTrialManager<S extends AVSession<?, T, ?>, T extends AVT
 												ani.getMediaObject(), audio, so, 
 												pts, pointSize, connect, delay);
 										trial.setNumber(RelativeTrialPosition.REPETITION, i + j + 1); // i or j must be 0
-										trial.setNumber(RelativeTrialPosition.BLOCK_INSTANCE, i + 1);
 										innerTrials.add(trial);
 										++trialCount;
 									}
@@ -287,7 +283,7 @@ public abstract class AVTrialManager<S extends AVSession<?, T, ?>, T extends AVT
 				}
 				
 				// add block
-				retval.add(trials);
+				if (!trials.isEmpty()) retval.add(trials);
 			}
 		}
         
@@ -300,10 +296,30 @@ public abstract class AVTrialManager<S extends AVSession<?, T, ?>, T extends AVT
 		int blockInMetablock = 1;
 		int trialNum = ((metablock - 1) * trialCount) + 1;
 		int trialInMetablock = 1;
+		int[] typeCounts = new int[AVBlockType.values().length];
+		Arrays.fill(typeCounts, 0);
+		int[] repCounts = new int[AVBlockType.values().length];
+		Arrays.fill(repCounts, 0);
+		AVBlockType lastType = null;
+		int lastRep = -1;
 		
 		for (List<T> block : retval) {
 			int trialInBlock = 1;
+			lastType = null;
 			for (T trial : block) {
+				// track types for block instance and repetition counts
+				if (lastType == null) {
+					lastType = trial.getType();
+					++typeCounts[lastType.ordinal()];
+				}
+				// track repetition changes and renumber
+				int rep = trial.getNumber(RelativeTrialPosition.REPETITION);
+				if (rep != lastRep) {
+					lastRep = rep;
+					++repCounts[lastType.ordinal()];
+				}
+				trial.setNumber(RelativeTrialPosition.REPETITION, repCounts[lastType.ordinal()]);
+				trial.setNumber(RelativeTrialPosition.BLOCK_INSTANCE, typeCounts[lastType.ordinal()]);
 				trial.setNumber(TrialHierarchy.METABLOCK, metablock);
 				trial.setNumber(TrialHierarchy.BLOCK, blockNum);
 				trial.setNumber(RelativeTrialPosition.BLOCK_IN_METABLOCK, blockInMetablock);
@@ -329,6 +345,9 @@ public abstract class AVTrialManager<S extends AVSession<?, T, ?>, T extends AVT
 		else if (level == TrialHierarchy.METABLOCK) {
 			S session = getSession();
 			
+			int mbCount = session.getMetaBlocks();
+			int repCount = session.getBlockSetRepetitions();
+			
 			// blocks
 			String blockTypes = "";
 			int numBlockTypes = 0;
@@ -349,8 +368,8 @@ public abstract class AVTrialManager<S extends AVSession<?, T, ?>, T extends AVT
 				++numBlockTypes;
 			}
 			blockTypes = String.format("\t%d metablock(s), %d block type(s), stimuli combinations\n " +
-					"\t\trepeated %d time(s), includes:\n", session.getMetaBlocks(), numBlockTypes, 
-					session.getBlockSetRepetitions()) + blockTypes;
+					"\t\trepeated %d time(s), includes:\n", mbCount, numBlockTypes, 
+					repCount) + blockTypes;
 			
 			// parameters
 			List<String> audioParams = MediaType.AUDIO.getParams(session);
@@ -447,22 +466,42 @@ public abstract class AVTrialManager<S extends AVSession<?, T, ?>, T extends AVT
 				videoDesc += String.format("\t\tVideo extensions: %s\n", listString(vidExt));
 			}
 			
-			return String.format("\n********** Experiment Session Trial Details **********\n%s\n" +
-					(session.includeAudioBlock() ? 
-							String.format("\tAudio-only trial count: %d\n", audioOnlyCount) : "") +
-					(session.includeAnimationBlock() ? 
-							String.format("\tAnimation-only trial count: %d\n", aniOnlyCount) : "") +
-					(session.includeAudioAnimationBlock() ? 
-							String.format("\tAudio and animation trial count: %d\n", audAniCount) : "") +
-					(session.includeVideoBlock() ? 
-							String.format("\tVideo trial count: %d\n", videoCount) : "") +
-					String.format("\tTotal trials: %d\n\n", audioOnlyCount + audAniCount + videoCount + 
-							aniOnlyCount) + audioDesc + aniDesc + videoDesc +
-					"**************************************************\n\n", blockTypes);
+			int uniqueTrials = audioOnlyCount + audAniCount + videoCount + aniOnlyCount;
+			String details = "\n********** Experiment Session Trial Details **********\n%s\n";
+			if (session.includeAudioBlock()) {
+				details += String.format("\tUnique audio-only trial count: %d\n", audioOnlyCount);
+				details += grouping(session.singleAudioBlock(), repCount, audioOnlyCount);
+			}
+			if (session.includeAnimationBlock()) {
+				details += String.format("\tUnique animation-only trial count: %d\n", aniOnlyCount);
+				details += grouping(session.singleAnimationBlock(), repCount, aniOnlyCount);
+			}
+			if (session.includeAudioAnimationBlock()) {
+				details += String.format("\tUnique audio and animation trial count: %d\n", audAniCount);
+				details += grouping(session.singleAudioAnimationBlock(), repCount, audAniCount);
+			}
+			if (session.includeVideoBlock()) {
+				details += String.format("\tUnique video trial count: %d\n", videoCount);
+				details += grouping(session.singleVideoBlock(), repCount, videoCount);
+			}
+			details += String.format("\tTotal unique trials: %d\n\tTotal trials per metablock: %d\n\n", 
+					uniqueTrials, uniqueTrials * repCount);
+			details += audioDesc + aniDesc + videoDesc;
+			details += "**************************************************\n\n";
 			
+			return String.format(details, blockTypes);
 		}
 		
 		return null;
+	}
+	
+	private String grouping(boolean single, int repCount, int uniqueTrialCount) {
+		if (single) {
+			return String.format("\t\tOrganized as a single block with %d trials repeated %d " +
+					"times\n", uniqueTrialCount, repCount);
+		}
+		return String.format("\t\tOrganized as %d blocks of %d trials\n", 
+				repCount, uniqueTrialCount);
 	}
 
 }
