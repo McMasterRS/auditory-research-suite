@@ -306,6 +306,7 @@ public abstract class AVTrialManager<S extends AVSession<?, T, ?>, T extends AVT
 		for (List<T> block : retval) {
 			int trialInBlock = 1;
 			lastType = null;
+			lastRep = -1;
 			for (T trial : block) {
 				// track types for block instance and repetition counts
 				if (lastType == null) {
