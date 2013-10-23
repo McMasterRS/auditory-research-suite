@@ -6,13 +6,18 @@
 	
 	<property name="jarbundler.jar" value="../lib/jarbundler-1.9.jar"/>
 	<property name="xerces.jar" value="../lib/xercesImpl.jar"/>
+	<property name="gervill" value="false"/>
 	
 	<condition property="launch4j.dir" value="${basedir}/../lib/launch4j-osx">
 		<os family="mac"/>
 	</condition>
 	
+	<target name="echo-gervill">
+		<echo>${gervill}</echo>
+	</target>
+	
 	<!-- Build the Rhythm Experiment application -->
-	<target name="rhythm" description="Create application bundle for rhythm experiment">
+	<target name="rhythm" description="Create application bundle for rhythm experiment" depends="echo-gervill">
 	    <taskdef name="jarbundler"
 	             classpath="${jarbundler.jar}:${xerces.jar}" 
 	             classname="net.sourceforge.jarbundler.JarBundler"/>
@@ -26,11 +31,12 @@
 	                icon="../resources/McMaster.icns"
 	                jvmversion="1.6*"
 	                version="0.6"
-	                infostring="MapleLab Rhythm Experiment, Copyright &#xa9; 2011"
+	                infostring="MapleLab Rhythm Experiment, Copyright &#xa9; 2013"
 	                bundleid="edu.mcmaster.maplelab.rhythm.RhythmExperiment" 
 					>
     	
 	        <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
+	    	<javaproperty name="sun.sound.useNewAudioEngine" value="${gervill}"/>
 
     		<jarfileset dir="../www/rhythm" includes="rhythm.jar"/>
 	    	<jarfileset dir="..">

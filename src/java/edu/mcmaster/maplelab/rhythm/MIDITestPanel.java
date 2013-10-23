@@ -253,7 +253,7 @@ public class MIDITestPanel extends JPanel {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-            int dev = _devs.getTapInputIndex() + 1;//getCurrentDeviceID();
+            int dev = _devs.getTapInputIndex() - 1;//getCurrentDeviceID();
             
             // determine notice for selected device
             String message = null;
@@ -268,7 +268,7 @@ public class MIDITestPanel extends JPanel {
             	_tapRecorder.setMIDIInputID(dev);
                 message = "Start tapping via the selected device, or use the computer keyboard";
             }
-            _tapRecorder.setMIDISynthID(_devs.getTapSynthIndex() + 1);
+            _tapRecorder.setMIDISynthID(_devs.getTapSynthIndex() - 1);
             
             // begin recording
             try {
