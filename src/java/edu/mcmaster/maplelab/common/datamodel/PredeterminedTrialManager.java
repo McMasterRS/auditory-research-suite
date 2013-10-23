@@ -76,18 +76,31 @@ public abstract class PredeterminedTrialManager<S extends Session<?, ?, ?>, T ex
 		
 		if (initialCount > warmupCount) {
 			int remaining = warmupCount;
-			for (int i = retval.size()-1; i > 0; i--) {
+			// Work through all blocks, pulling trials proportionally from each. 
+			for (int i = retval.size()-1; i >= 0; i--) {
 				List<T> block = retval.get(i);
 				int localCount = block.size();
 				if (localCount > 1) {
+					// Get the percentage of total trials in this block
 					float percent = (float) localCount / (float) initialCount;
-					localCount = (int) (warmupCount * percent);
+					localCount = Math.round(warmupCount * percent);  
+					
+					// check for possibility of pulling out too many trials:
+					// e.g. when there are 2 metablocks, and 3 warmups are requested, need to only pull 2, then 1 trial
+					int difference = remaining - localCount;
+					if (difference < 0) {
+						localCount += difference; // difference is negative, so must be added to reduce localCount
+					}
 					block = block.subList(0, localCount);
 					remaining -= localCount;
 				}
+				// Set the ith block to only have a proportional amount of trials, normalizing with warmup count.
+				retval.set(i, block);
 			}
-			retval.set(0, retval.get(0).subList(0, remaining));
-		}
+
+		} 
+		// else: does not matter. Should not ask for more warmup trials than actual trials.
+		// If this does happen, the retval will be left unchanged, and all trials will be returned.
 		
 		// do numbering
 		int trialNum = 1;
@@ -96,12 +109,13 @@ public abstract class PredeterminedTrialManager<S extends Session<?, ?, ?>, T ex
 			int trialInBlock = 1;
 			for (T trial : block) {
 				trial.setNumber(TRIAL, -1 * trialNum);
-				trial.setNumber(RelativeTrialPosition.TRIAL_IN_BLOCK, -1 * trialInBlock);
+				trial.setNumber(RelativeTrialPosition.TRIAL_IN_BLOCK, -1 * trialInBlock++);
 				trial.setNumber(RelativeTrialPosition.TRIAL_IN_METABLOCK, -1 * trialNum++);
 				trial.setNumber(BLOCK, -1 * blockNum);
-				trial.setNumber(RelativeTrialPosition.BLOCK_IN_METABLOCK, -1 * blockNum++);
+				trial.setNumber(RelativeTrialPosition.BLOCK_IN_METABLOCK, -1 * blockNum);
 				trial.setNumber(METABLOCK, -1);
 			}
+			blockNum++;
 		}
 		
 		return retval;
