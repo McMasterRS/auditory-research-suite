@@ -126,7 +126,9 @@ public class StimulusResponseScreen extends BasicStep {
         try {
             //if(!_isWarmup) {
                 _tapRecorder = new TapRecorder(_session);
-                _tapRecorder.setMIDIInputID(_session.getMIDIInputDeviceID());
+                _tapRecorder.setMIDIInputID(_session.getTapInputDevID());
+                _tapRecorder.setMIDISynthID(_session.getTapSynthDevID());
+                ToneGenerator.getInstance().setMIDISynthID(_session.getSynthDevID());
                 // We have to add a key listener to make sure this gets
                 // registered to receive events.
                 

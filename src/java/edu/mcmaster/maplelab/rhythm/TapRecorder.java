@@ -41,13 +41,14 @@ public class TapRecorder implements AWTEventListener, Receiver {
     private static final int ARTIFICIAL_MIDI_NOTE_VELOCITY = 64;
     
     private Receiver _feedbackReceiver;
-    private MidiDevice _midiSynthDev;
     private RhythmSession _session = null;
     private Sequencer _sequencer;
     private Track _track;
     private Receiver _logReceiver;
-    private int _midiDevID = -1;
+    private int _midiInputDevID = -1;
     private MidiDevice _midiInput;
+    private Integer _tapSynthID = null;
+    private MidiDevice _tapSynthDev;
     private boolean _allowCompKeyInput;
     private Boolean _lastKeyDown = null;
     private boolean _userInputOn = true;
@@ -64,7 +65,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
     }
 
     public TapRecorder(boolean allowComputerKeyInput, long suppressionWindow) throws MidiUnavailableException {
-        _sequencer = ToneGenerator.getInstance().getSequencer();
+    	_sequencer = ToneGenerator.getInstance().getSequencer();
         _allowCompKeyInput = allowComputerKeyInput;
         _suppressionWindow = suppressionWindow;
     }
@@ -92,19 +93,34 @@ public class TapRecorder implements AWTEventListener, Receiver {
     }
 
     /**
-     * Set the MIDI device ID to attempt to open for recording.
+     * Set the MIDI device ID to use for input.
      * 
-     * @param midiDevID MIDI device ID/index, or -1 to disable MIDI system recording.
+     * @param midiDevID MIDI device ID/index, or -1 to use the keyboard only.
      */
     public void setMIDIInputID(int midiDevID) {
     	// the previous input device must be closed, or
     	// it will continue to transmit midi signals to
     	// this TapRecorder
-    	if (_midiDevID != midiDevID && _midiInput != null) {
+    	if (_midiInputDevID != midiDevID && _midiInput != null) {
     		_midiInput.close();
     		_midiInput = null;
     	}
-        _midiDevID = midiDevID;
+        _midiInputDevID = midiDevID;
+    }
+
+    /**
+     * Set the MIDI device ID to use for tap sounds.
+     * 
+     * @param midiDevID MIDI device ID/index, or -1 to use the default system synth,
+     * or null to use the ToneGenerator's synth.
+     */
+    public void setMIDISynthID(Integer midiDevID) {
+    	// the previous synth device must be closed
+    	if (_tapSynthID != midiDevID && _tapSynthDev != null) {
+    		_tapSynthDev.close();
+    		_tapSynthDev = null;
+    	}
+        _tapSynthID = midiDevID;
     }
     
     /**
@@ -128,18 +144,18 @@ public class TapRecorder implements AWTEventListener, Receiver {
         }
         _sequencer.recordEnable(_track, -1);
         
-        Info info = null;
-        if (_midiDevID >= 0 && _userInputOn) {
+        Info inputInfo = null;
+        if (_midiInputDevID >= 0 && _userInputOn) {
             try {
                 Info[] devices = MidiSystem.getMidiDeviceInfo();
-                if (_midiDevID >= devices.length) {
+                if (_midiInputDevID >= devices.length) {
                     throw new ArrayIndexOutOfBoundsException(String.format(
-                        "MIDI device index %d is outside bounds of devices list (length = %d)", 
-                        _midiDevID, devices.length));
+                        "MIDI input device index %d is outside bounds of devices list (length = %d)", 
+                        _midiInputDevID, devices.length));
                 }
                 
-                info = devices[_midiDevID];
-                MidiDevice device = MidiSystem.getMidiDevice(info);
+                inputInfo = devices[_midiInputDevID];
+                MidiDevice device = MidiSystem.getMidiDevice(inputInfo);
                 
                 if (_midiInput != device || (_midiInput != null && !_midiInput.isOpen())) {
                 	_midiInput = device;
@@ -150,7 +166,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
                         if (_midiInput.getMaxTransmitters() == 0) {
                             throw new MidiUnavailableException(String.format(
                                 "Specified device with ID/index=%d (%s) doesn't support transmitting.", 
-                                _midiDevID, _midiInput.getDeviceInfo().getName()));
+                                _midiInputDevID, _midiInput.getDeviceInfo().getName()));
                         }
                         
                         _midiInput.getTransmitter().setReceiver(this);
@@ -169,22 +185,33 @@ public class TapRecorder implements AWTEventListener, Receiver {
         // prepare to play user tap sounds
         if (_session == null || _session.playSubjectTaps()) {
         	try {
-            	// XXX: This allocates resources on every call
-        		// used to just get the default receiver w/ MidiSystem.getReceiver(),
-        		// but the default changes depending on devices available
-        		
-        		_midiSynthDev = MidiSystem.getSynthesizer();
-    			//_feedbackReceiver.
-    			if (!_midiSynthDev.isOpen()) _midiSynthDev.open();
-    			_feedbackReceiver = _midiSynthDev.getReceiver();
-    			if (_session != null) {
-    				float vol = _withTap ? _session.subjectTapGain() : _session.subjectNoTapGain();
-        			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
-        					(short) _session.subjectTapGM(), (short) 0);
-        			for (MidiEvent me : prep) {
-        				_feedbackReceiver.send(me.getMessage(), me.getTick());
+        		MidiDevice device = null;
+        		if (_tapSynthID != null) {
+        			if (_tapSynthID >= 0) {
+                        device = ToneGenerator.initializeSynth(_tapSynthID);
         			}
-    			}
+        		}
+        		else {
+        			device = ToneGenerator.getInstance().getSynthesizer();
+        		}
+                
+                if (_tapSynthDev != device || (_tapSynthDev != null && !_tapSynthDev.isOpen())) {
+                	_tapSynthDev = device;
+                	
+                	if (_tapSynthDev != null) {
+                		if (!_tapSynthDev.isOpen()) _tapSynthDev.open();
+                		
+            			_feedbackReceiver = _tapSynthDev.getReceiver();
+            			if (_session != null) {
+            				float vol = _withTap ? _session.subjectTapGain() : _session.subjectNoTapGain();
+                			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
+                					(short) _session.subjectTapGM(), (short) 0);
+                			for (MidiEvent me : prep) {
+                				_feedbackReceiver.send(me.getMessage(), me.getTick());
+                			}
+            			}
+                	}
+                }
     		} 
             catch (Exception e) {
             	LogContext.getLogger().log(Level.SEVERE, "Couldn't initialize MIDI feedback device", e);
@@ -196,8 +223,8 @@ public class TapRecorder implements AWTEventListener, Receiver {
         }
         
         if (!_sequencer.isRecording()) _sequencer.startRecording();
-        if (info != null) LogContext.getLogger().info("Recording with: " + info.getName() + 
-        		", " + info.getDescription());
+        if (inputInfo != null) LogContext.getLogger().info("Recording from: " + inputInfo.getName() + 
+        		", " + inputInfo.getDescription());
     }
     
     /**
@@ -244,7 +271,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
         }
         _sequencer.stopRecording();        
         _sequencer.recordDisable(_track);
-        if (_midiSynthDev != null) _midiSynthDev.close();
+        if (_tapSynthDev != null) _tapSynthDev.close();
         if (_midiInput != null) _midiInput.close();
         _track = null;
         _lastOnTick = null;

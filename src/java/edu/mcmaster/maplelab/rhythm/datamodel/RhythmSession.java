@@ -61,8 +61,10 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
         randomizeAcrossRepetitions,
         playbackMeasures,
         beatsPerMeasure,
-        silenceMultiplier, 
-        midiDevID,
+        silenceMultiplier,
+        toneSynthID,
+        tapInputDevID,
+        tapSynthID,
         tapTestSound,
         computerKeyInput,
         recordNoteOff,
@@ -344,12 +346,28 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
         return getInteger(ConfigKeys.silenceMultiplier, 3);
     }
     
-    public int getMIDIInputDeviceID() {
-        return getInteger(ConfigKeys.midiDevID, 0);
+    public int getSynthDevID() {
+        return getInteger(ConfigKeys.toneSynthID, 0);
     }
     
-    public void setMIDIInputDeviceID(int id) {
-        setProperty(ConfigKeys.midiDevID, id);
+    public void setSynthDevID(int id) {
+        setProperty(ConfigKeys.toneSynthID, id);
+    }
+    
+    public int getTapInputDevID() {
+        return getInteger(ConfigKeys.tapInputDevID, 0);
+    }
+    
+    public void setTapInputDevID(int id) {
+        setProperty(ConfigKeys.tapInputDevID, id);
+    }
+    
+    public int getTapSynthDevID() {
+        return getInteger(ConfigKeys.tapSynthID, 0);
+    }
+    
+    public void setTapSynthDevID(int id) {
+        setProperty(ConfigKeys.tapSynthID, id);
     }
      
      /**

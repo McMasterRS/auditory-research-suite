@@ -307,13 +307,20 @@ public class RhythmTrialLogger extends
             EnumMap<MidiKeys, String> fields = new EnumMap<MidiKeys, String>(MidiKeys.class);
             
             RhythmSession session = getSession();
-            int id = session.getMIDIInputDeviceID();
-            Info info = MidiSystem.getMidiDeviceInfo()[session.getMIDIInputDeviceID()];
-            
-            fields.put(MidiKeys.midi_dev_id, String.valueOf(id));
-            fields.put(MidiKeys.midi_dev_name, info.getName());
-            fields.put(MidiKeys.midi_dev_version, info.getVersion());
-            fields.put(MidiKeys.midi_dev_vendor, info.getVendor());
+            int id = session.getTapInputDevID();
+            if (id >= 0) {
+                Info info = MidiSystem.getMidiDeviceInfo()[id];
+                fields.put(MidiKeys.midi_dev_id, String.valueOf(id));
+                fields.put(MidiKeys.midi_dev_name, info.getName());
+                fields.put(MidiKeys.midi_dev_version, info.getVersion());
+                fields.put(MidiKeys.midi_dev_vendor, info.getVendor());
+            }
+            else {
+                fields.put(MidiKeys.midi_dev_id, NA);
+                fields.put(MidiKeys.midi_dev_name, NA);
+                fields.put(MidiKeys.midi_dev_version, NA);
+                fields.put(MidiKeys.midi_dev_vendor, NA);
+            }
             
             return fields;
 		}

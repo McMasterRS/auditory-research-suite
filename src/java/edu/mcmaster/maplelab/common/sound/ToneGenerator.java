@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.logging.Level;
 
 import javax.sound.midi.*;
+import javax.sound.midi.MidiDevice.Info;
 
 import edu.mcmaster.maplelab.common.LogContext;
 
@@ -36,8 +37,8 @@ public class ToneGenerator {
     
     private static final int NOTES_OFF = 123;
     private static final int MIDI_VOLUME_CMD = 7;
-    private static final short MIDI_BANK_MSB_FLUTE = 0;
-    private static final short MIDI_BANK_LSB_FLUTE = 74;
+    public static final short MIDI_BANK_MSB_FLUTE = 0;
+    public static final short MIDI_BANK_LSB_FLUTE = 74;
 
     
     /** Number of pitch bend units per cent. Although not guaranteed, the 
@@ -62,14 +63,111 @@ public class ToneGenerator {
     private SequenceLatch _latch;
     private short _midiBankLSB = MIDI_BANK_LSB_FLUTE;
     private short _midiBankMSB = MIDI_BANK_MSB_FLUTE;
+    private int _midiSynthDevID = -1;
+    private MidiDevice _midiSynthDev;
+    private Receiver _synthReceiver;
     
     private Map<Track, Integer> _lastDetunes = new  HashMap<Track, Integer>();
     
     private ToneGenerator() throws MidiUnavailableException {
-        // The default sequencer should already be attached to the default synth.
-        _sequencer = MidiSystem.getSequencer();
+        // The default sequencer should already be attached to the default synth unless
+    	// we say not to connect it
+        _sequencer = MidiSystem.getSequencer(false);
         _sequencer.addMetaEventListener(_latch = new SequenceLatch());
-        _sequencer.open();
+    }
+    
+    /**
+     * Get the synthesizer currently in use.
+     */
+    public MidiDevice getSynthesizer() {
+    	if (_midiSynthDev == null) {
+    		// force initialization
+    		setMIDISynthID(_midiSynthDevID);
+    	}
+    	return _midiSynthDev;
+    }
+    
+    public static MidiDevice initializeSynth(int deviceID) throws MidiUnavailableException {
+		// find specified device, or use default
+		MidiDevice device;
+        Info[] devices = MidiSystem.getMidiDeviceInfo();
+        if (deviceID >= devices.length) {
+            throw new ArrayIndexOutOfBoundsException(String.format(
+                "MIDI synth device index %d is outside bounds of devices list (length = %d)", 
+                deviceID, devices.length));
+        }
+        else if (deviceID >= 0) {
+        	Info synthInfo = devices[deviceID];
+	        device = MidiSystem.getMidiDevice(synthInfo);
+	        if (device.getMaxReceivers() == 0) {
+	        	// XXX: This allocates resources on every call
+	    		// used to just get the default receiver w/ MidiSystem.getReceiver(),
+	    		// but the default changes depending on devices available
+	        	LogContext.getLogger().log(Level.WARNING, "Invalid synth device, using default.");
+	        	deviceID = -1;
+	        	device = MidiSystem.getSynthesizer();
+	        }
+        }
+        else {
+        	LogContext.getLogger().log(Level.INFO, "Using default synth device.");
+        	device = MidiSystem.getSynthesizer();
+        }
+        
+        return device;
+    }
+
+    /**
+     * Set the MIDI device ID to use for playing sounds.
+     * 
+     * @param midiDevID MIDI device ID/index, or -1 to use the default system synthesizer.
+     */
+    public void setMIDISynthID(int midiDevID) {
+    	// the previous synth device must be closed
+    	if (_midiSynthDevID != midiDevID) {
+	        closeSynth();
+	        _midiSynthDevID = midiDevID;
+    	}
+    	else if (_midiSynthDev != null) {
+        	return;
+        }
+        
+    	try {
+    		// find specified device, or use default
+    		MidiDevice device = initializeSynth(_midiSynthDevID);
+	        
+	        // assign and open device
+	        _midiSynthDev = device;
+    		if (_midiSynthDev != null && !_midiSynthDev.isOpen()) _midiSynthDev.open();
+
+    		// link the sequencer to the synth
+	    	if (_sequencer.isOpen()) _sequencer.close();
+	    	if (_midiSynthDev != null) {
+	    		if (_synthReceiver != null) {
+	    			_synthReceiver.close();
+	    		}
+		    	_synthReceiver = _midiSynthDev.getReceiver();
+		    	_sequencer.getTransmitter().setReceiver(_synthReceiver);
+	    	}
+	        _sequencer.open();
+		} 
+	    catch (Exception e) {
+	    	LogContext.getLogger().log(Level.SEVERE, "Couldn't initialize MIDI synthesizer", e);
+	        closeSynth();
+		}
+    }
+    
+    /**
+     * Shut down the synthesizer.
+     */
+    private void closeSynth() {
+		if (_synthReceiver != null) {
+			_synthReceiver.close();
+			_synthReceiver = null;
+		}
+        if (_midiSynthDev != null) {
+        	_midiSynthDev.close();
+        	_midiSynthDev = null;
+        }
     }
     
     @Override
@@ -77,6 +175,7 @@ public class ToneGenerator {
         super.finalize();
         try {
             _sequencer.close();
+            closeSynth();
         } 
         catch (Exception e) {
         }

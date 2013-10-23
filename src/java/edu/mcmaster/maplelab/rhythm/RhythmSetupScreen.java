@@ -9,9 +9,9 @@ import java.util.prefs.Preferences;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFormattedTextField;
 import javax.swing.JPanel;
 
+import net.miginfocom.swing.MigLayout;
 import edu.mcmaster.maplelab.common.Experiment;
 import edu.mcmaster.maplelab.common.gui.SimpleSetupScreen;
 import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession;
@@ -23,7 +23,7 @@ import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession;
  *
  */
 public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> {
-	private JFormattedTextField _midiDev;
+	private DeviceSelectionPanel _devs;
 
 	public RhythmSetupScreen() {
 		super(RhythmExperiment.EXPERIMENT_BASENAME.replace(" ", "").toLowerCase(), false, true);
@@ -36,11 +36,10 @@ public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> {
 
 	@Override
 	protected void addExperimentFields() {
-		addLabel("<html><p align=right>Tap Source (MIDI <br>Device #):");
-		_midiDev = new JFormattedTextField();
-		_midiDev.setColumns(12);
-		_midiDev.setValue(new Integer(0));
-		addField(_midiDev);    
+		_devs = new DeviceSelectionPanel();
+		JPanel p = new JPanel(new MigLayout("fill, insets 0", "0px[grow]0px", "10px[grow]10px"));
+		p.add(_devs, "grow");
+		addPanel(p);
 		
 		// provide access to test utility
 		JButton midiTest = new JButton("List and Test Devices");
@@ -53,26 +52,30 @@ public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> {
 		});
 
 		addLabel("MIDI System:");
-		JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		p = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		p.add(midiTest);
 		addField(p);
 	}
 
 	@Override
 	protected void applyExperimentSettings(RhythmSession session) {
-		session.setMIDIInputDeviceID(Integer.parseInt(_midiDev.getText()));
+		session.setSynthDevID(_devs.getToneSynthIndex());
+		session.setTapInputDevID(_devs.getTapInputIndex() - 1);
+		session.setTapSynthDevID(_devs.getTapSynthIndex() - 1);
 	}
 
 	@Override
 	protected void putExperimentPrefs(Preferences prefs) {
-		int midiDevID = Integer.parseInt(_midiDev.getText());
-		prefs.putInt(RhythmSession.ConfigKeys.midiDevID.name(), midiDevID);
+		prefs.putInt(RhythmSession.ConfigKeys.toneSynthID.name(), _devs.getToneSynthIndex());
+		prefs.putInt(RhythmSession.ConfigKeys.tapInputDevID.name(), _devs.getTapInputIndex());
+		prefs.putInt(RhythmSession.ConfigKeys.tapSynthID.name(), _devs.getTapSynthIndex());
 	}
 
 	@Override
 	protected void loadExperimentPrefs(Preferences prefs) {
-		int midiDevID = prefs.getInt(RhythmSession.ConfigKeys.midiDevID.name(), 0);
-		_midiDev.setValue(new Integer(midiDevID));
+		_devs.updateSelections(prefs.getInt(RhythmSession.ConfigKeys.toneSynthID.name(), 0), 
+				prefs.getInt(RhythmSession.ConfigKeys.tapInputDevID.name(), 0), 
+				prefs.getInt(RhythmSession.ConfigKeys.tapSynthID.name(), 0));
 	}
 
 	@Override

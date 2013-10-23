@@ -25,6 +25,8 @@ import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
+import net.miginfocom.swing.MigLayout;
+
 import edu.mcmaster.maplelab.common.gui.CloseButton;
 import edu.mcmaster.maplelab.common.sound.*;
 
@@ -40,6 +42,7 @@ public class MIDITestPanel extends JPanel {
     private final JTextPane _console;
     private JSpinner _midiDevID;
     private static JDialog _dialog = null;
+    private DeviceSelectionPanel _devs;
     private JScrollPane _scrollPane;
     
     public static JDialog createDialog(Component parent) {
@@ -64,13 +67,17 @@ public class MIDITestPanel extends JPanel {
     public MIDITestPanel() {
         super(new BorderLayout());
         
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JPanel top = new JPanel(new MigLayout("fill, insets 0", "5px[][][]push[]5px", "5px[]10px[]"));
         add(top, BorderLayout.NORTH);
+        
+        _devs = new DeviceSelectionPanel();
+        top.add(_devs, "span 4, grow, wrap");
         
         top.add(new JButton(new ListMidiAction()));
         top.add(new JButton(new PlayAction()));
+        top.add(new JButton(new TestTapRecord()), "wrap");
         
-        JPanel p = new JPanel();
+        /*JPanel p = new JPanel();
         p.setBorder(BorderFactory.createEtchedBorder());
         p.add(new JButton(new TestTapRecord()));
         p.add(new JLabel("Device:"));
@@ -78,7 +85,7 @@ public class MIDITestPanel extends JPanel {
         //TODO: set a custom Document object for the underlying text field
         // and limit inputs to valid integer-relevant characters?
         p.add(_midiDevID);
-        top.add(p);
+        top.add(p);*/
         
         _console = new JTextPane();
         _console.setContentType("text/plain");
@@ -88,7 +95,7 @@ public class MIDITestPanel extends JPanel {
         _scrollPane = new JScrollPane(_console);
         add(_scrollPane, BorderLayout.CENTER);
         
-        p = new JPanel();
+        JPanel p = new JPanel();
         p.add(new JButton(new ClearConsoleAction()));
         p.add(new CloseButton());
         add(p, BorderLayout.SOUTH);
@@ -154,6 +161,7 @@ public class MIDITestPanel extends JPanel {
         public void actionPerformed(ActionEvent e) {
             List<Note> tune = tune(150);
             try {
+            	ToneGenerator.getInstance().setMIDISynthID(_devs.getToneSynthIndex());
                 ToneGenerator.getInstance().play(tune, 1.0f, true);
             }
             catch (MidiUnavailableException e1) {
@@ -238,9 +246,14 @@ public class MIDITestPanel extends JPanel {
 
         public void actionPerformed(ActionEvent e) {
             setEnabled(false);
-            
-            int dev = getCurrentDeviceID();
-            _tapRecorder.setMIDIInputID(-1);
+
+            try {
+				ToneGenerator.getInstance().setMIDISynthID(_devs.getToneSynthIndex());
+			} catch (MidiUnavailableException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+            int dev = _devs.getTapInputIndex() + 1;//getCurrentDeviceID();
             
             // determine notice for selected device
             String message = null;
@@ -255,6 +268,7 @@ public class MIDITestPanel extends JPanel {
             	_tapRecorder.setMIDIInputID(dev);
                 message = "Start tapping via the selected device, or use the computer keyboard";
             }
+            _tapRecorder.setMIDISynthID(_devs.getTapSynthIndex() + 1);
             
             // begin recording
             try {
@@ -268,7 +282,7 @@ public class MIDITestPanel extends JPanel {
             printf(message);
         }
         
-        private Integer getCurrentDeviceID() {
+        /*private Integer getCurrentDeviceID() {
         	try {
         		_midiDevID.commitEdit();
         	}
@@ -280,7 +294,7 @@ public class MIDITestPanel extends JPanel {
         	}
         	
         	return (Integer) _midiDevID.getValue();
-        }
+        }*/
         
         private void sessionEnded() {
             printf("Stop tapping");

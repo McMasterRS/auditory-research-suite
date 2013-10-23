@@ -161,8 +161,23 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
     }
     
     /**
+     * Method for adding a form panel to the setup screen. Control is just
+     * placed on the screen; no other management is performed
+     * 
+     * @param panel panel to add.
+     */
+    protected void addPanel(JPanel panel) {
+    	_labelGBC.gridwidth = 2;
+    	_labelGBC.fill = GridBagConstraints.HORIZONTAL;
+    	add(panel, _labelGBC);
+    	_labelGBC.gridwidth = 1;
+    	_labelGBC.fill = GridBagConstraints.NONE;
+    }
+    
+    /**
      * Add any experiment-specific fields using calls to 
-     * {@link #addLabel(String)} and {@link #addField(JComponent)}.
+     * {@link #addLabel(String)}, {@link #addField(JComponent)},
+     * and {@link #addPanel(JPanel)}.
      */
     protected abstract void addExperimentFields();
     
