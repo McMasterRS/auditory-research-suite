@@ -6,7 +6,7 @@
 	
 	<property name="jarbundler.jar" value="../lib/jarbundler-1.9.jar"/>
 	<property name="xerces.jar" value="../lib/xercesImpl.jar"/>
-	<property name="gervill" value="false"/>
+	<property name="gervill" value="true"/>
 	
 	<condition property="launch4j.dir" value="${basedir}/../lib/launch4j-osx">
 		<os family="mac"/>
