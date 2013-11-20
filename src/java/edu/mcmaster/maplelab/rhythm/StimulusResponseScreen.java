@@ -371,8 +371,11 @@ public class StimulusResponseScreen extends BasicStep {
         public void run() {
             try {
                 ToneGenerator tg = ToneGenerator.getInstance();
-                tg.setMidiBank((short)0, _session.getGMBank());
+                tg.setPercussionChannelOn(_session.getUsePercussionChannel());
+                tg.setMidiBank((short)0, _session.getInstrumentNumber());
                 tg.getSequencer().addMetaEventListener(_endListener);
+                
+                Pitch.setMiddleCOctave(_session.getMiddleCOctave()); // Important to set Middle C for Pitches
                 List<Note> seq = _trial.generateSequence(_session, _session.getTrialSpecificationStyle());
                 _playbackStart = System.currentTimeMillis();
                 LogContext.getLogger().fine("Playback started @ " + _playbackStart);

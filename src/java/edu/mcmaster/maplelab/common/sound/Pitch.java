@@ -35,13 +35,16 @@ public class Pitch implements Comparable<Pitch> {
     private static final double RT12_2 = Math.pow(2, 1.0/12.0);
     private static final Pitch REF_PITCH = new Pitch(NotesEnum.A, 4);
     private static final double REF_FREQ = 440.0;
-    private static final Pattern P_PAT = Pattern.compile("([a-gA-G])([1-9])([+-]\\d+)?");
-        
+    private static final Pattern P_PAT = Pattern.compile("([a-gA-G][#sS]?)(-?\\d+)([+-]\\d+)?");
+    
+    // Default value of Middle C is C4, so _middleCOctave is 4
+    private static int _middleCOctave = 4;
+    
     /**
      * Ctor
      * 
      * @param note Note value
-     * @param octave octave [-1, 9]
+     * @param octave octave [-1, 9] (assuming Middle C is C4)
      */
     public Pitch(NotesEnum note, int octave) {
         this(note, octave, 0);
@@ -51,7 +54,7 @@ public class Pitch implements Comparable<Pitch> {
      * Ctor
      * 
      * @param note note value
-     * @param octave octave [-1, 9]
+     * @param octave octave [-1, 9] (assuming Middle C is C4)
      * @param detuneCents detune amount in cents (1/100th semitone) [-50, 50]
      */
     public Pitch(NotesEnum note, int octave, int detuneCents) {
@@ -62,8 +65,9 @@ public class Pitch implements Comparable<Pitch> {
         if(_note == null) {
             throw new NullPointerException("Note value may not be null.");
         }
-        if(_octave < -1 || _octave > 9) {
-            throw new IllegalArgumentException("Octave must be in the range [-1,9].");
+        if(_octave < _middleCOctave-5 || _octave > _middleCOctave+5) {
+            throw new IllegalArgumentException("Octave must be in the range [" + (_middleCOctave-5) 
+            		+ "," + (_middleCOctave+5) + "].");
         }
         if(_detuneCents < -50 || _detuneCents > 50) {
             throw new IllegalArgumentException("Detune must be in the range [-50,50].");
@@ -88,7 +92,8 @@ public class Pitch implements Comparable<Pitch> {
             throw new IllegalArgumentException("Midi note value must be in range [0, 127]");
         }
 
-        _octave = (midiNote / 12) - 1;
+    	int middleCOffset = 5 - _middleCOctave;
+        _octave = (midiNote / 12) - middleCOffset;
         _note = NotesEnum.values()[midiNote % 12];
         _detuneCents = detuneCents;
     }
@@ -102,6 +107,10 @@ public class Pitch implements Comparable<Pitch> {
         this(Math.round(fractionalMidiNote), extractDetune(fractionalMidiNote));
     }
 
+    public static void setMiddleCOctave(int midCOctave) {
+    	_middleCOctave = midCOctave;
+    }
+    
     /**
      * Get note value.
      * @uml.property  name="note"
@@ -111,7 +120,8 @@ public class Pitch implements Comparable<Pitch> {
     }
     
     /**
-     * Get octave value in [-1, 9]
+     * Get octave value in range middle C octave +- 5
+     * If middle C is C4, then this range is [-1,9]
      * @uml.property  name="octave"
      */
     public int getOctave() {
@@ -141,8 +151,10 @@ public class Pitch implements Comparable<Pitch> {
      * Convert to a midi note number.
      */
     public int toMidiNoteNumber() {
-        // C-1 == note 0
-        int octaveOffset = (_octave + 1) * 12;
+        // C-1 == note 0 if C4 is middle C
+    	int middleCOffset = 5 - _middleCOctave;
+    	// This number should be 60 for middle C
+        int octaveOffset = (_octave + middleCOffset) * 12;
         return octaveOffset + _note.ordinal();
     }
     
@@ -245,7 +257,7 @@ public class Pitch implements Comparable<Pitch> {
         Pitch retval = null;
         Matcher matcher = P_PAT.matcher(rep);
         if(matcher.matches()) {
-            NotesEnum note = NotesEnum.valueOf(matcher.group(1).toUpperCase());
+            NotesEnum note = NotesEnum.valueOf(matcher.group(1).toUpperCase().replaceAll("#", "S"));
             int octave = Integer.parseInt(matcher.group(2));
             int detune = 0;
             if(matcher.groupCount() > 3) {

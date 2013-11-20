@@ -29,7 +29,8 @@ import edu.mcmaster.maplelab.common.LogContext;
 public class ToneGenerator {
 	private static final int ENABLED_CHANNEL_COUNT = 12;
 	
-	private static final int GENERATOR_CHANNEL = 0;
+	// Generator Channel is set below as a variable. 
+	
     private static final int MIDI_MAX_VOLUME = 127;
     private static final int MIDI_NOTE_VELOCITY_CMD = 64;
     private static final int PITCH_BEND_MAX = 16383;
@@ -58,6 +59,15 @@ public class ToneGenerator {
         }
         return _singleton;
     }
+    
+    /** 
+	 * The 10th channel works differently. Don't set this to 9 for general use.
+	 * Additionally, all channels not explicitly set by us have different default settings.
+	 * So if ENABLE_CHANNEL_COUNT is 12, then channels 13-16 (12-15 when encoded properly) 
+	 * are not setup, and will likely play notes differently. 
+	 */
+    // Defaulted to 0, the first channel. Can be set via #setPercussionChannelOn
+	private static int _generator_channel = 0; // This is off by one. Choose Channel from [0..15]
     
     private Sequencer _sequencer;
     private SequenceLatch _latch;
@@ -189,6 +199,19 @@ public class ToneGenerator {
     }
     
     /**
+     * Set the channel to the percussion channel (9) to play notes on.
+     * 
+     * @param setPercussionOn true means we use channel 9, false means we use channel 0.
+     */
+    public void setPercussionChannelOn(boolean setPercussionOn) {
+    	if (setPercussionOn) {
+    		_generator_channel = 9;
+    	} else {
+    		_generator_channel = 0;
+    	}
+    }
+    
+    /**
      * Set the midi sound.
      * 
      * @param msb
@@ -317,7 +340,7 @@ public class ToneGenerator {
      */
     public static MidiEvent createNoteOnEvent(int note, int velocity, long ticks) throws InvalidMidiDataException {
         ShortMessage msg = new ShortMessage();
-        msg.setMessage(ShortMessage.NOTE_ON, GENERATOR_CHANNEL, note, velocity);
+        msg.setMessage(ShortMessage.NOTE_ON, _generator_channel, note, velocity);
         return new MidiEvent(msg, ticks);
     }
 
@@ -328,7 +351,7 @@ public class ToneGenerator {
      */
     public static MidiEvent createNoteOffEvent(int note, long ticks) throws InvalidMidiDataException {
         ShortMessage msg = new ShortMessage();
-        msg.setMessage(ShortMessage.NOTE_OFF, GENERATOR_CHANNEL, note, 0);
+        msg.setMessage(ShortMessage.NOTE_OFF, _generator_channel, note, 0);
         
         return new MidiEvent(msg, ticks);        
     }
@@ -351,7 +374,7 @@ public class ToneGenerator {
 
         ShortMessage msg = new ShortMessage();
         int amount = (int)(PITCH_BEND_NONE + PITCH_BEND_PER_CENTS * detuneCents);
-        msg.setMessage(ShortMessage.PITCH_BEND, GENERATOR_CHANNEL, amount % 128, amount / 128);
+        msg.setMessage(ShortMessage.PITCH_BEND, _generator_channel, amount % 128, amount / 128);
         
         return new MidiEvent(msg, ticks);
     }
@@ -384,7 +407,7 @@ public class ToneGenerator {
             msg.setMessage(ShortMessage.PROGRAM_CHANGE, i, midiBankLSB, midiBankMSB);
             retval[idx+1] = new MidiEvent(msg, 0);
     	}
-        
+    	
         return retval;
     }
     

@@ -38,6 +38,7 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
      * @since   Feb 28, 2007
      */
     public enum ConfigKeys {
+    	middleC,
         trialSpecificationStyle,
         trialNotePattern,
         primaryPitch,
@@ -53,7 +54,8 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
         probeVelocity,
         probeDuration,
         silenceDuration,
-        gmBank,
+        usePercussionChannel,
+        instrumentNumber,
         baseIOIs,
         highPitch,
         lowPitch,
@@ -208,6 +210,17 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     }
     
     /**
+     * Get the Middle C Octave label, as some SoundBanks differ on their labelling.
+     * (Values are normally "C3", "C4", or "C5")
+     * @return int representing the Middle C octave to base notes off of.
+     */
+    public int getMiddleCOctave() {
+    	String midC =  getString(ConfigKeys.middleC, "C4");
+    	// Makes the assumption that midC will be of the form [Alpha]-?[0-9]
+    	return Integer.parseInt(midC.substring(1));
+    }
+    
+    /**
 	 * Get the Trial Specification Style, defaults to using {@link TrialSpecStyle.PatternWithNotes}.
 	 */
     public TrialSpecStyle getTrialSpecificationStyle() {
@@ -339,13 +352,22 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     }
     
     /**
-     * Get the general midi bank number to select for playback.
+     * Get whether or not to use the Percussion Channel for rhythm playback.
      * 
-     * @return midi bank number [1,128]
+     * @return value of property "usePercussionChannel"
      */
-    public short getGMBank() {
-        String  gmBank = getString(ConfigKeys.gmBank, "13");
-        return Short.parseShort(gmBank);
+    public boolean getUsePercussionChannel() {
+    	return getBoolean(ConfigKeys.usePercussionChannel, false);
+    }
+    
+    /**
+     * Get the instrument number to select for playback.
+     * 
+     * @return instrument number [0,127]
+     */
+    public short getInstrumentNumber() {
+        String iNum = getString(ConfigKeys.instrumentNumber, "0");
+        return Short.parseShort(iNum);
     }
     
     /**
