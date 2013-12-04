@@ -78,7 +78,7 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
         recordActualTapNote,
         subjectTapGain,
         subjectNoTapGain,
-        subjectTapGM
+        subjectTapInstrumentNumber
     }
     
     /**
@@ -172,10 +172,10 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     }
     
     /**
-     * General midi bank to play for subject tap feedback.
+     * General midi instrument to play for subject tap feedback.
      */
-    public int subjectTapGM() {
-    	return getInteger(ConfigKeys.subjectTapGM, 1);
+    public int subjectTapInstrumentNumber() {
+    	return getInteger(ConfigKeys.subjectTapInstrumentNumber, 1);
     }
     
     /**
