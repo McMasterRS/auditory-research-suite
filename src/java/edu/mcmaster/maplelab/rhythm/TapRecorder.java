@@ -129,7 +129,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
      * resources for playing user feedback, if required.
      */
     public void start(Sequence sequence) {
-        if (_allowCompKeyInput && _userInputOn) {
+       	if (_allowCompKeyInput && _userInputOn) {
         	Toolkit.getDefaultToolkit().addAWTEventListener(this, AWTEvent.KEY_EVENT_MASK);
         }
         
@@ -205,7 +205,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
             			if (_session != null) {
             				float vol = _withTap ? _session.subjectTapGain() : _session.subjectNoTapGain();
                 			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
-                					(short) _session.subjectTapGM(), (short) 0);
+                					(short) _session.subjectTapInstrumentNumber(), (short) 0);
                 			for (MidiEvent me : prep) {
                 				_feedbackReceiver.send(me.getMessage(), me.getTick());
                 			}

@@ -23,11 +23,15 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
+import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.sound.midi.*;
 import javax.swing.*;
+
+import net.miginfocom.swing.MigLayout;
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.AnswerConfidenceResponseInputs;
@@ -93,15 +97,15 @@ public class StimulusResponseScreen extends BasicStep {
             _isWarmup ? ConfigKeys.warmupScreenTrialText : ConfigKeys.testScreenTrialText, 
                 null));
         
-        JPanel bottom = new JPanel(new GridLayout(1, 0));
+        /* Status/Response setup */
+        JPanel bottom = new JPanel(new MigLayout("insets 0, fill"));
         getContentPanel().add(bottom, BorderLayout.SOUTH);
         
-        JPanel textItems = new JPanel(new BorderLayout());
-        textItems.setBorder(BorderFactory.createTitledBorder("Status"));
-        bottom.add(textItems);
+        JPanel statusItems = new JPanel(new MigLayout("insets 0, fill"));
+        statusItems.setBorder(BorderFactory.createTitledBorder("Status"));
         
         _statusText = new JLabel();
-        textItems.add(_statusText, BorderLayout.CENTER);
+        statusItems.add(_statusText, BorderLayout.CENTER);
         Font f = _statusText.getFont();
         _statusText.setFont(new Font(f.getName(), Font.PLAIN, f.getSize() + 4));
         _statusText.setVerticalAlignment(SwingConstants.CENTER);
@@ -110,18 +114,43 @@ public class StimulusResponseScreen extends BasicStep {
         _results = new JLabel("<html>0 Correct");
         _results.setVerticalAlignment(SwingConstants.BOTTOM);
         _results.setHorizontalAlignment(SwingConstants.RIGHT);
-        textItems.add(_results, BorderLayout.SOUTH);
+        statusItems.add(_results, BorderLayout.SOUTH);
         
         updateResultsText();
         
         _response = new AnswerConfidenceResponseInputs(new RhythmResponseParameters(_session));
-        bottom.add(_response);
+        
+        switch (_session.getStatusOrientation()) {
+        case verticalTop:
+        	bottom.add(statusItems, "north");
+            bottom.add(_response, "south");
+        	break;
+        case verticalBottom:
+        	bottom.add(statusItems, "south");
+            bottom.add(_response, "north");
+        	break;
+        case suppressed:
+        	// StatusItems set to invisible, and hidden such that they do not participate in the layout
+        	statusItems.setVisible(false);
+        	bottom.add(statusItems, "hidemode 3"); 
+            bottom.add(_response, "grow");
+        	break;
+        case horizontalRight:
+        	bottom.add(statusItems, "east, w 50%"); // width percentage constraints to keep status box from 
+            bottom.add(_response, "west, w 50%");	// jumping around as the text changes.  
+        	break;
+        case horizontalLeft:
+        default:
+        	bottom.add(statusItems, "west, w 50%"); // width percentage constraints to keep status box from
+            bottom.add(_response, "east, w 50%");	// jumping around as the text changes.
+        }
         
         _response.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 updateEnabledState();
             }
         });
+        /* End Status/Response setup */
         
         try {
             //if(!_isWarmup) {

@@ -107,15 +107,17 @@ public abstract class AVStimulusResponseScreen<R, T extends AVTrial<R>, L extend
         setInstructionText(_session.getString(isWarmup ? 
         		ConfigKeys.warmupScreenTrialText : ConfigKeys.testScreenTrialText, null));
         
-        JPanel bottom = new JPanel(new MigLayout("insets 0, fill", "[]0px[]", "[]"));
+        
+        /* Status/Response setup */
+//        String direction 
+        JPanel bottom = new JPanel(new MigLayout("insets 0, fill"));
         getContentPanel().add(bottom, BorderLayout.SOUTH);
         
-        JPanel textItems = new JPanel(new MigLayout("insets 0, fill"));
-        textItems.setBorder(BorderFactory.createTitledBorder("Status"));
-        bottom.add(textItems, "sg one, grow");
+        JPanel statusItems = new JPanel(new MigLayout("insets 0, fill"));
+        statusItems.setBorder(BorderFactory.createTitledBorder("Status"));
         
         _statusText = new JLabel();
-        textItems.add(_statusText);
+        statusItems.add(_statusText);
         Font f = _statusText.getFont();
         _statusText.setFont(new Font(f.getName(), Font.PLAIN, f.getSize() + 4));
         _statusText.setVerticalAlignment(SwingConstants.CENTER);
@@ -124,18 +126,43 @@ public abstract class AVStimulusResponseScreen<R, T extends AVTrial<R>, L extend
         _results = new JLabel("<html>0 Correct");
         _results.setVerticalAlignment(SwingConstants.BOTTOM);
         _results.setHorizontalAlignment(SwingConstants.RIGHT);
-        textItems.add(_results, "south");
+        statusItems.add(_results, "south");
         
         updateResultsText();
         
         _response = createResponseInputs(_session);
-        bottom.add(_response, "sg one, grow");
+        
+        switch (_session.getStatusOrientation()) {
+        case verticalTop:
+        	bottom.add(statusItems, "north");
+            bottom.add(_response, "south");
+        	break;
+        case verticalBottom:
+        	bottom.add(statusItems, "south");
+            bottom.add(_response, "north");
+        	break;
+        case suppressed:
+        	// StatusItems set to invisible, and hidden such that they do not participate in the layout
+        	statusItems.setVisible(false);
+        	bottom.add(statusItems, "hidemode 3"); 
+            bottom.add(_response, "grow");
+        	break;
+        case horizontalRight:
+        	bottom.add(statusItems, "east, w 50%"); // width percentage constraints to keep status box from 
+            bottom.add(_response, "west, w 50%");	// jumping around as the text changes.  
+        	break;
+        case horizontalLeft:
+        default:
+        	bottom.add(statusItems, "west, w 50%"); // width percentage constraints to keep status box from
+            bottom.add(_response, "east, w 50%");	// jumping around as the text changes.
+        }
         
         _response.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 updatePrevNextState();
             }
         });
+        /* End Status/Response setup */
         
         // initialize w/ response controls disabled
         setEnabled(false);

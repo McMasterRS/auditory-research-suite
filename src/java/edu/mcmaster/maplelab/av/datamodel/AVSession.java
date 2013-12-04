@@ -52,7 +52,8 @@ public abstract class AVSession<TM extends AVTrialManager<?, T>, T extends AVTri
 		animationFileExtensions,
 		audioFileExtensions,
 		synchronizeParameters,
-		audioPollWait
+		audioPollWait,
+		showTickMarks
 	}
 	
 	private Properties _audioFileMetaData = null;
@@ -90,6 +91,13 @@ public abstract class AVSession<TM extends AVTrialManager<?, T>, T extends AVTri
 	 */
 	public int getAudioPollWait() {
 		return getInteger(ConfigKeys.audioPollWait, 0);
+	}
+	
+	/**
+	 * Get whether or not to show tick marks on response sliders.
+	 */
+	public boolean getShowTickMarks() {
+		return getBoolean(ConfigKeys.showTickMarks, true);
 	}
 	
 	/**

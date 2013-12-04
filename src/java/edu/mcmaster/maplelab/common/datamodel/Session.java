@@ -56,6 +56,7 @@ public abstract class Session<TM extends TrialManager<?, T>, T extends Trial<?>,
         randomizeTrials,
         preStimulusSilence,
         allowFeedback,
+        statusOrientation,
         trialDelay,
         debug,
         demo,
@@ -66,6 +67,17 @@ public abstract class Session<TM extends TrialManager<?, T>, T extends Trial<?>,
         playbackGain,
         speedMode,
         propertyPrefix
+    }
+    
+    /**
+     * @author zachbrown
+     */
+    public enum StatusOrientationEnum {
+    	verticalTop,
+    	verticalBottom,
+    	horizontalLeft,
+    	horizontalRight,
+    	suppressed
     }
 
     /**
@@ -256,6 +268,14 @@ public abstract class Session<TM extends TrialManager<?, T>, T extends Trial<?>,
      */
     public boolean allowResponseFeedback() {
     	return getBoolean(ConfigKeys.allowFeedback, true);
+    }
+    
+    /**
+     * Get the status orientation. 
+     */
+    public StatusOrientationEnum getStatusOrientation() {
+    	String orient = getString(ConfigKeys.statusOrientation, StatusOrientationEnum.horizontalLeft.name() );
+    	return StatusOrientationEnum.valueOf(orient);
     }
     
     /**

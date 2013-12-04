@@ -19,7 +19,9 @@ public class SIStimulusResponseScreen extends AVStimulusResponseScreen<MultiResp
 
 	@Override
 	public ResponseInputs<MultiResponse> createResponseInputs(SISession session) {
-		return new SliderResponseInputs(SIResponseParameters.getResponseParameters(session));
+		SliderResponseInputs sri = new SliderResponseInputs(SIResponseParameters.getResponseParameters(session));
+		sri.enableSliderTickMarks(session.getShowTickMarks());
+		return sri;
 	}
 
 	@Override

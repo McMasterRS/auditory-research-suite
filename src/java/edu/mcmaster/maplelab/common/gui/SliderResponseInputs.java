@@ -1,5 +1,6 @@
 package edu.mcmaster.maplelab.common.gui;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -63,13 +64,25 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 				JSlider s = new JSlider(min, max, crp.getMiddleValue());
 				int divisor = Math.max(size / 10, 1); // we want ~10 divisions
 				s.setMajorTickSpacing(size / divisor);
-				s.setPaintTicks(true);
+				s.setPaintTicks(false); // Defaulted off... can change via enableSliderTickMarks()
 				s.setPaintLabels(false);
-				s.addChangeListener(_forwarder);
+				s.addChangeListener(_forwarder);				
 				// expect 2 answers, but just use the first 2
 				Answer[] answers = crp.getAnswers();
 				_sliders.add(new SliderGroup(s, new JLabel(answers[0].toString()), 
 						new JLabel(answers[1].toString())));
+			}
+		}
+	}
+	
+	/**
+	 * Set the sliders to show tick marks or not.
+	 * @param enable
+	 */
+	public void enableSliderTickMarks(boolean enable) {
+		if (_sliders != null) {
+			for (SliderGroup sg : _sliders) {
+				sg.getSlider().setPaintTicks(enable);
 			}
 		}
 	}
@@ -91,8 +104,8 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 		createSliders();
 		
 		JPanel outer = new JPanel(new MigLayout("insets 0, fill, hidemode 0"));
-		JPanel p = new JPanel(new MigLayout("fill, hidemode 0", "[right][center][left]", "[][]"));
-		outer.add(p);
+		JPanel p = new JPanel(new MigLayout("insets 0, fill, hidemode 0", "[right][center, grow][left]", "[][]"));
+		outer.add(p, "growx");
 		outer.setBorder(BorderFactory.createTitledBorder("Response"));
 		
 		// first slider
@@ -100,14 +113,14 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 		SliderGroup sg = _sliders.get(0);
 		// expect 2 answers, but just use the first 2
 		p.add(sg.getLeft());
-		p.add(sg.getSlider(), "grow");
+		p.add(sg.getSlider(), "growx");
 		p.add(sg.getRight(), "wrap");
 		
 		// second slider, if valid
 		if (_sliders.size() == 2) {
 			sg = _sliders.get(1);
 			p.add(sg.getLeft());
-			p.add(sg.getSlider(), "grow");
+			p.add(sg.getSlider(), "growx");
 			p.add(sg.getRight());
 		}
 		
