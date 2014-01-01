@@ -462,10 +462,16 @@ public class ToneGenerator {
     public static void main(String[] args) {
         try {
             ToneGenerator tg = new ToneGenerator();
+            tg.setMIDISynthID(-1);
             
             Note[] notes = new Note[] {
-                new Note(new Pitch(NotesEnum.C, 4), 64, 2000),
-                new Note(null, 64, 250),
+                new Note(new Pitch(NotesEnum.C, 4), 64, 1000),
+                new Note(new Pitch(NotesEnum.C, 4, 50), 64, 1000),
+                new Note(new Pitch(NotesEnum.C, 4, 50), 64, 1000),
+                new Note(new Pitch(NotesEnum.C, 4), 64, 1000),
+                new Note(new Pitch(NotesEnum.C, 4), 64, 1000),
+                new Note(new Pitch(NotesEnum.C, 4), 64, 1000),
+                new Note(null, 64, 1000),
                 new Note(new Pitch(NotesEnum.C, 4, -20), 64, 2000),
                 new Note(new Pitch(NotesEnum.C, 4, 20), 64, 2000),
                 new Note(new Pitch(NotesEnum.C, 4), 64, 2000),

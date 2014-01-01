@@ -29,33 +29,43 @@ public class RhythmTrialManager extends PredeterminedTrialManager<RhythmSession,
         // initialize common parameters
         RhythmSession session = getSession();
 		List<Integer> baseIOIs = session.getBaseIOIs();
-        List<Float> offsetDegrees = session.getOffsetDegrees();
+        List<Float> offsetDegrees = session.getBaseIOIoffsetDegrees();
+        List<Integer> probeDetuneOffsets = session.getProbeDetuneOffsets();
  
         int trialCount = 0;
 		int reps = session.getBlockSetRepetitions();
 		// XXX: repetition and block instance are the same for rhythm
 		for (int i = 0; i < reps; i++) {
 			List<List<RhythmTrial>> rep = new ArrayList<List<RhythmTrial>>();
+			// Vary over baseIOIs
 			for (Integer ioi : baseIOIs) {
 				// first, create trials with tapping
 				List<RhythmTrial> tapBlock = new ArrayList<RhythmTrial>();
+				// Vary over baseIOI offsets
 				for (Float offset : offsetDegrees) {
-					RhythmTrial trial = new RhythmTrial(ioi, offset, true);
-					trial.setNumber(RelativeTrialPosition.REPETITION, i + 1);
-					trial.setNumber(RelativeTrialPosition.BLOCK_INSTANCE, i + 1);
-		            tapBlock.add(trial);
-		            ++trialCount;
+					// Vary over probe detunes
+					for(Integer probeDetune : probeDetuneOffsets) {
+						RhythmTrial trial = new RhythmTrial(ioi, offset, probeDetune, true);
+						trial.setNumber(RelativeTrialPosition.REPETITION, i + 1);
+						trial.setNumber(RelativeTrialPosition.BLOCK_INSTANCE, i + 1);
+						tapBlock.add(trial);
+						++trialCount;
+					}
 		        }
 				
 				// next, create trials without tapping
 				List<RhythmTrial> notapBlock = new ArrayList<RhythmTrial>();
+				// Vary over baseIOI offsets again
 				for (Float offset : offsetDegrees) {
-					RhythmTrial trial = new RhythmTrial(ioi, offset, false);
-					trial.setNumber(RelativeTrialPosition.REPETITION, i + 1);
-					trial.setNumber(RelativeTrialPosition.BLOCK_INSTANCE, i + 1);
-					notapBlock.add(trial);
-		            ++trialCount;
-		        }
+					// Vary over probe detunes again
+					for (Integer probeDetune : probeDetuneOffsets) {
+						RhythmTrial trial = new RhythmTrial(ioi, offset, probeDetune, false);
+						trial.setNumber(RelativeTrialPosition.REPETITION, i + 1);
+						trial.setNumber(RelativeTrialPosition.BLOCK_INSTANCE, i + 1);
+						notapBlock.add(trial);
+						++trialCount;
+					}
+				}
 
 		        if (session.randomizeTrials()) {
 		        	Collections.shuffle(tapBlock);
@@ -110,13 +120,18 @@ public class RhythmTrialManager extends PredeterminedTrialManager<RhythmSession,
 	@Override
 	protected List<List<RhythmTrial>> generateWarmup() {
 		RhythmSession session = getSession();
-        List<Float> offsetDegrees = session.getOffsetDegrees();
+        List<Float> offsetDegrees = session.getBaseIOIoffsetDegrees();
+        List<Integer> probeDetuneOffsets = session.getProbeDetuneOffsets();
 		int baseIOI = session.getBaseIOIs().get(0);
         
 		List<RhythmTrial> block = new ArrayList<RhythmTrial>();
-        for (Float offset : offsetDegrees) {
-            RhythmTrial t = new RhythmTrial(baseIOI, offset, true);
-            block.add(t);
+        // Vary over baseIOI offsets
+		for (Float offset : offsetDegrees) {
+			// Vary over probe detunes
+			for (Integer probeDetune : probeDetuneOffsets) {
+				RhythmTrial t = new RhythmTrial(baseIOI, offset, probeDetune, true);
+				block.add(t);
+			}
         }
         
         int numTrials = session.getNumWarmupTrials();
@@ -162,7 +177,7 @@ public class RhythmTrialManager extends PredeterminedTrialManager<RhythmSession,
 							iois.size() * 2, session.getBlockSetRepetitions()) + blockTypes;
 			
 			// trials
-			List<Float> offsets = session.getOffsetDegrees();
+			List<Float> offsets = session.getBaseIOIoffsetDegrees();
 			String trialTypes = String.format("\tEach block contains %d trials constructed from:\n", 
 					offsets.size());
 			trialTypes += "\t\t\tOffset degrees: " + listString(offsets, 4, 4) + "\n";

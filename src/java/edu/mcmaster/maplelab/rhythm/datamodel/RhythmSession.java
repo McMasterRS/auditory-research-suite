@@ -59,7 +59,8 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
         baseIOIs,
         highPitch,
         lowPitch,
-        offsetDegrees,
+        baseIOIoffsetDegrees,
+        probeDetuneOffsets,
         randomizeAcrossRepetitions,
         playbackMeasures,
         beatsPerMeasure,
@@ -388,8 +389,15 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     /**
      * List of floats representing percentage of baseIOI that probe tone should be offset.
      */
-    public List<Float> getOffsetDegrees() {
-        return getFloatList(ConfigKeys.offsetDegrees, new Float[]{0.1f});        
+    public List<Float> getBaseIOIoffsetDegrees() {
+        return getFloatList(ConfigKeys.baseIOIoffsetDegrees, new Float[]{0.1f});        
+    }
+    
+    /**
+     * List of Integers representing the cents (hundredth of a semitone) detunes for the probe pitch. 
+     */
+    public List<Integer> getProbeDetuneOffsets() {
+    	return getIntegerList(ConfigKeys.probeDetuneOffsets, new Integer[]{0});
     }
     
     public int getSynthDevID() {

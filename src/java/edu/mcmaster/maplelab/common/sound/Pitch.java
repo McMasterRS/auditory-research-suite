@@ -209,6 +209,21 @@ public class Pitch implements Comparable<Pitch> {
         return sub(-semitones);
     }
     
+    /**
+     * Create a new pitch by adjusting this one by cents (hundredths of a semitone).
+     * @param cents int
+     * @return new tone, distance "cents" hundredths of a semitone away.
+     */
+    public Pitch detune(int cents) {
+    	// Need to deal with case where current fractionalNote + cents > 50 or <-50
+    	int totalCents = getDetuneCents() + cents;
+    	int wholeNote = toMidiNoteNumber() + (totalCents/50);
+    	int fractionalNote = totalCents % 50;
+    	if (fractionalNote > 0 && totalCents < 0){
+    		fractionalNote -= 50; // shift to negative as mod operater returns positive
+    	}
+    	return new Pitch(wholeNote, fractionalNote);
+    }
 
     /**
      * Logical equals. True of note, octave and detune are the same.

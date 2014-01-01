@@ -34,13 +34,15 @@ import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession.TrialSpecStyle;
  */
 public class RhythmTrial extends Trial<ConfidenceResponse> {
     private final int _baseIOI;
-    private final float _offsetDegree;
+    private final float _baseIOIoffsetDegree;
+    private final int _probeDetuneOffset;
     private final boolean _withTap;
     private Sequence _sequence;
 
-    public RhythmTrial(int baseIOI, float offsetDegree, boolean withTap) {
+    public RhythmTrial(int baseIOI, float offsetDegree, int probeDetuneOffset, boolean withTap) {
         _baseIOI = baseIOI;
-        _offsetDegree = offsetDegree;
+        _baseIOIoffsetDegree = offsetDegree;
+        _probeDetuneOffset = probeDetuneOffset;
         _withTap = withTap;
     }
 
@@ -55,10 +57,17 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
     /**
      * Fraction of baseIOI critcal tone is offset from natural position.
      */
-    public float getOffsetDegree() {
-        return _offsetDegree;
+    public float getBaseIOIOffsetDegree() {
+        return _baseIOIoffsetDegree;
     }
 
+    /**
+     * Pitch bend detune for probe tone. Measured in cents (hundredths of semitones). 
+     */
+    public int getProbeDetuneOffset() {
+    	return _probeDetuneOffset;
+    }
+    
     /**
      * Whether user should tap along with playback.
      */
@@ -124,10 +133,11 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
         }
         
         retval.add(new Note(highPitch, 64, getBaseIOI()));
-        int silence = (int)((session.getSilenceMultiplier() + getOffsetDegree()) * getBaseIOI());
+        int silence = (int)((session.getSilenceMultiplier() + getBaseIOIOffsetDegree()) * getBaseIOI());
         retval.add(new Note(silence));
         
-        retval.add(new Note(highPitch, 64, getBaseIOI()));
+        Pitch probe = highPitch.detune(getProbeDetuneOffset());
+        retval.add(new Note(probe, 64, getBaseIOI()));
         
         LogContext.getLogger().fine("Sequence length (inc. lead-in silence): " + computeDuration(retval));
         
@@ -159,7 +169,7 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
     	int tertiaryVelocity = session.getTertiaryVelocity();
     	int tertiaryDuration = Math.round(session.getTertiaryDuration() * getBaseIOI());
     	
-    	Pitch probePitch = session.getProbePitch();
+    	Pitch probePitch = session.getProbePitch().detune(getProbeDetuneOffset());
     	int probeVelocity = session.getProbeVelocity();
     	int probeDuration = Math.round(session.getProbeDuration() * getBaseIOI());
     	
@@ -215,10 +225,10 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
         ConfidenceResponse response = getResponse();
         if(response != null) {
             if (RhythmResponseParameters.isProbeToneAccurate(response)) {
-                return getOffsetDegree() == 0.0;
+                return getBaseIOIOffsetDegree() == 0.0;
             }
             else {
-                return getOffsetDegree() != 0.0;
+                return getBaseIOIOffsetDegree() != 0.0;
             }
                 
         }
@@ -227,8 +237,9 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
 	
 	@Override
 	public String getDescription() {
-		String format = "Trial %d:\n\tIOI: %d\n\tOffset: %1.2f\n\tTap: %b";
-		return String.format(format, getTrialNumber(), getBaseIOI(), getOffsetDegree(), isWithTap());
+		String format = "Trial %d:\n\tIOI: %d\n\tIOIoffset: %1.2f\n\tProbeDetuneOffset: %d\n\tTap: %b";
+		return String.format(format, getTrialNumber(), getBaseIOI(), getBaseIOIOffsetDegree(),
+				getProbeDetuneOffset(), isWithTap());
 	}
 
     /**
@@ -236,8 +247,8 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
      * @see edu.mcmaster.maplelab.common.datamodel.Trial#toString()
      */
     public String toString() {
-        return String.format("Trial %d [ioi=%d,offset=%1.2f,tap=%b]", getTrialNumber(), 
-        		getBaseIOI(), getOffsetDegree(), isWithTap());
+        return String.format("Trial %d [ioi=%d,IOIoffset=%1.2f,probeDetuneOffset=%d,tap=%b]", getTrialNumber(), 
+        		getBaseIOI(), getBaseIOIOffsetDegree(), getProbeDetuneOffset(), isWithTap());
     }
 
 
