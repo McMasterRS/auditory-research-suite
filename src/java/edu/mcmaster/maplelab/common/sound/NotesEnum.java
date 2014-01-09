@@ -29,7 +29,10 @@ public enum NotesEnum {
     A("A"),
     AS("A#"),
     B("B");
-        
+    
+    // Number of notes, so we don't keep calling values().length
+    private static final int numNotes = 12;
+    
     private final String _displayName;
     private NotesEnum(String displayName) {
         _displayName = displayName;
@@ -38,5 +41,15 @@ public enum NotesEnum {
     @Override
     public String toString() {
         return _displayName;
+    }
+    
+    public NotesEnum upSemitone(int numSemitones) {
+    	return downSemitone(-numSemitones);
+    }
+    
+    public NotesEnum downSemitone(int numSemitones) {
+    	int newNote = (this.ordinal() - numSemitones) % numNotes;
+    	if (newNote < 0) newNote += numNotes; //adjustment for mod returning negative numbers
+    	return NotesEnum.values()[newNote];
     }
 }

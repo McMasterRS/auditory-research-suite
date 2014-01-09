@@ -23,7 +23,7 @@ public class RhythmResponseParameters extends ResponseParameters<RhythmSession, 
 
 	@Override
 	public String getQuestion() {
-		return "Accurate timing";
+		return getSession().getAccuracyResponseLabel();
 	}
 
 	@Override

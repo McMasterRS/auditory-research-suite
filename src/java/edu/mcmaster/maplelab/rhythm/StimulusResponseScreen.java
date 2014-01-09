@@ -183,8 +183,8 @@ public class StimulusResponseScreen extends BasicStep {
         }
         
         LogContext.getLogger().fine("* baseIOIs: " + _session.getBaseIOIs());
-        LogContext.getLogger().fine("* baseIOIoffsetDegrees: " + _session.getBaseIOIoffsetDegrees());
-        LogContext.getLogger().fine("* probeDetuneOffsets: " + _session.getProbeDetuneOffsets());
+        LogContext.getLogger().fine("* offsetDegrees: " + _session.getBaseIOIoffsetDegrees());
+        LogContext.getLogger().fine("* probeDetuneAmounts: " + _session.getProbeDetuneAmounts());
     }
     
     /**

@@ -38,8 +38,8 @@ public class RhythmTrialLogger extends
 
     public enum Keys {
     	baseIOI, 
-        baseIOIoffsetDegree,
-        probeDetuneOffset,
+        offsetDegree,
+        probeDetuneAmount,
         withTap, 
         confidence, 
         subjResponse,
@@ -92,8 +92,8 @@ public class RhythmTrialLogger extends
         
         // Calculate trial parameters
         fields.put(Keys.baseIOI, String.valueOf(trial.getBaseIOI()));
-        fields.put(Keys.baseIOIoffsetDegree, String.valueOf(trial.getBaseIOIOffsetDegree()));
-        fields.put(Keys.probeDetuneOffset, String.valueOf(trial.getProbeDetuneOffset()));
+        fields.put(Keys.offsetDegree, String.valueOf(trial.getBaseIOIOffsetDegree()));
+        fields.put(Keys.probeDetuneAmount, String.valueOf(trial.getProbeDetuneAmount()));
         fields.put(Keys.withTap, String.valueOf(trial.isWithTap()));
         
         // Output subject response information
@@ -135,8 +135,8 @@ public class RhythmTrialLogger extends
 
     	private enum TapKeys {
             baseIOI, 
-            baseIOIoffsetDegree,
-            probeDetuneOffset,
+            offsetDegree,
+            probeDetuneAmount,
             withTap,
             opcode,
             channel,
@@ -200,8 +200,8 @@ public class RhythmTrialLogger extends
             EnumMap<TapKeys, String> fields = new EnumMap<TapKeys, String>(TapKeys.class);
             
             fields.put(TapKeys.baseIOI, String.valueOf(trial.getBaseIOI()));
-            fields.put(TapKeys.baseIOIoffsetDegree, String.valueOf(trial.getBaseIOIOffsetDegree()));
-            fields.put(TapKeys.probeDetuneOffset, String.valueOf(trial.getProbeDetuneOffset()));
+            fields.put(TapKeys.offsetDegree, String.valueOf(trial.getBaseIOIOffsetDegree()));
+            fields.put(TapKeys.probeDetuneAmount, String.valueOf(trial.getProbeDetuneAmount()));
             fields.put(TapKeys.withTap, String.valueOf(trial.isWithTap()));
             
             MidiMessage m = _currEvent.getMessage();

@@ -39,7 +39,7 @@ public class ToneGenerator {
     private static final int NOTES_OFF = 123;
     private static final int MIDI_VOLUME_CMD = 7;
     public static final short MIDI_BANK_MSB_FLUTE = 0;
-    public static final short MIDI_BANK_LSB_FLUTE = 74;
+    public static final short MIDI_BANK_LSB_FLUTE = 73;
 
     
     /** Number of pitch bend units per cent. Although not guaranteed, the 
@@ -464,17 +464,18 @@ public class ToneGenerator {
             ToneGenerator tg = new ToneGenerator();
             tg.setMIDISynthID(-1);
             
+            Pitch.setMiddleCOctave(4);
+            
             Note[] notes = new Note[] {
-                new Note(new Pitch(NotesEnum.C, 4), 64, 1000),
-                new Note(new Pitch(NotesEnum.C, 4, 50), 64, 1000),
-                new Note(new Pitch(NotesEnum.C, 4, 50), 64, 1000),
-                new Note(new Pitch(NotesEnum.C, 4), 64, 1000),
-                new Note(new Pitch(NotesEnum.C, 4), 64, 1000),
-                new Note(new Pitch(NotesEnum.C, 4), 64, 1000),
-                new Note(null, 64, 1000),
-                new Note(new Pitch(NotesEnum.C, 4, -20), 64, 2000),
-                new Note(new Pitch(NotesEnum.C, 4, 20), 64, 2000),
-                new Note(new Pitch(NotesEnum.C, 4), 64, 2000),
+                new Note(new Pitch(NotesEnum.C, 5), 64, 1000),
+                new Note(new Pitch(NotesEnum.D, 5), 64, 1000),
+                new Note(new Pitch(NotesEnum.E, 5), 64, 1000),
+                new Note(new Pitch(NotesEnum.F, 5), 64, 1000),
+                new Note(new Pitch(NotesEnum.G, 5), 64, 1000),
+                new Note(new Pitch(NotesEnum.A, 5), 64, 1000),
+//                new Note(null, 64, 1000),
+                new Note(new Pitch(NotesEnum.B, 5), 64, 1000),
+                new Note(new Pitch(NotesEnum.C, 6), 64, 1000),
             };
             
             tg.play(Arrays.asList(notes), 1.0f);

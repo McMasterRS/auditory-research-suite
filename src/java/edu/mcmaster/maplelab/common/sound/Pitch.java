@@ -11,8 +11,11 @@
 */
 package edu.mcmaster.maplelab.common.sound;
 
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import edu.mcmaster.maplelab.common.LogContext;
 
 
 /**
@@ -33,12 +36,14 @@ public class Pitch implements Comparable<Pitch> {
     private final int _detuneCents;
 
     private static final double RT12_2 = Math.pow(2, 1.0/12.0);
-    private static final Pitch REF_PITCH = new Pitch(NotesEnum.A, 4);
     private static final double REF_FREQ = 440.0;
     private static final Pattern P_PAT = Pattern.compile("([a-gA-G][#sS]?)(-?\\d+)([+-]\\d+)?");
     
     // Default value of Middle C is C4, so _middleCOctave is 4
     private static int _middleCOctave = 4;
+    private static Pitch REF_PITCH = new Pitch(NotesEnum.A, 4);
+    private static Pitch MIN_PITCH = new Pitch(NotesEnum.C, -1);
+    private static Pitch MAX_PITCH = new Pitch(NotesEnum.G, 9);
     
     /**
      * Ctor
@@ -70,7 +75,7 @@ public class Pitch implements Comparable<Pitch> {
             		+ "," + (_middleCOctave+5) + "].");
         }
         if(_detuneCents < -50 || _detuneCents > 50) {
-            throw new IllegalArgumentException("Detune must be in the range [-50,50].");
+            throw new IllegalArgumentException("An initialization detune must be in the range [-50,50].");
         }
     }
     
@@ -107,8 +112,15 @@ public class Pitch implements Comparable<Pitch> {
         this(Math.round(fractionalMidiNote), extractDetune(fractionalMidiNote));
     }
 
+    /**
+     * Set the reference points for reading Notes. Middle C is defaulted to C4, and the reference pitch is A4.
+     * @param midCOctave
+     */
     public static void setMiddleCOctave(int midCOctave) {
     	_middleCOctave = midCOctave;
+    	REF_PITCH = new Pitch(NotesEnum.A, midCOctave);
+    	MIN_PITCH = new Pitch(NotesEnum.C, midCOctave - 5);
+    	MAX_PITCH = new Pitch(NotesEnum.G, midCOctave + 5);
     }
     
     /**
@@ -215,18 +227,19 @@ public class Pitch implements Comparable<Pitch> {
      * @return new tone, distance "cents" hundredths of a semitone away.
      */
     public Pitch detune(int cents) {
-    	// Need to deal with case where current fractionalNote + cents > 50 or <-50
-    	int totalCents = getDetuneCents() + cents;
-    	int wholeNote = toMidiNoteNumber() + (totalCents/50);
-    	int fractionalNote = totalCents % 50;
-    	if (fractionalNote > 0 && totalCents < 0){
-    		fractionalNote -= 50; // shift to negative as mod operater returns positive
+    	// 100 cents between notes
+    	Pitch newpitch = add(cents/100f);
+    	
+    	// Check MIDI bounds
+    	if (newpitch.compareTo(MAX_PITCH) > 0 || newpitch.compareTo(MIN_PITCH) < 0) {
+    		LogContext.getLogger().log(Level.WARNING, "Detune has changed pitch beyond MIDI bounds.");
     	}
-    	return new Pitch(wholeNote, fractionalNote);
+    	
+    	return newpitch;
     }
 
     /**
-     * Logical equals. True of note, octave and detune are the same.
+     * Logical equals. True if note, octave and detune are the same.
      * {@inheritDoc} 
      * @see java.lang.Object#equals(java.lang.Object)
      */
@@ -306,5 +319,4 @@ public class Pitch implements Comparable<Pitch> {
         }
         return retval;
     }
-
 }

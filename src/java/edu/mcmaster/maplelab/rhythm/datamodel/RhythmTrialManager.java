@@ -30,7 +30,7 @@ public class RhythmTrialManager extends PredeterminedTrialManager<RhythmSession,
         RhythmSession session = getSession();
 		List<Integer> baseIOIs = session.getBaseIOIs();
         List<Float> offsetDegrees = session.getBaseIOIoffsetDegrees();
-        List<Integer> probeDetuneOffsets = session.getProbeDetuneOffsets();
+        List<Integer> probeDetuneAmounts = session.getProbeDetuneAmounts();
  
         int trialCount = 0;
 		int reps = session.getBlockSetRepetitions();
@@ -44,7 +44,7 @@ public class RhythmTrialManager extends PredeterminedTrialManager<RhythmSession,
 				// Vary over baseIOI offsets
 				for (Float offset : offsetDegrees) {
 					// Vary over probe detunes
-					for(Integer probeDetune : probeDetuneOffsets) {
+					for(Integer probeDetune : probeDetuneAmounts) {
 						RhythmTrial trial = new RhythmTrial(ioi, offset, probeDetune, true);
 						trial.setNumber(RelativeTrialPosition.REPETITION, i + 1);
 						trial.setNumber(RelativeTrialPosition.BLOCK_INSTANCE, i + 1);
@@ -58,7 +58,7 @@ public class RhythmTrialManager extends PredeterminedTrialManager<RhythmSession,
 				// Vary over baseIOI offsets again
 				for (Float offset : offsetDegrees) {
 					// Vary over probe detunes again
-					for (Integer probeDetune : probeDetuneOffsets) {
+					for (Integer probeDetune : probeDetuneAmounts) {
 						RhythmTrial trial = new RhythmTrial(ioi, offset, probeDetune, false);
 						trial.setNumber(RelativeTrialPosition.REPETITION, i + 1);
 						trial.setNumber(RelativeTrialPosition.BLOCK_INSTANCE, i + 1);
@@ -121,14 +121,14 @@ public class RhythmTrialManager extends PredeterminedTrialManager<RhythmSession,
 	protected List<List<RhythmTrial>> generateWarmup() {
 		RhythmSession session = getSession();
         List<Float> offsetDegrees = session.getBaseIOIoffsetDegrees();
-        List<Integer> probeDetuneOffsets = session.getProbeDetuneOffsets();
+        List<Integer> probeDetuneAmounts = session.getProbeDetuneAmounts();
 		int baseIOI = session.getBaseIOIs().get(0);
         
 		List<RhythmTrial> block = new ArrayList<RhythmTrial>();
         // Vary over baseIOI offsets
 		for (Float offset : offsetDegrees) {
 			// Vary over probe detunes
-			for (Integer probeDetune : probeDetuneOffsets) {
+			for (Integer probeDetune : probeDetuneAmounts) {
 				RhythmTrial t = new RhythmTrial(baseIOI, offset, probeDetune, true);
 				block.add(t);
 			}

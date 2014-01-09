@@ -35,14 +35,14 @@ import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession.TrialSpecStyle;
 public class RhythmTrial extends Trial<ConfidenceResponse> {
     private final int _baseIOI;
     private final float _baseIOIoffsetDegree;
-    private final int _probeDetuneOffset;
+    private final int _probeDetuneAmount;
     private final boolean _withTap;
     private Sequence _sequence;
 
-    public RhythmTrial(int baseIOI, float offsetDegree, int probeDetuneOffset, boolean withTap) {
+    public RhythmTrial(int baseIOI, float offsetDegree, int probeDetuneAmount, boolean withTap) {
         _baseIOI = baseIOI;
         _baseIOIoffsetDegree = offsetDegree;
-        _probeDetuneOffset = probeDetuneOffset;
+        _probeDetuneAmount = probeDetuneAmount;
         _withTap = withTap;
     }
 
@@ -64,8 +64,8 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
     /**
      * Pitch bend detune for probe tone. Measured in cents (hundredths of semitones). 
      */
-    public int getProbeDetuneOffset() {
-    	return _probeDetuneOffset;
+    public int getProbeDetuneAmount() {
+    	return _probeDetuneAmount;
     }
     
     /**
@@ -136,7 +136,7 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
         int silence = (int)((session.getSilenceMultiplier() + getBaseIOIOffsetDegree()) * getBaseIOI());
         retval.add(new Note(silence));
         
-        Pitch probe = highPitch.detune(getProbeDetuneOffset());
+        Pitch probe = highPitch.detune(getProbeDetuneAmount());
         retval.add(new Note(probe, 64, getBaseIOI()));
         
         LogContext.getLogger().fine("Sequence length (inc. lead-in silence): " + computeDuration(retval));
@@ -169,7 +169,7 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
     	int tertiaryVelocity = session.getTertiaryVelocity();
     	int tertiaryDuration = Math.round(session.getTertiaryDuration() * getBaseIOI());
     	
-    	Pitch probePitch = session.getProbePitch().detune(getProbeDetuneOffset());
+    	Pitch probePitch = session.getProbePitch().detune(getProbeDetuneAmount());
     	int probeVelocity = session.getProbeVelocity();
     	int probeDuration = Math.round(session.getProbeDuration() * getBaseIOI());
     	
@@ -237,9 +237,9 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
 	
 	@Override
 	public String getDescription() {
-		String format = "Trial %d:\n\tIOI: %d\n\tIOIoffset: %1.2f\n\tProbeDetuneOffset: %d\n\tTap: %b";
+		String format = "Trial %d:\n\tIOI: %d\n\tIOIoffset: %1.2f\n\tProbeDetuneAmount: %d\n\tTap: %b";
 		return String.format(format, getTrialNumber(), getBaseIOI(), getBaseIOIOffsetDegree(),
-				getProbeDetuneOffset(), isWithTap());
+				getProbeDetuneAmount(), isWithTap());
 	}
 
     /**
@@ -247,8 +247,8 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
      * @see edu.mcmaster.maplelab.common.datamodel.Trial#toString()
      */
     public String toString() {
-        return String.format("Trial %d [ioi=%d,IOIoffset=%1.2f,probeDetuneOffset=%d,tap=%b]", getTrialNumber(), 
-        		getBaseIOI(), getBaseIOIOffsetDegree(), getProbeDetuneOffset(), isWithTap());
+        return String.format("Trial %d [ioi=%d,IOIoffset=%1.2f,probeDetuneAmount=%d,tap=%b]", getTrialNumber(), 
+        		getBaseIOI(), getBaseIOIOffsetDegree(), getProbeDetuneAmount(), isWithTap());
     }
 
 
