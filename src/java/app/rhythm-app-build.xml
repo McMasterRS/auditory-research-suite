@@ -23,6 +23,7 @@
 	             classname="net.sourceforge.jarbundler.JarBundler"/>
 
 	    <jarbundler dir="${basedir}" verbose="true" showPlist="true"
+	    			vmoptions="-Xms200m -Xmx512m"
 	                name="Rhythm Experiment"
 	                shortname="RhythmExperiment"
 	                signature="????"

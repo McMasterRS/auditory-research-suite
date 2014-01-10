@@ -58,9 +58,15 @@ public class DeviceSelectionPanel extends JPanel {
 	}
 	
 	public void updateSelections(int toneSynth, int tapInput, int tapSynth) {
-		_toneSynth.setSelectedIndex(toneSynth);
-		_tapInput.setSelectedIndex(tapInput);
-		_tapSynth.setSelectedIndex(tapSynth);
+		if (toneSynth < _toneSynth.getItemCount()) {
+			_toneSynth.setSelectedIndex(toneSynth);
+		}
+		if (tapInput < _tapInput.getItemCount()) {
+			_tapInput.setSelectedIndex(tapInput);
+		}
+		if (tapSynth < _tapSynth.getItemCount()) {
+			_tapSynth.setSelectedIndex(tapSynth);
+		}
 	}
 	
 	public int getToneSynthIndex() { return _toneSynth.getSelectedIndex(); }
