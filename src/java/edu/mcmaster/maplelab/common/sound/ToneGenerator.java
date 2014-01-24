@@ -29,8 +29,6 @@ import edu.mcmaster.maplelab.common.LogContext;
 public class ToneGenerator {
 	private static final int ENABLED_CHANNEL_COUNT = 12;
 	
-	// Generator Channel is set below as a variable. 
-	
     private static final int MIDI_MAX_VOLUME = 127;
     private static final int MIDI_NOTE_VELOCITY_CMD = 64;
     private static final int PITCH_BEND_MAX = 16383;
@@ -59,7 +57,19 @@ public class ToneGenerator {
         }
         return _singleton;
     }
-    
+	
+	public enum ChannelKey {
+		DefaultMain(0),
+		Taps(1),
+		Percussion(9);
+		
+		private final int channelNum;
+		
+		ChannelKey(int num) { channelNum = num; }
+		
+		public int getChannelNum() { return channelNum; }
+	}
+	
     /** 
 	 * The 10th channel works differently. Don't set this to 9 for general use.
 	 * Additionally, all channels not explicitly set by us have different default settings.
@@ -67,7 +77,7 @@ public class ToneGenerator {
 	 * are not setup, and will likely play notes differently. 
 	 */
     // Defaulted to 0, the first channel. Can be set via #setPercussionChannelOn
-	private static int _generator_channel = 0; // This is off by one. Choose Channel from [0..15]
+	private static ChannelKey _generatorChannel = ChannelKey.DefaultMain;
     
     private Sequencer _sequencer;
     private SequenceLatch _latch;
@@ -205,9 +215,9 @@ public class ToneGenerator {
      */
     public void setPercussionChannelOn(boolean setPercussionOn) {
     	if (setPercussionOn) {
-    		_generator_channel = 9;
+    		_generatorChannel = ChannelKey.Percussion;
     	} else {
-    		_generator_channel = 0;
+    		_generatorChannel = ChannelKey.DefaultMain;
     	}
     }
     
@@ -223,13 +233,14 @@ public class ToneGenerator {
     }
     
     /**
-     * Playback a single note. Blocks until playback finishes.
+     * Initialize a single note.
+     * Call {@link #startSequencerPlayback(boolean)} to play, once initialized.
      * 
      * @param note note to play
      */
-    public void play(Note note, float volumePct) {
+    public void initializeSingleNote(Note note, float volumePct) {
         List<Note> singleNote = Collections.singletonList(note);
-        play(singleNote, volumePct);
+        initializeSequenceToPlay(singleNote, volumePct);
     }
     
     /**
@@ -240,23 +251,13 @@ public class ToneGenerator {
     }
     
     /**
-     * Play a series of notes on the default sequencer. Blocks until
-     * sequence playback finishes.
+     * Initialize a series of notes on the default sequencer. 
+     * Call {@link #startSequencerPlayback()} to play notes, once initialized.
      * 
      * @param notes notes to play.
+     * @param volumePct float in (0.0f, 1.0f) to set volume level.
      */
-    public void play(List<Note> notes, float volumePct) {
-        play(notes, volumePct, true);
-    }
-    
-
-    /**
-     * Play a series of notes on the default sequencer. Blocks until
-     * sequence playback finishes, if indicated.
-     * 
-     * @param notes notes to play.
-     */
-    public Sequence play(List<Note> notes, float volumePct, boolean block) {
+    public Sequence initializeSequenceToPlay(List<Note> notes, float volumePct) {
         Sequence retval = null;
         try {
             _lastDetunes.clear();
@@ -275,12 +276,12 @@ public class ToneGenerator {
                     int detune = ps.getDetuneCents();
                     
                     long ticks = toTicks(cumulativeDuration);
-                    MidiEvent detuneEvent = createDetuneEvent(track, detune, ticks);
+                    MidiEvent detuneEvent = createDetuneEvent(track, _generatorChannel, detune, ticks);
                     if(detuneEvent != null) {
                         track.add(detuneEvent);
                     }
-                    track.add(createNoteOnEvent(midiNote, n.getVelocity(), ticks));
-                    track.add(createNoteOffEvent(midiNote, toTicks(cumulativeDuration+noteDuration)));
+                    track.add(createNoteOnEvent(midiNote, _generatorChannel, n.getVelocity(), ticks));
+                    track.add(createNoteOffEvent(midiNote, _generatorChannel, toTicks(cumulativeDuration+noteDuration)));
                     
                 }
                 cumulativeDuration += noteDuration;
@@ -288,17 +289,6 @@ public class ToneGenerator {
             }
             _sequencer.setSequence(retval);
             setTempo(_sequencer, TEMPO_BEATS_PER_MINUTE);
-         
-            long milli = retval.getMicrosecondLength()/1000;
-            _sequencer.startRecording();
-            
-            if(block) {
-                synchronized (_latch) {
-                    // Wait for the sequence to end
-                    _latch.wait(milli*4);
-                    _sequencer.stop();
-                }
-            }
         } 
         catch (Exception ex) {
             LogContext.getLogger().log(Level.WARNING, "Unexpected MIDI error", ex);
@@ -308,12 +298,32 @@ public class ToneGenerator {
         return retval;
     }
     
-//    private MetaMessage createTempoEvent() {
-//        byte b1, b2, b3;
-//        MetaMessage retval = new MetaMessage();
-//        byte[] date = new byte[] { 0xff, 0x51, 0x03, b1, b2, b3 };
-//        retval.setMessage(i, abyte0, j)
-//    }
+    /**
+     * Starts the sequencer playing/recording, if it has been initialized. 
+     * Blocks until sequence playback finishes, if indicated.
+     * 
+     * @param block
+     */
+    public void startSequencerPlayback(boolean block) {
+    	 if (_sequencer != null) {
+    		 if (!_sequencer.isRecording()) {
+    			 _sequencer.startRecording();
+    			 
+    			 if(block) {
+    				 long milli = _sequencer.getSequence().getMicrosecondLength()/1000;
+    				 synchronized (_latch) {
+    					 // Wait for the sequence to end
+    					 try {
+							_latch.wait(milli*4);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+    					 _sequencer.stop();
+    				 }
+    			 }
+    		 }
+    	 }
+    }
     
     private void setTempo(Sequencer sequencer, int tempoBPM) {
         // Per: http://www.jsresources.org/faq_midi.html#tempo_methods
@@ -338,9 +348,9 @@ public class ToneGenerator {
      * @param velocity The velocity of the note
      * @return note event
      */
-    public static MidiEvent createNoteOnEvent(int note, int velocity, long ticks) throws InvalidMidiDataException {
+    public static MidiEvent createNoteOnEvent(int note, ChannelKey channel, int velocity, long ticks) throws InvalidMidiDataException {
         ShortMessage msg = new ShortMessage();
-        msg.setMessage(ShortMessage.NOTE_ON, _generator_channel, note, velocity);
+        msg.setMessage(ShortMessage.NOTE_ON, channel.getChannelNum(), note, velocity);
         return new MidiEvent(msg, ticks);
     }
 
@@ -349,9 +359,9 @@ public class ToneGenerator {
      * 
      * @param note note to turn off.
      */
-    public static MidiEvent createNoteOffEvent(int note, long ticks) throws InvalidMidiDataException {
+    public static MidiEvent createNoteOffEvent(int note, ChannelKey channel, long ticks) throws InvalidMidiDataException {
         ShortMessage msg = new ShortMessage();
-        msg.setMessage(ShortMessage.NOTE_OFF, _generator_channel, note, 0);
+        msg.setMessage(ShortMessage.NOTE_OFF, channel.getChannelNum(), note, 0);
         
         return new MidiEvent(msg, ticks);        
     }
@@ -363,7 +373,7 @@ public class ToneGenerator {
      * @param detuneCents amount to adjust in cents, where 100 cents = semitone.
      * @return detune event
      */
-    private MidiEvent createDetuneEvent(Track track, int detuneCents, long ticks) throws InvalidMidiDataException {
+    private MidiEvent createDetuneEvent(Track track, ChannelKey channel, int detuneCents, long ticks) throws InvalidMidiDataException {
         // Apply any detune via the pitch bend controller.
         Integer lastDetune = _lastDetunes.get(track);
         if(lastDetune != null && lastDetune.intValue() == detuneCents) {
@@ -374,7 +384,7 @@ public class ToneGenerator {
 
         ShortMessage msg = new ShortMessage();
         int amount = (int)(PITCH_BEND_NONE + PITCH_BEND_PER_CENTS * detuneCents);
-        msg.setMessage(ShortMessage.PITCH_BEND, _generator_channel, amount % 128, amount / 128);
+        msg.setMessage(ShortMessage.PITCH_BEND, channel.getChannelNum(), amount % 128, amount / 128);
         
         return new MidiEvent(msg, ticks);
     }
@@ -478,7 +488,8 @@ public class ToneGenerator {
                 new Note(new Pitch(NotesEnum.C, 6), 64, 1000),
             };
             
-            tg.play(Arrays.asList(notes), 1.0f);
+            tg.initializeSequenceToPlay(Arrays.asList(notes), 1.0f);
+            tg.startSequencerPlayback(true);
         }
         catch(Exception ex) {
             ex.printStackTrace();

@@ -409,14 +409,15 @@ public class StimulusResponseScreen extends BasicStep {
                 List<Note> seq = _trial.generateSequence(_session, _session.getTrialSpecificationStyle());
                 _playbackStart = System.currentTimeMillis();
                 LogContext.getLogger().fine("Playback started @ " + _playbackStart);
-                _currSequence = tg.play(seq, _session.getPlaybackGain(), false);
+                _currSequence = tg.initializeSequenceToPlay(seq, _session.getPlaybackGain());
                 if (_tapRecorder != null) {
                 	// this is not intuitive, but we still want the 
                 	// tap recorder to handle computer taps
-                	//_tapRecorder.enableUserInput(_trial.isWithTap());
                 	_tapRecorder.setWithTap(_trial.isWithTap());
-                    _tapRecorder.start(_currSequence);
+                	// Must be called to initialize resources for tapping/recording
+                    _tapRecorder.initializeSequencerForRecording();
                 }
+                tg.startSequencerPlayback(false);
             }
             catch (MidiUnavailableException ex) {
                 LogContext.getLogger().log(Level.SEVERE, "MIDI error", ex);

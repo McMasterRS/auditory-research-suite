@@ -26,6 +26,7 @@ import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.sound.MidiInterpreter;
 import edu.mcmaster.maplelab.common.sound.MultiMidiEvent;
 import edu.mcmaster.maplelab.common.sound.ToneGenerator;
+import edu.mcmaster.maplelab.common.sound.ToneGenerator.ChannelKey;
 import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession;
 
 
@@ -124,11 +125,11 @@ public class TapRecorder implements AWTEventListener, Receiver {
     }
     
     /**
-     * Start recording by adding a track to the given sequence for recording and
+     * Initializes sequencer for recording by adding a track to the given sequence and
      * connecting this Receiver to the selected input device. Also initializes 
      * resources for playing user feedback, if required.
      */
-    public void start(Sequence sequence) {
+    public void initializeSequencerForRecording() {
        	if (_allowCompKeyInput && _userInputOn) {
         	Toolkit.getDefaultToolkit().addAWTEventListener(this, AWTEvent.KEY_EVENT_MASK);
         }
@@ -210,6 +211,16 @@ public class TapRecorder implements AWTEventListener, Receiver {
                 				_feedbackReceiver.send(me.getMessage(), me.getTick());
                 			}
             			}
+            			// _session is null if we are calling from the MIDITestPanel before starting trials
+            			// This just runs taps with some basic defaults
+            			else {
+            				float vol = 1.0f;
+                			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
+                					(short) 3 , (short) 0);
+                			for (MidiEvent me : prep) {
+                				_feedbackReceiver.send(me.getMessage(), me.getTick());
+                			}
+            			}
                 	}
                 }
     		} 
@@ -222,7 +233,6 @@ public class TapRecorder implements AWTEventListener, Receiver {
     		}
         }
         
-        if (!_sequencer.isRecording()) _sequencer.startRecording();
         if (inputInfo != null) LogContext.getLogger().info("Recording from: " + inputInfo.getName() + 
         		", " + inputInfo.getDescription());
     }
@@ -400,7 +410,8 @@ public class TapRecorder implements AWTEventListener, Receiver {
     	_track.add(event);
     	if (_feedbackReceiver != null) {
     		try {
-    			_feedbackReceiver.send(event.getMessage(), System.currentTimeMillis()*1000);
+    			// Send event to be dealt with as soon as possible.
+    			_feedbackReceiver.send(event.getMessage(), -1);
     		}
     		catch (IllegalStateException ise) {
     			// result of timing issue between end-of-track and subject tap
@@ -419,8 +430,8 @@ public class TapRecorder implements AWTEventListener, Receiver {
     		
     		try {
                 MidiEvent event = down ? 
-                    ToneGenerator.createNoteOnEvent(ARTIFICIAL_MIDI_NOTE, ARTIFICIAL_MIDI_NOTE_VELOCITY, -1) :
-                        ToneGenerator.createNoteOffEvent(ARTIFICIAL_MIDI_NOTE, -1);
+                    ToneGenerator.createNoteOnEvent(ARTIFICIAL_MIDI_NOTE, ChannelKey.Taps, ARTIFICIAL_MIDI_NOTE_VELOCITY, -1) :
+                        ToneGenerator.createNoteOffEvent(ARTIFICIAL_MIDI_NOTE, ChannelKey.Taps, -1);
                 recordEvent(event);
             }
             catch (InvalidMidiDataException ex) {

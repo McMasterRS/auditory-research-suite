@@ -22,9 +22,9 @@ public class DeviceSelectionPanel extends JPanel {
 	public DeviceSelectionPanel() {
 		super(new MigLayout("insets 0 0 0 0", "[right]10px[center]10px[center]10px[center]", "0px[]3px[]0px"));
 		setBorder(BorderFactory.createTitledBorder("MIDI Devices"));
-		add(new JLabel("Tone Synth"), "skip 1");
-		add(new JLabel("Tap Source"));
-		add(new JLabel("Tap Synth"), "wrap");
+		add(new JLabel("<html><div style=\"text-align: center;\">Tone Synth<br>(Must have RECEIVE)"), "skip 1");
+		add(new JLabel("<html><div style=\"text-align: center;\">Tap Source<br>(Must have TRANS)"));
+		add(new JLabel("<html><div style=\"text-align: center;\">Tap Synth<br>(Must have RECEIVE)"), "wrap");
 		add(new JLabel("Device #:"));
 		
 		_toneSynth = new JComboBox();

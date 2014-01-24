@@ -161,8 +161,10 @@ public class MIDITestPanel extends JPanel {
         public void actionPerformed(ActionEvent e) {
             List<Note> tune = tune(150);
             try {
-            	ToneGenerator.getInstance().setMIDISynthID(_devs.getToneSynthIndex());
-                ToneGenerator.getInstance().play(tune, 1.0f, true);
+            	ToneGenerator tg = ToneGenerator.getInstance();
+            	tg.setMIDISynthID(_devs.getToneSynthIndex());
+                tg.initializeSequenceToPlay(tune, 1.0f);
+                tg.startSequencerPlayback(true);
             }
             catch (MidiUnavailableException e1) {
                 print(e1);
@@ -258,7 +260,7 @@ public class MIDITestPanel extends JPanel {
             // determine notice for selected device
             String message = null;
             if (dev >= MidiSystem.getMidiDeviceInfo().length || dev < 0) {
-            	message = "Invalid device . . . \nStart tapping via the computer keyboard";
+            	message = "Invalid tapping device . . . \nStart tapping via the computer keyboard";
             }
             else if (!TapRecorder.isValidTransmittingDevice(dev)) {
             	message = "The selected device does not have transmit functionality . . . \n" +
@@ -269,32 +271,21 @@ public class MIDITestPanel extends JPanel {
                 message = "Start tapping via the selected device, or use the computer keyboard";
             }
             _tapRecorder.setMIDISynthID(_devs.getTapSynthIndex() - 1);
+
+            printf(message);
             
             // begin recording
             try {
                 ToneGenerator.getInstance().getSequencer().addMetaEventListener(_endListener);
-                _currSequence = ToneGenerator.getInstance().play(tune(1000), 1.0f, false);
-                _tapRecorder.start(_currSequence);
+                _currSequence = ToneGenerator.getInstance().initializeSequenceToPlay(tune(1000), 1.0f);
+                _tapRecorder.initializeSequencerForRecording();//_tapRecorder.start(_currSequence);
+                
+                ToneGenerator.getInstance().startSequencerPlayback(false);
             }
             catch (Exception ex) {
                 print(ex);
             }
-            printf(message);
         }
-        
-        /*private Integer getCurrentDeviceID() {
-        	try {
-        		_midiDevID.commitEdit();
-        	}
-        	catch (ParseException pe) {
-        		JComponent editor = _midiDevID.getEditor();
-        		if (editor instanceof DefaultEditor) {
-        			((DefaultEditor) editor).getTextField().setValue(_midiDevID.getValue());
-        		}
-        	}
-        	
-        	return (Integer) _midiDevID.getValue();
-        }*/
         
         private void sessionEnded() {
             printf("Stop tapping");
