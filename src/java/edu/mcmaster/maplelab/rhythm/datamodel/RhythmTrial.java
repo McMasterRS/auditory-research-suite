@@ -139,7 +139,7 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
         Pitch probe = highPitch.detune(getProbeDetuneAmount());
         retval.add(new Note(probe, 64, getBaseIOI()));
         
-        LogContext.getLogger().fine("Sequence length (inc. lead-in silence): " + computeDuration(retval));
+        LogContext.getLogger().fine("Sequence length (not inc. lead-in silence): " + computeDuration(retval));
         
         return retval;
     }
@@ -200,7 +200,7 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
     			throw new InvalidPropertiesFormatException("Property \"trialNotePattern\" contains invalid characters.");
     		}
     	}
-    	LogContext.getLogger().fine("Sequence length (inc. lead-in silence): " + computeDuration(retval));
+    	LogContext.getLogger().fine("Sequence length (not inc. lead-in silence): " + computeDuration(retval));
     	return retval;
     }
     

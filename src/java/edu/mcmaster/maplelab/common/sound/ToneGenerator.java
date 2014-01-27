@@ -50,6 +50,13 @@ public class ToneGenerator {
     public static final int TEMPO_BEATS_PER_MINUTE = 60;
     private static final int TICKS_PER_QNOTE = 1000;
     
+    /**
+     * Measured in ticks (see {@link #TICKS_PER_MILLISECOND}) as understood by the {@link #_sequencer}.
+     * Used in {@link #initializeSequenceToPlay(List, float)} to allow initialization MIDIEvents to take
+     * effect before tones start playing. Otherwise initial notes will be compressed. 
+     */
+    public static final int INITIALIZATION_TIMING_OFFSET = 250; 
+    
     private static ToneGenerator _singleton = null;
     public static ToneGenerator getInstance() throws MidiUnavailableException {
         if(_singleton == null) {
@@ -265,7 +272,7 @@ public class ToneGenerator {
             Track track = retval.createTrack();
             prepareTrack(track, volumePct, _midiBankLSB, _midiBankMSB);
             
-            int cumulativeDuration = 0;
+            int cumulativeDuration = INITIALIZATION_TIMING_OFFSET;
             for (Note n : notes) {
                 int noteDuration = n.getDuration();
                 

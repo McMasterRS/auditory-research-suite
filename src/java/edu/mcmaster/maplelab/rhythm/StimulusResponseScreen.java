@@ -153,30 +153,28 @@ public class StimulusResponseScreen extends BasicStep {
         /* End Status/Response setup */
         
         try {
-            //if(!_isWarmup) {
-                _tapRecorder = new TapRecorder(_session);
-                _tapRecorder.setMIDIInputID(_session.getTapInputDevID());
-                _tapRecorder.setMIDISynthID(_session.getTapSynthDevID());
-                ToneGenerator.getInstance().setMIDISynthID(_session.getSynthDevID());
-                // We have to add a key listener to make sure this gets
-                // registered to receive events.
-                
-                class TapTarget extends JComponent {
-                    public TapTarget() {
-                        if (_session.allowComputerKeyInput()) {
-                        	enableEvents(AWTEvent.KEY_EVENT_MASK);
-                        }
-                    }
+        	_tapRecorder = new TapRecorder(_session);
+        	_tapRecorder.setMIDIInputID(_session.getTapInputDevID());
+        	_tapRecorder.setMIDISynthID(_session.getTapSynthDevID());
+        	ToneGenerator.getInstance().setMIDISynthID(_session.getSynthDevID());
+        	// We have to add a key listener to make sure this gets
+        	// registered to receive events.
+
+        	class TapTarget extends JComponent {
+        		public TapTarget() {
+        			if (_session.allowComputerKeyInput()) {
+        				enableEvents(AWTEvent.KEY_EVENT_MASK);
+        			}
+        		}
+        	}
+
+        	_tapTarget = new TapTarget();
+
+        	getContentPanel().add(_tapTarget, BorderLayout.CENTER);
+
+        	if(_session.isDebug()) {
+        		_tapRecorder.setLogReceiver(new DebugTapForwarder());
                 }
-                
-                _tapTarget = new TapTarget();
-                
-                getContentPanel().add(_tapTarget, BorderLayout.CENTER);
-                
-                if(_session.isDebug()) {
-                    _tapRecorder.setLogReceiver(new DebugTapForwarder());
-                }
-            //}
         }
         catch (MidiUnavailableException ex) {
             LogContext.getLogger().log(Level.SEVERE, "Tap recorder error", ex);
@@ -405,10 +403,14 @@ public class StimulusResponseScreen extends BasicStep {
                 tg.setMidiBank((short)0, _session.getInstrumentNumber());
                 tg.getSequencer().addMetaEventListener(_endListener);
                 
-                Pitch.setMiddleCOctave(_session.getMiddleCOctave()); // Important to set Middle C for Pitches
+                Pitch.setMiddleCOctave(_session.getMiddleCOctave()); 
+                // Important to set Middle C for Pitches before Notes are generated
                 List<Note> seq = _trial.generateSequence(_session, _session.getTrialSpecificationStyle());
-                _playbackStart = System.currentTimeMillis();
-                LogContext.getLogger().fine("Playback started @ " + _playbackStart);
+                
+                // Use to time initialization time for tg.initializeSequenceToPlay and 
+                // _tapRecorder.initializeSequencerForRecording
+                //long loadingStart = System.currentTimeMillis();
+                
                 _currSequence = tg.initializeSequenceToPlay(seq, _session.getPlaybackGain());
                 if (_tapRecorder != null) {
                 	// this is not intuitive, but we still want the 
@@ -417,6 +419,13 @@ public class StimulusResponseScreen extends BasicStep {
                 	// Must be called to initialize resources for tapping/recording
                     _tapRecorder.initializeSequencerForRecording();
                 }
+                _playbackStart = System.currentTimeMillis();
+                
+                // Use for init timing
+                //LogContext.getLogger().finest("Sequence loading time: " + (_playbackStart - loadingStart));
+                
+                LogContext.getLogger().fine("Playback started @ " + _playbackStart);
+                
                 tg.startSequencerPlayback(false);
             }
             catch (MidiUnavailableException ex) {
@@ -435,9 +444,11 @@ public class StimulusResponseScreen extends BasicStep {
         private void playbackEnded() {
             try {
                 long playbackStop = System.currentTimeMillis();
+                // Subtracts off timing offset to only account for the time that actual notes are played. 
                 LogContext.getLogger().fine(String.format(
-                    "Playback ended @ %s: duration (approx) = %s milliseconds", 
-                    playbackStop,  playbackStop - _playbackStart));
+                    "Playback ended @ %s: duration (approx) = %s milliseconds", playbackStop,  
+                    (playbackStop - _playbackStart) - ToneGenerator.INITIALIZATION_TIMING_OFFSET));
+                
                 ToneGenerator.getInstance().getSequencer().removeMetaEventListener(_endListener);
                 if (_tapRecorder != null) {
                     _tapRecorder.stop();
@@ -494,7 +505,7 @@ public class StimulusResponseScreen extends BasicStep {
                 
                 // Give user time to read results, if necessary.
                 if (_session.allowResponseFeedback()) {
-                	Thread.sleep(_session.getPreStimulusSilence());
+                	Thread.sleep(_session.getPostStimulusSilence());
                 }
             }
             catch (InterruptedException ex) {

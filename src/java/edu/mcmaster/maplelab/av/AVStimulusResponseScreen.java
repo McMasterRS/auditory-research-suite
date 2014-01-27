@@ -528,7 +528,7 @@ public abstract class AVStimulusResponseScreen<R, T extends AVTrial<R>, L extend
                 
                 // Give user time to read results, if necessary.
                 if (_session.allowResponseFeedback()) {
-                	Thread.sleep(_session.getPreStimulusSilence());
+                	Thread.sleep(_session.getPostStimulusSilence());
                 }
             }
             catch (InterruptedException ex) {

@@ -184,6 +184,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
         }
 		
         // prepare to play user tap sounds
+        // Must work when _session is null because MIDITestPanel does not have an initialized session.
         if (_session == null || _session.playSubjectTaps()) {
         	try {
         		MidiDevice device = null;

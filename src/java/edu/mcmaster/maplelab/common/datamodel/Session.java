@@ -55,6 +55,7 @@ public abstract class Session<TM extends TrialManager<?, T>, T extends Trial<?>,
         randomizeBlocks,
         randomizeTrials,
         preStimulusSilence,
+        postStimulusSilence,
         allowFeedback,
         statusOrientation,
         trialDelay,
@@ -283,6 +284,13 @@ public abstract class Session<TM extends TrialManager<?, T>, T extends Trial<?>,
      */
     public int getPreStimulusSilence() {
         return getInteger(ConfigKeys.preStimulusSilence, 2000);
+    }
+    
+    /**
+     * Number of milliseconds to wait after playback of stimulus, if applicable.
+     */
+    public int getPostStimulusSilence() {
+        return getInteger(ConfigKeys.postStimulusSilence, 2000);
     }    
     
     /**

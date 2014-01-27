@@ -278,7 +278,7 @@ public class MIDITestPanel extends JPanel {
             try {
                 ToneGenerator.getInstance().getSequencer().addMetaEventListener(_endListener);
                 _currSequence = ToneGenerator.getInstance().initializeSequenceToPlay(tune(1000), 1.0f);
-                _tapRecorder.initializeSequencerForRecording();//_tapRecorder.start(_currSequence);
+                _tapRecorder.initializeSequencerForRecording();
                 
                 ToneGenerator.getInstance().startSequencerPlayback(false);
             }
