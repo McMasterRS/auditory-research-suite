@@ -11,6 +11,7 @@ import java.util.List;
 import edu.mcmaster.maplelab.common.datamodel.PredeterminedTrialManager;
 import edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.RelativeTrialPosition;
 import edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.TrialHierarchy;
+import edu.mcmaster.maplelab.rhythm.datamodel.RhythmTrial.TrialTestingType;
 
 /**
  * @author bguseman
@@ -31,6 +32,7 @@ public class RhythmTrialManager extends PredeterminedTrialManager<RhythmSession,
 		List<Integer> baseIOIs = session.getBaseIOIs();
         List<Float> offsetDegrees = session.getBaseIOIoffsetDegrees();
         List<Integer> probeDetuneAmounts = session.getProbeDetuneAmounts();
+        TrialTestingType testingType = session.getExperimentTestingType();
  
         int trialCount = 0;
 		int reps = session.getBlockSetRepetitions();
@@ -45,7 +47,7 @@ public class RhythmTrialManager extends PredeterminedTrialManager<RhythmSession,
 				for (Float offset : offsetDegrees) {
 					// Vary over probe detunes
 					for(Integer probeDetune : probeDetuneAmounts) {
-						RhythmTrial trial = new RhythmTrial(ioi, offset, probeDetune, true);
+						RhythmTrial trial = new RhythmTrial(ioi, offset, probeDetune, testingType, true);
 						trial.setNumber(RelativeTrialPosition.REPETITION, i + 1);
 						trial.setNumber(RelativeTrialPosition.BLOCK_INSTANCE, i + 1);
 						tapBlock.add(trial);
@@ -59,7 +61,7 @@ public class RhythmTrialManager extends PredeterminedTrialManager<RhythmSession,
 				for (Float offset : offsetDegrees) {
 					// Vary over probe detunes again
 					for (Integer probeDetune : probeDetuneAmounts) {
-						RhythmTrial trial = new RhythmTrial(ioi, offset, probeDetune, false);
+						RhythmTrial trial = new RhythmTrial(ioi, offset, probeDetune, testingType, false);
 						trial.setNumber(RelativeTrialPosition.REPETITION, i + 1);
 						trial.setNumber(RelativeTrialPosition.BLOCK_INSTANCE, i + 1);
 						notapBlock.add(trial);
@@ -123,13 +125,14 @@ public class RhythmTrialManager extends PredeterminedTrialManager<RhythmSession,
         List<Float> offsetDegrees = session.getBaseIOIoffsetDegrees();
         List<Integer> probeDetuneAmounts = session.getProbeDetuneAmounts();
 		int baseIOI = session.getBaseIOIs().get(0);
+		TrialTestingType testingType = session.getExperimentTestingType();
         
 		List<RhythmTrial> block = new ArrayList<RhythmTrial>();
         // Vary over baseIOI offsets
 		for (Float offset : offsetDegrees) {
 			// Vary over probe detunes
 			for (Integer probeDetune : probeDetuneAmounts) {
-				RhythmTrial t = new RhythmTrial(baseIOI, offset, probeDetune, true);
+				RhythmTrial t = new RhythmTrial(baseIOI, offset, probeDetune, testingType, true);
 				block.add(t);
 			}
         }
@@ -178,9 +181,11 @@ public class RhythmTrialManager extends PredeterminedTrialManager<RhythmSession,
 			
 			// trials
 			List<Float> offsets = session.getBaseIOIoffsetDegrees();
+			List<Integer> detunes = session.getProbeDetuneAmounts();
 			String trialTypes = String.format("\tEach block contains %d trials constructed from:\n", 
-					offsets.size());
-			trialTypes += "\t\t\tOffset degrees: " + listString(offsets, 4, 4) + "\n";
+					offsets.size() * detunes.size());
+			trialTypes += "\t\t\tOffset degrees: " + listString(offsets, 4, 4) + " and \n";
+			trialTypes += "\t\t\tProbe Detune amounts: " + listString(detunes, 4, 4) + "\n";
 			
 			// block ordering
 			String blockList = "\tBlocks (order will change on each repetition):\n";

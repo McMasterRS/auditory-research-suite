@@ -14,7 +14,6 @@ package edu.mcmaster.maplelab.rhythm.datamodel;
 import java.util.ArrayList;
 import java.util.InvalidPropertiesFormatException;
 import java.util.List;
-import java.util.logging.Level;
 
 import javax.sound.midi.Sequence;
 
@@ -36,13 +35,21 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
     private final int _baseIOI;
     private final float _baseIOIoffsetDegree;
     private final int _probeDetuneAmount;
+    private final TrialTestingType _testingType;
     private final boolean _withTap;
     private Sequence _sequence;
 
-    public RhythmTrial(int baseIOI, float offsetDegree, int probeDetuneAmount, boolean withTap) {
+    public enum TrialTestingType {
+    	OffsetTiming,
+    	ProbeDetune;
+    }
+        
+    public RhythmTrial(int baseIOI, float offsetDegree, int probeDetuneAmount, TrialTestingType testingType, 
+    		boolean withTap) {
         _baseIOI = baseIOI;
         _baseIOIoffsetDegree = offsetDegree;
         _probeDetuneAmount = probeDetuneAmount;
+        _testingType = testingType;
         _withTap = withTap;
     }
 
@@ -66,6 +73,13 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
      */
     public int getProbeDetuneAmount() {
     	return _probeDetuneAmount;
+    }
+    
+    /**
+     * The testing type (or experiment focus) that this trial is using for correctness testing.
+     */
+    public TrialTestingType getTrialTestingType() {
+    	return _testingType;
     }
     
     /**
@@ -224,13 +238,26 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
     public boolean isResponseCorrect() {
         ConfidenceResponse response = getResponse();
         if(response != null) {
-            if (RhythmResponseParameters.isProbeToneAccurate(response)) {
-                return getBaseIOIOffsetDegree() == 0.0;
-            }
-            else {
-                return getBaseIOIOffsetDegree() != 0.0;
-            }
-                
+            switch (_testingType) {
+			case ProbeDetune:
+				// Check user's response
+				if (RhythmResponseParameters.isProbeToneAccurate(response)) {
+	                return getProbeDetuneAmount() == 0;
+	            }
+	            else {
+	                return getProbeDetuneAmount() != 0;
+	            }
+			case OffsetTiming:
+				// Check user's response
+				if (RhythmResponseParameters.isProbeToneAccurate(response)) {
+	                return getBaseIOIOffsetDegree() == 0.0;
+	            }
+	            else {
+	                return getBaseIOIOffsetDegree() != 0.0;
+	            }
+			default:
+				throw new IllegalArgumentException("Unhandled TrialTestingType value.");
+			}   
         }
         return false;
     }    

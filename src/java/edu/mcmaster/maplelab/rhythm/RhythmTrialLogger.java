@@ -137,6 +137,7 @@ public class RhythmTrialLogger extends
             baseIOI, 
             offsetDegree,
             probeDetuneAmount,
+            trialTestingType,
             withTap,
             opcode,
             channel,
@@ -202,6 +203,7 @@ public class RhythmTrialLogger extends
             fields.put(TapKeys.baseIOI, String.valueOf(trial.getBaseIOI()));
             fields.put(TapKeys.offsetDegree, String.valueOf(trial.getBaseIOIOffsetDegree()));
             fields.put(TapKeys.probeDetuneAmount, String.valueOf(trial.getProbeDetuneAmount()));
+            fields.put(TapKeys.trialTestingType, trial.getTrialTestingType().name());
             fields.put(TapKeys.withTap, String.valueOf(trial.isWithTap()));
             
             MidiMessage m = _currEvent.getMessage();

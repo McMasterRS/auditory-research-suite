@@ -19,6 +19,7 @@ import edu.mcmaster.maplelab.common.sound.Pitch;
 import edu.mcmaster.maplelab.common.util.MathUtils;
 import edu.mcmaster.maplelab.rhythm.RhythmExperiment;
 import edu.mcmaster.maplelab.rhythm.RhythmTrialLogger;
+import edu.mcmaster.maplelab.rhythm.datamodel.RhythmTrial.TrialTestingType;
 
 /**
  * Context data for the experiment session.
@@ -61,6 +62,7 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
         lowPitch,
         offsetDegrees,
         probeDetuneAmounts,
+        experimentTestingType,
         accuracyResponseLabel,
         randomizeAcrossRepetitions,
         playbackMeasures,
@@ -399,6 +401,11 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
      */
     public List<Integer> getProbeDetuneAmounts() {
     	return getIntegerList(ConfigKeys.probeDetuneAmounts, new Integer[]{0});
+    }
+    
+    public TrialTestingType getExperimentTestingType() {
+    	String type = getString(ConfigKeys.experimentTestingType, TrialTestingType.OffsetTiming.name());
+    	return TrialTestingType.valueOf(type);
     }
     
     public String getAccuracyResponseLabel() {
