@@ -15,12 +15,10 @@ import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
 
-import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.common.datamodel.Answer;
 import edu.mcmaster.maplelab.common.datamodel.ContinuousResponseParameters;
 import edu.mcmaster.maplelab.common.datamodel.MultiResponse;
 import edu.mcmaster.maplelab.common.datamodel.ResponseParameters;
-import edu.mcmaster.maplelab.common.datamodel.Session;
 
 public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 	/** Sliders. */

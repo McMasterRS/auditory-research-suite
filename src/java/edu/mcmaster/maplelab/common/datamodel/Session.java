@@ -21,7 +21,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 
-import edu.mcmaster.maplelab.av.datamodel.AVSession.ConfigKeys;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.util.MathUtils;
