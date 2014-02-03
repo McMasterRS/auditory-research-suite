@@ -19,7 +19,7 @@ public class VideoPanel extends JPanel {
 	private final QTMovieView _view;
 	
 	public VideoPanel() {
-		super(new MigLayout("insets 0, fill"));
+		super(new MigLayout("insets 0, center, fill", "center", "center"));
 		_view = QTMovieView.CLASS.create();
 		_view.setControllerVisible(false);
 		_view.setPreservesAspectRatio(true);

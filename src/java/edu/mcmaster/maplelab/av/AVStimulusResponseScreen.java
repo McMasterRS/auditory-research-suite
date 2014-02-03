@@ -30,6 +30,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
 
 import net.miginfocom.swing.MigLayout;
 import edu.mcmaster.maplelab.av.datamodel.AVBlockType;
@@ -109,7 +110,6 @@ public abstract class AVStimulusResponseScreen<R, T extends AVTrial<R>, L extend
         
         
         /* Status/Response setup */
-//        String direction 
         JPanel bottom = new JPanel(new MigLayout("insets 0, fill"));
         getContentPanel().add(bottom, BorderLayout.SOUTH);
         
@@ -372,6 +372,7 @@ public abstract class AVStimulusResponseScreen<R, T extends AVTrial<R>, L extend
                     	AVBlockType currType = currTrial.getType();
 
                 		getContentPanel().remove(_vidPanel);
+                		getContentPanel().setBorder(new EmptyBorder(0,2,0,2));
                     	
                     	if (currType != AVBlockType.VIDEO_ONLY) {
                     		AnimationPanel aniPanel = _scheduler.getAnimationPanel();

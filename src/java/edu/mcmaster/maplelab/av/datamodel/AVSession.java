@@ -53,7 +53,8 @@ public abstract class AVSession<TM extends AVTrialManager<?, T>, T extends AVTri
 		audioFileExtensions,
 		synchronizeParameters,
 		audioPollWait,
-		showTickMarks
+		showTickMarks,
+		sliderLength
 	}
 	
 	private Properties _audioFileMetaData = null;
@@ -98,6 +99,20 @@ public abstract class AVSession<TM extends AVTrialManager<?, T>, T extends AVTri
 	 */
 	public boolean getShowTickMarks() {
 		return getBoolean(ConfigKeys.showTickMarks, true);
+	}
+	
+	/**
+	 * Get the pixel length for rendering response sliders.
+	 */
+	public int getSliderLength() {
+		int len = getInteger(ConfigKeys.sliderLength, 550);
+		// Do some arbitrary bounds checking, so we don't make negative length sliders,
+		// or go outside a decently large screen size.
+		if (len < 50 || len > 2000) {
+			return 550;
+		} else {
+			return len;
+		}
 	}
 	
 	/**

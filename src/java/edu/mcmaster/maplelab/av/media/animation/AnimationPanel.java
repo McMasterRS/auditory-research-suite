@@ -63,6 +63,7 @@ public class AnimationPanel extends JPanel {
 
         _canvas = new GLCanvas(caps);
         _canvas.setName("glCanvas");
+    	_canvas.setMinimumSize(new Dimension(5, 5));
         setRenderer(renderer);
         
         if (trigger != null) {
@@ -82,6 +83,10 @@ public class AnimationPanel extends JPanel {
     
     public void setSize(Dimension dim) {
     	_canvas.setPreferredSize(dim != null ? dim : new Dimension(640, 480));
+    }
+    
+    public void setSize(int width, int height) {
+    	_canvas.setPreferredSize(new Dimension(width, height));
     }
     
     /**
