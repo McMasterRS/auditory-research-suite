@@ -106,11 +106,7 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 		
 		JPanel outer = new JPanel(new MigLayout("insets 0, fill, hidemode 0"));
 		
-		Session<?, ?, ?> session = getResponseParams()[0].getSession();
-		int sliderLength = 550; // Default value
-		if (session instanceof AVSession<?, ?, ?>) {
-			sliderLength = ((AVSession<?, ?, ?>) session).getSliderLength();
-		}
+		int sliderLength = getResponseParams()[0].getSession().getSliderLength();
 		String colFormat = String.format("[right][center, %d!][left]", sliderLength);
 		JPanel p = new JPanel(new MigLayout("insets 0, fill, hidemode 0"
 				, colFormat, "[][]"));

@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 
+import edu.mcmaster.maplelab.av.datamodel.AVSession.ConfigKeys;
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.util.MathUtils;
@@ -58,6 +59,7 @@ public abstract class Session<TM extends TrialManager<?, T>, T extends Trial<?>,
         postStimulusSilence,
         allowFeedback,
         statusOrientation,
+        sliderLength,
         trialDelay,
         debug,
         demo,
@@ -278,6 +280,20 @@ public abstract class Session<TM extends TrialManager<?, T>, T extends Trial<?>,
     	String orient = getString(ConfigKeys.statusOrientation, StatusOrientationEnum.horizontalLeft.name() );
     	return StatusOrientationEnum.valueOf(orient);
     }
+    
+	/**
+	 * Get the pixel length for rendering response sliders.
+	 */
+	public int getSliderLength() {
+		int len = getInteger(ConfigKeys.sliderLength, 550);
+		// Do some arbitrary bounds checking, so we don't make negative length sliders,
+		// or go outside a decently large screen size.
+		if (len < 50 || len > 2000) {
+			return 550;
+		} else {
+			return len;
+		}
+	}
     
     /**
      * Number of milliseconds to wait before playback of stimulus, if applicable.
