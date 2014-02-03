@@ -7,7 +7,7 @@ public abstract class ResponseParameters<S extends Session<?, ?, ?>, DataType> {
 		_session = session;
 	}
 	
-	protected S getSession() {
+	public S getSession() {
 		return _session;
 	}
 	

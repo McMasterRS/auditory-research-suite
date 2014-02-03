@@ -1,6 +1,5 @@
 package edu.mcmaster.maplelab.common.gui;
 
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -16,10 +15,12 @@ import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
 
+import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.common.datamodel.Answer;
 import edu.mcmaster.maplelab.common.datamodel.ContinuousResponseParameters;
 import edu.mcmaster.maplelab.common.datamodel.MultiResponse;
 import edu.mcmaster.maplelab.common.datamodel.ResponseParameters;
+import edu.mcmaster.maplelab.common.datamodel.Session;
 
 public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 	/** Sliders. */
@@ -42,7 +43,7 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
      * possible choices as indicated.
      */
 	public SliderResponseInputs(boolean enableKeyEvents, 
-											ContinuousResponseParameters<?, ?>... interpreters) {
+			ContinuousResponseParameters<?, ?>... interpreters) {
         super(true, enableKeyEvents, interpreters);
         
         if (interpreters.length > 2 || (interpreters.length > 0 && interpreters[0].isDiscrete())) {
@@ -104,7 +105,15 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 		createSliders();
 		
 		JPanel outer = new JPanel(new MigLayout("insets 0, fill, hidemode 0"));
-		JPanel p = new JPanel(new MigLayout("insets 0, fill, hidemode 0", "[right][center, grow][left]", "[][]"));
+		
+		Session<?, ?, ?> session = getResponseParams()[0].getSession();
+		int sliderLength = 550; // Default value
+		if (session instanceof AVSession<?, ?, ?>) {
+			sliderLength = ((AVSession<?, ?, ?>) session).getSliderLength();
+		}
+		String colFormat = String.format("[right][center, %d!][left]", sliderLength);
+		JPanel p = new JPanel(new MigLayout("insets 0, fill, hidemode 0"
+				, colFormat, "[][]"));
 		outer.add(p, "growx");
 		outer.setBorder(BorderFactory.createTitledBorder("Response"));
 		
