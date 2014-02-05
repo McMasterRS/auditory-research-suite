@@ -15,8 +15,6 @@ import edu.mcmaster.maplelab.common.gui.Introduction;
 import edu.mcmaster.maplelab.common.gui.PreTrialsInstructions;
 import edu.mcmaster.maplelab.common.gui.PreWarmupInstructions;
 import edu.mcmaster.maplelab.si.datamodel.SISession;
-import edu.mcmaster.maplelab.toj.TOJStimulusResponseScreen;
-import edu.mcmaster.maplelab.toj.datamodel.TOJSession;
 
 public class SIExperiment extends Experiment<SISession> {
 	public static final String EXPERIMENT_BASENAME = "SI";

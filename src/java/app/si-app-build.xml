@@ -24,7 +24,7 @@
 	                stubfile="SIExperiment"
 	                mainclass="edu.mcmaster.maplelab.si.SIExperiment"
 	                icon="../Resources/McMaster.icns"
-	                jvmversion="1.6*"
+	                jvmversion="1.6+"
 	                version="0.6"
 	                infostring="MapleLab SI Experiment, Copyright &#xa9; 2011"
 	                bundleid="edu.mcmaster.maplelab.si.SIExperiment" 

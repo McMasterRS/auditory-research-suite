@@ -80,18 +80,21 @@
 	
 	<!-- Get the SVN build version. -->
 	<target name="svn.version" if="is.svn">
-		<exec executable="svnversion">
-        	<redirector outputproperty="build-num">
-        		<outputfilterchain>
-        			<tokenfilter>
-        				<!-- Strip anything after the first integer -->
-        				<trim/>
-                        <replaceregex pattern="^([0-9]+).*$" replace="\1"/>
-                        <replaceregex pattern="^exported$" replace="-1"/>
-        			</tokenfilter>
-        		</outputfilterchain>
-        	</redirector>
-    	</exec>
+		<exec executable="svn">
+			<arg value="info"/>
+			<redirector outputproperty="build-num">
+				<outputfilterchain>
+			    	<linecontains>
+						<contains value="Revision:"/>
+					</linecontains>
+			        <tokenfilter>
+			        	<!-- Strip anything but the number. -->
+			        	<trim/>
+			        	<replaceregex pattern="Revision: " replace=""/>
+			        </tokenfilter>
+			    </outputfilterchain>
+			</redirector>
+		</exec>
 	</target>
 	
 	<!-- Get the SVN build version from git. -->
@@ -114,7 +117,7 @@
     	</exec>
 	</target>
 
-	<available property="is.svn" file=".svn" type="dir" />
+	<property name="is.svn" value="true" />
 	<target name="si.version" depends="svn.version, git.version" >
 		
 		<echo>Got build num.</echo>
