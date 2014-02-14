@@ -1,5 +1,6 @@
 package edu.mcmaster.maplelab.common.datamodel;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -67,40 +68,63 @@ public abstract class PredeterminedTrialManager<S extends Session<?, ?, ?>, T ex
 	
 	protected List<List<T>> generateWarmup() {
 		S session = getSession();
-		List<List<T>> retval = generateMetaBlock(1);
+		List<List<T>> metablock = generateMetaBlock(1);
 		int warmupCount = session.getNumWarmupTrials();
-		int initialCount = 0;
-		for (List<T> block : retval) {
-			initialCount += block.size();
+		
+		if (metablock.size() <= 0) {
+			LogContext.getLogger().warning("No Trials were generated for warmup.\n" +
+					"Check that properties file actually requests trials.");
 		}
 		
-		if (initialCount > warmupCount) {
-			int remaining = warmupCount;
-			// Work through all blocks, pulling trials proportionally from each. 
-			for (int i = retval.size()-1; i >= 0; i--) {
-				List<T> block = retval.get(i);
-				int localCount = block.size();
-				if (localCount > 1) {
-					// Get the percentage of total trials in this block
-					float percent = (float) localCount / (float) initialCount;
-					localCount = Math.round(warmupCount * percent);  
-					
-					// check for possibility of pulling out too many trials:
-					// e.g. when there are 2 metablocks, and 3 warmups are requested, need to only pull 2, then 1 trial
-					int difference = remaining - localCount;
-					if (difference < 0) {
-						localCount += difference; // difference is negative, so must be added to reduce localCount
-					}
-					block = block.subList(0, localCount);
-					remaining -= localCount;
-				}
-				// Set the ith block to only have a proportional amount of trials, normalizing with warmup count.
-				retval.set(i, block);
+		
+		// Count total number of trials in all blocks
+		int totalNumTrials = 0;
+		for (List<T> block : metablock) {
+			totalNumTrials += block.size();
+		}
+		
+		int numBlocks = metablock.size();
+		// Build/initialize return list of blocks
+		List<List<T>> retval = new ArrayList<List<T>>(numBlocks);
+		for(int i=0; i < numBlocks; i++) {
+			retval.add(new ArrayList<T>());
+		}
+		
+		// Check if more warmup trials have been requested than we have available. 
+		// In this case, cap the warmup count to be the same size as the number of Trials.
+		if (warmupCount > totalNumTrials) {
+			LogContext.getLogger().fine(String.format("Requested %d warmup trials, " +
+					"but only have %d experimental trials to pull from.\nMaking %d warmup trials.",
+					warmupCount, totalNumTrials, totalNumTrials));
+			warmupCount = totalNumTrials;
+		}
+		
+		/* Step through all Trials from the generated metablock in the following order:
+		 * All 0th elements from blocks [0..numBlocks), then all 1st elements... etc.
+		 * Will add every element up to the warmupCount index. 
+		 */
+		for (int i=0; i < warmupCount; i++) {
+			int ithBlock = i % numBlocks;
+			int ithTrialInBlock = i / numBlocks;
+			// Get the trial from the
+			T trial = metablock.get(ithBlock).get(ithTrialInBlock);
+			// Add this trial to the ithBlock to return
+			retval.get(ithBlock).add(trial);
+		}		
+		
+		// It is possible to end up with empty lists in the retval if fewer warmup trials are requested
+		// than the number of blocks in the metablock.
+		// Here they are removed to avoid index out of bounds errors later on.
+		// Don't remove while going through list
+		List<List<T>> toRemove = new ArrayList<List<T>>();
+		for (List<T> block : retval) {
+			if (block.isEmpty()) {
+				// Don't remove while going through list
+				toRemove.add(block);
 			}
-
-		} 
-		// else: does not matter. Should not ask for more warmup trials than actual trials.
-		// If this does happen, the retval will be left unchanged, and all trials will be returned.
+		}
+		retval.removeAll(toRemove);
+		
 		
 		// do numbering
 		int trialNum = 1;

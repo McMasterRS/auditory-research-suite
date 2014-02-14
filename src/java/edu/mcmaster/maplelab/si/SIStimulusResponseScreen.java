@@ -26,9 +26,7 @@ public class SIStimulusResponseScreen extends AVStimulusResponseScreen<MultiResp
 
 	@Override
 	public void updateResponseInputs(SITrial trial) {
-		SliderResponseInputs inputs = (SliderResponseInputs) getResponseInputs();
-		int num = trial.getNumMediaObjects();
-		if (inputs != null) inputs.setInputVisibility(1, num > 1);
+		// No-op.
 	}
 
 }
