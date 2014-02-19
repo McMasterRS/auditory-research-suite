@@ -17,6 +17,9 @@ import java.awt.event.*;
 import java.io.File;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
+
+import net.miginfocom.swing.MigLayout;
 
 
 /**
@@ -36,9 +39,9 @@ public class FileBrowseField extends JPanel {
     private boolean _missingFileIndicator = true;
 
     private ColorUpdater _colorUpdater;
-
-    public FileBrowseField(boolean directoriesOnly) {
-        super(new GridBagLayout());
+    
+    public FileBrowseField(boolean directoriesOnly, boolean browsePropertiesFiles) {
+        super(new MigLayout("insets 0 0 0 0, nogrid, fill"));
         
         _directoriesOnly = directoriesOnly;
         
@@ -46,22 +49,15 @@ public class FileBrowseField extends JPanel {
         _colorUpdater = new ColorUpdater();
         _fileName.addFocusListener(_colorUpdater);
         _fileName.addActionListener(_colorUpdater);
-        
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-        
-        add(_fileName, gbc);
+        add(_fileName, "growx 200");
         
         _button = new JButton("Browse...");
-        _button.addActionListener(new ActionHandler());
-        gbc.weightx = 0;
-        gbc.gridx = 1;
-        add(_button, gbc);
+        add(_button);
+        _button.addActionListener(browsePropertiesFiles ? 
+        		new PropertiesBrowseHandler() : new DefaultBrowseHandler());
     }
     
-    private class ActionHandler implements ActionListener {
+    private class DefaultBrowseHandler implements ActionListener {
 
         public void actionPerformed(ActionEvent e) {
             
@@ -75,6 +71,42 @@ public class FileBrowseField extends JPanel {
                 setFile(chooser.getSelectedFile());
             }
         }
+    }
+    
+    private class PropertiesBrowseHandler implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String path = _fileName.getText();
+			JFileChooser chooser = path != null ? new JFileChooser(path) : new JFileChooser();
+			chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			
+			FileFilter propFilter = new FileFilter() {
+				
+				@Override
+				public String getDescription() {
+					return ".properties";
+				}
+				
+				@Override
+				public boolean accept(File f) {
+					if (f.isDirectory()) return true;
+					
+					String filename = f.getName();
+					if (filename.contains(".properties")) {
+						return true;
+					}
+					return false;
+				}
+			};
+			
+			chooser.setFileFilter(propFilter);
+			chooser.addChoosableFileFilter(propFilter);
+			
+			if(chooser.showDialog(FileBrowseField.this, "Select") ==
+	                JFileChooser.APPROVE_OPTION) {
+				setFile(chooser.getSelectedFile());
+	        }
+		}	
     }
     
     public void setMissingFileIndicator(boolean state) {
