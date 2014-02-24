@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import com.apple.eawt.AppEvent.QuitEvent;
@@ -356,24 +357,33 @@ public abstract class ExperimentFrame <T extends Session<?, R, L>,  R extends Tr
         }
     }      
 
-    private Properties initProperties(SimpleSetupScreen<T> setup) {
-        Properties props = new Properties();
+    private Properties initProperties(SimpleSetupScreen<T> setup) {    	
+    	Properties props = new Properties();
         InputStream in = null;
-        String propFile = "";
+        String propFileStr = "";
+    	String defaultPropFile = setup.getPrefsPrefix() + ".properties";
+    	
         try {
-        	String name = setup.getPrefsPrefix() + ".properties";
-            File f = new File(setup.getDataDir(), name);
-            if (f.exists()) {
-                in = new FileInputStream(f);   
-                propFile = f.getAbsolutePath();
+            File propFile = setup.getPropertiesFile();
+            if (propFile.exists()) {
+                in = new FileInputStream(propFile);   
+                propFileStr = propFile.getAbsolutePath();
             }
             else {
-            	URL url = getClass().getResource(name);
-                in = getClass().getResourceAsStream(name);
-                if (url != null) propFile = url.getPath();
+            	// Maybe a warning of some sort should pop up here, more than just a log entry.
+            	LogContext.getLogger().warning("Unable to find user specified properties file. " +
+            			"Using default internal properties file.");
+            	JOptionPane.showMessageDialog(null, "<html>Unable to find user specified properties file. " +
+            			"<br>Using default internal properties file.</html>", "Using Default Properties",
+            			JOptionPane.INFORMATION_MESSAGE);
+            	
+            	URL url = getClass().getResource(defaultPropFile);
+                in = getClass().getResourceAsStream(defaultPropFile);
+                if (url != null) propFileStr = url.getPath();
             }
+            
             props.load(in);
-            props.put(Session.ConfigKeys.propertiesFile.name(), propFile);
+            props.put(Session.ConfigKeys.propertiesFile.name(), propFileStr);
         }
         catch (Exception ex) {
             logError(ex, "Error reading configuration file");
@@ -383,38 +393,6 @@ public abstract class ExperimentFrame <T extends Session<?, R, L>,  R extends Tr
             if(in != null)  try { in.close(); } catch (IOException e) {}
         }
         
-        /* ISSUE 6 kludgy fix, awaiting response*/
-        
-//        try {
-//        	final String beginPropFilename = setup.getPrefsPrefix() + ".properties";
-//        	File dir = setup.getDataDir();
-//        	if (dir.exists()) {
-//        		File[] files = dir.listFiles(new FilenameFilter() {
-//					@Override
-//					public boolean accept(final File dir, final String name) {
-//						return name.startsWith(beginPropFilename);
-//					}
-//				}); // Get first one
-//        		File f = files[0];
-//        		in = new FileInputStream(f);
-//        		propFile = f.getAbsolutePath();
-//        	}
-//        	else {
-//        		// Default to using the packaged properties file
-//            	URL url = getClass().getResource(beginPropFilename);
-//                in = getClass().getResourceAsStream(beginPropFilename);
-//                if (url != null) propFile = url.getPath();
-//            }
-//            props.load(in);
-//            props.put(Session.ConfigKeys.propertiesFile.name(), propFile);
-//        } 
-//        catch (Exception ex){
-//        	logError(ex, "Error reading configuration file");
-//            return null;
-//        }
-//        finally {
-//            if(in != null)  try { in.close(); } catch (IOException e) {}
-//        }
         return props;
     }
     

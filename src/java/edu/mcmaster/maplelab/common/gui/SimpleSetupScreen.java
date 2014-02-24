@@ -44,7 +44,7 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
     private final JFormattedTextField _subject;
     private final JFormattedTextField _session;
     private final FileBrowseField _dataDir;
-    private final PropertiesFileSelectionPanel _propSelPanel;
+    private final PropertiesFileSelectionPanel _propFileSelPanel;
     private final String _prefsPrefix;
     private GridBagConstraints _labelGBC;
     private GridBagConstraints _fieldGBC;
@@ -89,7 +89,7 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
         addField(_session);
         
         addLabel("Data directory:");
-        _dataDir = new FileBrowseField(true, false);
+        _dataDir = new FileBrowseField(true);
         _fieldGBC.fill = GridBagConstraints.HORIZONTAL;
         addField(_dataDir);
         _fieldGBC.fill = GridBagConstraints.NONE;
@@ -115,8 +115,8 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
         _labelGBC.weighty = 0;
         _fieldGBC.weighty = 0;
         
-        _propSelPanel = new PropertiesFileSelectionPanel();
-        addPanel(_propSelPanel);
+        _propFileSelPanel = new PropertiesFileSelectionPanel();
+        addPanel(_propFileSelPanel);
         
         addExperimentFields();
         
@@ -220,6 +220,14 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
      */
     public File getDataDir() {
         return _dataDir.getFile();
+    }
+    
+    /**
+     * 
+     * @return File for properties file to use in this experiment.
+     */
+    public File getPropertiesFile() {
+    	return _propFileSelPanel.getSelectedPropertiesFile(this);
     }
 
     /**

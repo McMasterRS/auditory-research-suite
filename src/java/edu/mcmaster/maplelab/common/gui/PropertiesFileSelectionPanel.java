@@ -2,6 +2,7 @@ package edu.mcmaster.maplelab.common.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -10,6 +11,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+
+import edu.mcmaster.maplelab.common.LogContext;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -43,7 +46,7 @@ public class PropertiesFileSelectionPanel extends JPanel implements ActionListen
 		_useSpecifiedDirRButton = new JRadioButton("Use Specified Directory");
 		_useSpecifiedDirRButton.setActionCommand(specDirActionCommand);
 		_useSpecifiedDirRButton.addActionListener(this);
-		_useSpecifiedDirRButton.setToolTipText("Select this to read the properties file from a user specified location.");
+		_useSpecifiedDirRButton.setToolTipText("Select this to read the properties file from a user specified directory.");
 		add(_useSpecifiedDirRButton, "wrap");
 		
 		// ButtonGroup links the buttons so they are mutually exclusive
@@ -51,51 +54,71 @@ public class PropertiesFileSelectionPanel extends JPanel implements ActionListen
 		bg.add(_useDataDirRButton);
 		bg.add(_useSpecifiedDirRButton);
 		
+		_browseField = new FileBrowseField(true);
+		_browseField.setEnabled(false);
+		add(_browseField, "growx, wrap");
+		
 		_propFileVersionLabel = new JLabel("Properties File Version:");
 		add(_propFileVersionLabel, "gapright 5");
 		
-		_propFileVersionField = new JTextField(25);
+		_propFileVersionField = new JTextField(20);
+		_propFileVersionField.setToolTipText("<html>Specify a properties file version to use.<br>" +
+				"An input of [version] is used to find a file that looks like: <br>" +
+				"[experiment].properties-[version]</html>");
 		add(_propFileVersionField, "wrap");
-		
-		_browseField = new FileBrowseField(false, true);
-		_browseField.setEnabled(false);
-		add(_browseField, "growx");
-		
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getActionCommand().equals(dataDirActionCommand)) {
-			_propFileVersionLabel.setEnabled(true);
-			_propFileVersionField.setEnabled(true);
 			_browseField.setEnabled(false);
 		} else if (e.getActionCommand().equals(specDirActionCommand)) {
-			_propFileVersionLabel.setEnabled(false);
-			_propFileVersionField.setEnabled(false);
 			_browseField.setEnabled(true);
 		}
 	}
 	
-	
-	public String getSelectedPropertiesFile() {
-		// TODO: add checking to return version or full absolute path. 
-		// Need SimpleSetupScreen to return a correct File to Experiment Frame
-		// OR maybe better to have some check method in SSS to check for version num or browse path.
-		return "";
+	public File getSelectedPropertiesFile(SimpleSetupScreen<?> setup) {
+		File propFile = null;
+		
+		String propFileStr = setup.getPrefsPrefix() + ".properties";
+		String version = _propFileVersionField.getText().trim();
+		
+		// Add version modifier to file name if text has been input.
+		// Makes the file searched for of the form [experiment name].properties-[version]
+		if (!"".equals(version)) {
+			propFileStr += ("-" + version);
+		}
+		
+		File propertiesDir;
+		if (_useDataDirRButton.isSelected()) {
+			propertiesDir = setup.getDataDir();
+		} 
+		// Otherwise the specified directory is selected. 
+		else {
+			propertiesDir = _browseField.getFile();
+		}
+		propFile = new File(propertiesDir, propFileStr);
+		
+		if (propFile != null && propFile.exists()) {
+			LogContext.getLogger().fine("Selected properties file is:" + propFile.getAbsolutePath());
+		} else {
+			LogContext.getLogger().fine("Unable to find user specified properties file: " + propFile.getAbsolutePath());
+		}
+		
+		return propFile;
 	}
 	
 	// main method for separate testing
-	public static void main(String[] args) {
-		try {
-			JFrame foo = new JFrame();
-			foo.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			foo.getContentPane().add(new PropertiesFileSelectionPanel());
-			foo.pack();
-			foo.setVisible(true);
-		}
-		catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
+//	public static void main(String[] args) {
+//		try {
+//			JFrame foo = new JFrame();
+//			foo.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//			foo.getContentPane().add(new PropertiesFileSelectionPanel());
+//			foo.pack();
+//			foo.setVisible(true);
+//		}
+//		catch (Exception ex) {
+//			ex.printStackTrace();
+//		}
+//	}
 }
-

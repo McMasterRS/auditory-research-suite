@@ -160,15 +160,15 @@ public abstract class AVDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel<
 		add(_forceReload, "left, gaptop 10, gapbottom 15, wrap");
 		
 		add(new JLabel("Audio File"), "right, span, split");
-		_audFile = new FileBrowseField(false, false);
+		_audFile = new FileBrowseField(false);
 		add(_audFile, "growx, wrap");
 		
 		add(new JLabel("Visual File"),"right, span, split");
-		_visFile = new FileBrowseField(false, false);
+		_visFile = new FileBrowseField(false);
 		add(_visFile, "growx, wrap");
 		
 		add(new JLabel("Video File"), "right, span, split");
-		_vidFile = new FileBrowseField(false, false);
+		_vidFile = new FileBrowseField(false);
 		add(_vidFile, "growx, wrap");
 		//_vidFile.setEnabled(false);
 		
