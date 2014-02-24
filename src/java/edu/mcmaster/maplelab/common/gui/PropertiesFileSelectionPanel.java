@@ -2,15 +2,17 @@ package edu.mcmaster.maplelab.common.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.FileFilter;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
-import javax.swing.JFrame;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JTextField;
 
 import edu.mcmaster.maplelab.common.LogContext;
 
@@ -22,20 +24,36 @@ import net.miginfocom.swing.MigLayout;
  * @author zachbrown
  *
  */
-public class PropertiesFileSelectionPanel extends JPanel implements ActionListener {
+public class PropertiesFileSelectionPanel extends JPanel implements ActionListener, PropertyChangeListener {
 
+	// Action commands for radio buttons
 	private static String dataDirActionCommand = "datadir";
 	private static String specDirActionCommand = "specdir";
+		
+	// Keep a reference to the dataDirField so we can update the combobox
+	private final FileBrowseField _dataDirField;
 	
 	private JRadioButton _useDataDirRButton;
 	private JRadioButton _useSpecifiedDirRButton;
-	private JLabel _propFileVersionLabel;
-	private JTextField _propFileVersionField;
 	private FileBrowseField _browseField;
+	private JLabel _propFileVersionLabel;
+	private JComboBox _propFileVersionComboBox;
 	
-	public PropertiesFileSelectionPanel() {
+	// Default string for indicating lack of available properties files in combobox
+	private static final String NO_PROP_FILES_IN_DIR = "No properties files found in chosen directory";
+	// Used to keep track of current available properties files
+	private File[] _possiblePropertiesFiles;
+	
+	/**
+	 * Constructor.
+	 * 
+	 * @param dataDirField {@link FileBrowseField} that can specify the "data directory" for this widget.
+	 */
+	public PropertiesFileSelectionPanel(FileBrowseField dataDirField) {
 		super(new MigLayout("insets 0 0 0 0, nogrid, fill"));
 		setBorder(BorderFactory.createTitledBorder("Properties File"));
+		
+		_dataDirField = dataDirField;
 		
 		_useDataDirRButton = new JRadioButton("Use Data Directory", true);
 		_useDataDirRButton.setActionCommand(dataDirActionCommand);
@@ -56,64 +74,92 @@ public class PropertiesFileSelectionPanel extends JPanel implements ActionListen
 		
 		_browseField = new FileBrowseField(true);
 		_browseField.setEnabled(false);
+		_browseField.addFileChoiceChangeListener(this);
 		add(_browseField, "growx, wrap");
 		
 		_propFileVersionLabel = new JLabel("Properties File Version:");
 		add(_propFileVersionLabel, "gapright 5");
 		
-		_propFileVersionField = new JTextField(20);
-		_propFileVersionField.setToolTipText("<html>Specify a properties file version to use.<br>" +
+		String[] defaultItems = {NO_PROP_FILES_IN_DIR};
+		_propFileVersionComboBox = new JComboBox(defaultItems);
+		_propFileVersionComboBox.setToolTipText("<html>Specify a properties file version to use.<br>" +
 				"An input of [version] is used to find a file that looks like: <br>" +
 				"[experiment].properties-[version]</html>");
-		add(_propFileVersionField, "wrap");
+
+		add(_propFileVersionComboBox, "wrap");
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getActionCommand().equals(dataDirActionCommand)) {
 			_browseField.setEnabled(false);
+			updatePropFileChoices(_dataDirField.getFile());
 		} else if (e.getActionCommand().equals(specDirActionCommand)) {
 			_browseField.setEnabled(true);
+			updatePropFileChoices(_browseField.getFile());
 		}
 	}
 	
-	public File getSelectedPropertiesFile(SimpleSetupScreen<?> setup) {
-		File propFile = null;
-		
-		String propFileStr = setup.getPrefsPrefix() + ".properties";
-		String version = _propFileVersionField.getText().trim();
-		
-		// Add version modifier to file name if text has been input.
-		// Makes the file searched for of the form [experiment name].properties-[version]
-		if (!"".equals(version)) {
-			propFileStr += ("-" + version);
+	/**
+	 * Get the selected properties file found by this widget.
+	 * Will return null if no valid properties file has been selected.
+	 * 
+	 * @return A {@link File} for the selected properties file.
+	 */
+	public File getSelectedPropertiesFile() {
+		// Check if there are any possible files to return
+		if (_possiblePropertiesFiles == null || _possiblePropertiesFiles.length == 0) {
+			// Fail, no valid properties files were available.
+			return null;
 		}
 		
-		File propertiesDir;
-		if (_useDataDirRButton.isSelected()) {
-			propertiesDir = setup.getDataDir();
-		} 
-		// Otherwise the specified directory is selected. 
-		else {
-			propertiesDir = _browseField.getFile();
-		}
-		propFile = new File(propertiesDir, propFileStr);
+		// Get selected file
+		File propFile = _possiblePropertiesFiles[_propFileVersionComboBox.getSelectedIndex()];
 		
 		if (propFile != null && propFile.exists()) {
 			LogContext.getLogger().fine("Selected properties file is:" + propFile.getAbsolutePath());
 		} else {
 			LogContext.getLogger().fine("Unable to find user specified properties file: " + propFile.getAbsolutePath());
 		}
-		
 		return propFile;
 	}
+	
+	/*
+	 * Update the ComboBox with possible properties files found in the given directory File.
+	 */
+	private void updatePropFileChoices(File dir) {
+		_possiblePropertiesFiles = dir.listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				// Only accept actual files that are .properties files 
+				return file.isFile() && file.getName().contains(".properties");
+			}
+		});
+		
+		// get rid of old items before updating
+		_propFileVersionComboBox.removeAllItems();
+		if (_possiblePropertiesFiles != null && _possiblePropertiesFiles.length > 0) {
+			for (File f : _possiblePropertiesFiles) {
+				_propFileVersionComboBox.addItem(f.getName());
+			}
+		} else {
+			// Given directory has no valid children, or file is not a directory
+			_propFileVersionComboBox.addItem(NO_PROP_FILES_IN_DIR);
+		}
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent evt) {
+		updatePropFileChoices((File)evt.getNewValue());
+	}
+	
 	
 	// main method for separate testing
 //	public static void main(String[] args) {
 //		try {
 //			JFrame foo = new JFrame();
 //			foo.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//			foo.getContentPane().add(new PropertiesFileSelectionPanel());
+//			foo.getContentPane().add(new PropertiesFileSelectionPanel(null));
 //			foo.pack();
 //			foo.setVisible(true);
 //		}

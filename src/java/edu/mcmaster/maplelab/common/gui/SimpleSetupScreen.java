@@ -115,7 +115,8 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
         _labelGBC.weighty = 0;
         _fieldGBC.weighty = 0;
         
-        _propFileSelPanel = new PropertiesFileSelectionPanel();
+        _propFileSelPanel = new PropertiesFileSelectionPanel(_dataDir);
+        _dataDir.addFileChoiceChangeListener(_propFileSelPanel);
         addPanel(_propFileSelPanel);
         
         addExperimentFields();
@@ -227,7 +228,7 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
      * @return File for properties file to use in this experiment.
      */
     public File getPropertiesFile() {
-    	return _propFileSelPanel.getSelectedPropertiesFile(this);
+    	return _propFileSelPanel.getSelectedPropertiesFile();
     }
 
     /**

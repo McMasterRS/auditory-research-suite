@@ -14,6 +14,8 @@ package edu.mcmaster.maplelab.common.gui;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 
 import javax.swing.*;
@@ -39,6 +41,8 @@ public class FileBrowseField extends JPanel {
 
     private ColorUpdater _colorUpdater;
     
+    private final PropertyChangeSupport _PCS = new PropertyChangeSupport(this);
+    
     public FileBrowseField(boolean directoriesOnly) {
         super(new MigLayout("insets 0 0 0 0, nogrid, fill"));
         
@@ -59,7 +63,7 @@ public class FileBrowseField extends JPanel {
 
         public void actionPerformed(ActionEvent e) {
             
-            String path = getTextField().getText();
+            String path = _fileName.getText();
             JFileChooser chooser = path != null ? new JFileChooser(path) : new JFileChooser();
             
             chooser.setFileSelectionMode(_directoriesOnly ? JFileChooser.DIRECTORIES_ONLY : JFileChooser.FILES_ONLY);
@@ -70,12 +74,8 @@ public class FileBrowseField extends JPanel {
         }
     }
     
-    protected JTextField getTextField() {
-    	return _fileName;
-    }
-    
-    protected JButton getButton() {
-    	return _button;
+    public void addFileChoiceChangeListener(PropertyChangeListener listener) {
+    	_PCS.addPropertyChangeListener(listener);
     }
     
     public void setMissingFileIndicator(boolean state) {
@@ -83,8 +83,12 @@ public class FileBrowseField extends JPanel {
     }
 
     public void setFile(File file) {
+    	String oldFileAbsPath = _fileName.getText();
         _fileName.setText(file.getAbsolutePath());
         _colorUpdater.updateColor();
+        
+        // Pass the new chosen directory to listeners.
+        _PCS.firePropertyChange("updated file", oldFileAbsPath, file);
     }
     
     public File getFile() {

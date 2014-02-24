@@ -365,16 +365,17 @@ public abstract class ExperimentFrame <T extends Session<?, R, L>,  R extends Tr
     	
         try {
             File propFile = setup.getPropertiesFile();
-            if (propFile.exists()) {
+            if (propFile != null && propFile.exists()) {
                 in = new FileInputStream(propFile);   
                 propFileStr = propFile.getAbsolutePath();
             }
             else {
-            	// Maybe a warning of some sort should pop up here, more than just a log entry.
-            	LogContext.getLogger().warning("Unable to find user specified properties file. " +
+            	// propFile is null or does not exist... use default internal file.
+            	LogContext.getLogger().warning("User specified properties file is null or does not exist." +
             			"Using default internal properties file.");
-            	JOptionPane.showMessageDialog(null, "<html>Unable to find user specified properties file. " +
-            			"<br>Using default internal properties file.</html>", "Using Default Properties",
+            	JOptionPane.showMessageDialog(null, "<html>No valid properties file given. " +
+            			"<br>Using default internal properties file: <br>" + defaultPropFile + "</html>",
+            			"Using Default Properties",
             			JOptionPane.INFORMATION_MESSAGE);
             	
             	URL url = getClass().getResource(defaultPropFile);
