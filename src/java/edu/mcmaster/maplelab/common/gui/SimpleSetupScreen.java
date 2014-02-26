@@ -23,6 +23,8 @@ import java.util.prefs.Preferences;
 
 import javax.swing.*;
 
+import net.miginfocom.swing.MigLayout;
+
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.Session;
 
@@ -46,8 +48,6 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
     private final FileBrowseField _dataDir;
     private final PropertiesFileSelectionPanel _propFileSelPanel;
     private final String _prefsPrefix;
-    private GridBagConstraints _labelGBC;
-    private GridBagConstraints _fieldGBC;
     private JCheckBox _fullScreen;
     private JCheckBox _demoMode;
 
@@ -57,18 +57,9 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
     
     public SimpleSetupScreen(String prefsPrefix, boolean includeDemoModeSwitch, 
     		boolean includeFullScreenSwitch) {
-        super(new GridBagLayout());
+        super(new MigLayout("insets 0, fill, wrap", "[right]2px[left][grow]push"));
         _prefsPrefix = prefsPrefix;
         setBorder(BorderFactory.createTitledBorder("Setup"));
-        _labelGBC = new GridBagConstraints();
-        _labelGBC.gridx = 0;
-        _labelGBC.anchor = GridBagConstraints.EAST;
-        
-        _fieldGBC = new GridBagConstraints();
-        _fieldGBC.anchor = GridBagConstraints.WEST;
-        _fieldGBC.gridx = 1;
-        _fieldGBC.weightx = 1;
-        _fieldGBC.fill = GridBagConstraints.NONE;
         
         addLabel("RA ID:");
         _raID = new JFormattedTextField();
@@ -90,9 +81,7 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
         
         addLabel("Data directory:");
         _dataDir = new FileBrowseField(true);
-        _fieldGBC.fill = GridBagConstraints.HORIZONTAL;
         addField(_dataDir);
-        _fieldGBC.fill = GridBagConstraints.NONE;
         
         if (includeFullScreenSwitch) {
             addLabel("Full screen:");
@@ -105,15 +94,6 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
             _demoMode = new JCheckBox();
             addField(_demoMode);
         }
-        
-        // Create buffer space between standard fields and fields
-        // user may add later. Also provides better distribution of extra space.
-        _labelGBC.weighty = 1;
-        _fieldGBC.weighty = 1;
-        add(new JLabel(), _labelGBC);
-        add(new JLabel(), _fieldGBC);
-        _labelGBC.weighty = 0;
-        _fieldGBC.weighty = 0;
         
         _propFileSelPanel = new PropertiesFileSelectionPanel(_dataDir);
         _dataDir.addFileChoiceChangeListener(_propFileSelPanel);
@@ -151,7 +131,7 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
      * @param label label for control
      */
     protected void addLabel(String label) {
-        add(new JLabel(label), _labelGBC);
+        add(new JLabel(label), "right");
     }
     
     /**
@@ -162,7 +142,7 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
      * @param field field to add.
      */
     protected void addField(JComponent field)  {
-        add(field, _fieldGBC);
+        add(field, "left, wrap");
     }
     
     /**
@@ -172,11 +152,7 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
      * @param panel panel to add.
      */
     protected void addPanel(JPanel panel) {
-    	_labelGBC.gridwidth = 2;
-    	_labelGBC.fill = GridBagConstraints.HORIZONTAL;
-    	add(panel, _labelGBC);
-    	_labelGBC.gridwidth = 1;
-    	_labelGBC.fill = GridBagConstraints.NONE;
+    	add(panel, "grow, span");
     }
     
     /**
