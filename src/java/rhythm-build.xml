@@ -30,7 +30,8 @@
 	    <include name="edu/mcmaster/maplelab/rhythm/*.class" />
 	    <include name="edu/mcmaster/maplelab/rhythm/**/*.class" />
         <include name="edu/mcmaster/maplelab/rhythm/**/*.png" />
-        <include name="edu/mcmaster/maplelab/rhythm/**/*.properties" />       	
+        <include name="edu/mcmaster/maplelab/rhythm/**/*.properties" />    
+        <include name="edu/mcmaster/maplelab/rhythm/**/*.sf2" />       	
     </patternset>
 	
 	<path id="used.jars.path">
