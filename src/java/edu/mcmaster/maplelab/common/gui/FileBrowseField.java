@@ -17,6 +17,10 @@ import java.awt.event.*;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
+import javax.swing.filechooser.FileFilter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.*;
 
@@ -33,6 +37,8 @@ import net.miginfocom.swing.MigLayout;
 public class FileBrowseField extends JPanel {
     private final boolean _directoriesOnly;
     
+    private final javax.swing.filechooser.FileFilter _filter;
+    
     private final JTextField _fileName;
 
 	private JButton _button;
@@ -43,10 +49,16 @@ public class FileBrowseField extends JPanel {
     
     private final PropertyChangeSupport _PCS = new PropertyChangeSupport(this);
     
-    public FileBrowseField(boolean directoriesOnly) {
+    public FileBrowseField(boolean directoriesOnly, String...extensions) {
         super(new MigLayout("insets 0 0 0 0, nogrid, fill"));
         
         _directoriesOnly = directoriesOnly;
+        if (extensions != null && extensions.length > 0) {
+        	_filter = new FileBrowseFilter(extensions);
+        }
+        else {
+        	_filter = null;
+        }
         
         _fileName = new JTextField();
         _colorUpdater = new ColorUpdater();
@@ -67,6 +79,9 @@ public class FileBrowseField extends JPanel {
             JFileChooser chooser = path != null ? new JFileChooser(path) : new JFileChooser();
             
             chooser.setFileSelectionMode(_directoriesOnly ? JFileChooser.DIRECTORIES_ONLY : JFileChooser.FILES_ONLY);
+            if (_filter != null) {
+            	chooser.setFileFilter(_filter);
+            }
             
             if (chooser.showOpenDialog(FileBrowseField.this) == JFileChooser.APPROVE_OPTION) {
             	setFile(chooser.getSelectedFile());
@@ -124,5 +139,40 @@ public class FileBrowseField extends JPanel {
         public void focusLost(FocusEvent arg0) {
             updateColor();
         }
+    }
+    
+    private class FileBrowseFilter extends FileFilter {
+    	private final List<String> _ext;
+    	
+    	public FileBrowseFilter(String...strings) {
+    		_ext = new ArrayList<String>();
+    		for (String s : strings) {
+    			if (s != null && !s.isEmpty()) {
+    				_ext.add(s.startsWith(".") ? s : "." + s);
+    			}
+    		}
+    	}
+    	
+		@Override
+		public boolean accept(File f) {
+			for (String ext : _ext) {
+				if (f.getAbsolutePath().endsWith(ext)) {
+					return true;
+				}
+			}
+			
+			return false;
+		}
+
+		@Override
+		public String getDescription() {
+			String retval = "";
+			for (String ext : _ext) {
+				retval = retval + "*." + ext + ", ";
+			}
+			retval = retval.substring(0, retval.length() - 2);
+			
+			return retval;
+		}
     }
 }
