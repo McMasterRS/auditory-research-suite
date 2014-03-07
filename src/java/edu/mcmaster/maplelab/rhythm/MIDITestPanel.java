@@ -14,14 +14,13 @@ package edu.mcmaster.maplelab.rhythm;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowEvent;
 import java.io.*;
-import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.sound.midi.*;
 import javax.swing.*;
-import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
@@ -40,12 +39,14 @@ import edu.mcmaster.maplelab.common.sound.*;
  */
 public class MIDITestPanel extends JPanel {
     private final JTextPane _console;
-    private JSpinner _midiDevID;
     private static JDialog _dialog = null;
     private DeviceSelectionPanel _devs;
     private JScrollPane _scrollPane;
+        
+    private MIDISettings _primaryMIDISettings;
+    private MIDISettings _testMIDISettings;
     
-    public static JDialog createDialog(Component parent) {
+    public static JDialog createDialog(Component parent, MIDISettings settings) {
         Window window = SwingUtilities.windowForComponent(parent);
         
         if (_dialog == null) {
@@ -55,37 +56,31 @@ public class MIDITestPanel extends JPanel {
             else {
                 _dialog = new JDialog((Dialog) window, "MIDI Devices and Testing");
             }
-            
-            _dialog.getContentPane().add(new MIDITestPanel());
-            _dialog.pack();
-            _dialog.setLocationRelativeTo(parent);
         }
+        _dialog.getContentPane().removeAll();
+        _dialog.getContentPane().add(new MIDITestPanel(settings));
+        _dialog.pack();
+        _dialog.setLocationRelativeTo(parent);
         
         return _dialog;
     }
     
-    public MIDITestPanel() {
+    public MIDITestPanel(MIDISettings settings) {
         super(new BorderLayout());
+        
+        _primaryMIDISettings = settings;
+        _testMIDISettings = new MIDISettings();
+        _testMIDISettings.copy(settings);
         
         JPanel top = new JPanel(new MigLayout("fill, insets 0", "5px[][][]push[]5px", "5px[]10px[]"));
         add(top, BorderLayout.NORTH);
         
-        _devs = new DeviceSelectionPanel();
+        _devs = new DeviceSelectionPanel(_testMIDISettings);
         top.add(_devs, "span 4, grow, wrap");
         
         top.add(new JButton(new ListMidiAction()));
         top.add(new JButton(new PlayAction()));
         top.add(new JButton(new TestTapRecord()), "wrap");
-        
-        /*JPanel p = new JPanel();
-        p.setBorder(BorderFactory.createEtchedBorder());
-        p.add(new JButton(new TestTapRecord()));
-        p.add(new JLabel("Device:"));
-        _midiDevID = new JSpinner(new SpinnerNumberModel(-1, -1, 15, 1));
-        //TODO: set a custom Document object for the underlying text field
-        // and limit inputs to valid integer-relevant characters?
-        p.add(_midiDevID);
-        top.add(p);*/
         
         _console = new JTextPane();
         _console.setContentType("text/plain");
@@ -97,7 +92,17 @@ public class MIDITestPanel extends JPanel {
         
         JPanel p = new JPanel();
         p.add(new JButton(new ClearConsoleAction()));
-        p.add(new CloseButton());
+        p.add(new CloseButton("Cancel"));
+        p.add(new JButton(new AbstractAction("Apply Settings") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				_primaryMIDISettings.copy(_testMIDISettings);
+				
+				Component comp = (Component) e.getSource();
+				Window win = SwingUtilities.windowForComponent(comp);
+				win.dispatchEvent(new WindowEvent(win, WindowEvent.WINDOW_CLOSING));
+			}
+		}));
         add(p, BorderLayout.SOUTH);
     }
     
@@ -255,7 +260,7 @@ public class MIDITestPanel extends JPanel {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-            int dev = _devs.getTapInputIndex() - 1;//getCurrentDeviceID();
+            int dev = _devs.getTapInputIndex();//getCurrentDeviceID();
             
             // determine notice for selected device
             String message = null;
@@ -270,7 +275,7 @@ public class MIDITestPanel extends JPanel {
             	_tapRecorder.setMIDIInputID(dev);
                 message = "Start tapping via the selected device, or use the computer keyboard";
             }
-            _tapRecorder.setMIDISynthID(_devs.getTapSynthIndex() - 1);
+            _tapRecorder.setMIDISynthID(_devs.getTapSynthIndex());
 
             printf(message);
             
@@ -326,7 +331,7 @@ public class MIDITestPanel extends JPanel {
         try {
             JFrame foo = new JFrame();
             foo.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            foo.getContentPane().add(new MIDITestPanel());
+            foo.getContentPane().add(new MIDITestPanel(new MIDISettings()));
             foo.pack();
             foo.setVisible(true);
         }

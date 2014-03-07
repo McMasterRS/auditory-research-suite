@@ -71,6 +71,7 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
         toneSynthID,
         tapInputDevID,
         tapSynthID,
+        soundbankFilename,
         tapTestSound,
         computerKeyInput,
         recordNoteOff,
@@ -434,6 +435,14 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     
     public void setTapSynthDevID(int id) {
         setProperty(ConfigKeys.tapSynthID, id);
+    }
+    
+    public String getSoundbankFilename() {
+    	return getString(ConfigKeys.soundbankFilename, "");
+    }
+    
+    public void setSoundbankFilename(String filename) {
+    	setProperty(ConfigKeys.soundbankFilename, filename);
     }
      
      /**

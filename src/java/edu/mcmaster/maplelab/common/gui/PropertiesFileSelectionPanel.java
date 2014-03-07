@@ -82,9 +82,7 @@ public class PropertiesFileSelectionPanel extends JPanel implements ActionListen
 		
 		String[] defaultItems = {NO_PROP_FILES_IN_DIR};
 		_propFileVersionComboBox = new JComboBox(defaultItems);
-		_propFileVersionComboBox.setToolTipText("<html>Specify a properties file version to use.<br>" +
-				"An input of [version] is used to find a file that looks like: <br>" +
-				"[experiment].properties-[version]</html>");
+		_propFileVersionComboBox.setToolTipText("Choose properties file version.");
 
 		add(_propFileVersionComboBox, "wrap");
 	}

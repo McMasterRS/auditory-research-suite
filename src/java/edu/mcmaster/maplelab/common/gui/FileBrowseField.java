@@ -106,6 +106,10 @@ public class FileBrowseField extends JPanel {
         _PCS.firePropertyChange("updated file", oldFileAbsPath, file);
     }
     
+    public void setText(String text) {
+    	_fileName.setText(text);
+    }
+    
     public File getFile() {
         String fStr = _fileName.getText();
         return new File(fStr != null ? fStr : ".");
@@ -155,8 +159,10 @@ public class FileBrowseField extends JPanel {
     	
 		@Override
 		public boolean accept(File f) {
+			if (f.isDirectory()) {return true;}
+			
 			for (String ext : _ext) {
-				if (f.getAbsolutePath().endsWith(ext)) {
+				if (f.getName().endsWith(ext)) {
 					return true;
 				}
 			}
@@ -168,7 +174,7 @@ public class FileBrowseField extends JPanel {
 		public String getDescription() {
 			String retval = "";
 			for (String ext : _ext) {
-				retval = retval + "*." + ext + ", ";
+				retval = retval + "*" + ext + ", ";
 			}
 			retval = retval.substring(0, retval.length() - 2);
 			
