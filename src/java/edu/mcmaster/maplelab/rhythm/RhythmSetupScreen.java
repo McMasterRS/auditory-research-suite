@@ -4,8 +4,6 @@ import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.prefs.Preferences;
 
@@ -24,9 +22,7 @@ import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession;
  * @author bguseman
  *
  */
-public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> implements PropertyChangeListener {
-	private DeviceSelectionPanel _devs;
-	
+public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> {
 	private MIDISettings _primaryMIDISettings;
 
 	public RhythmSetupScreen() {
@@ -41,11 +37,10 @@ public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> implemen
 	@Override
 	protected void addExperimentFields() {
 		_primaryMIDISettings = new MIDISettings();
-		_primaryMIDISettings.addPropertyChangeListener(this);
 		
-		_devs = new DeviceSelectionPanel(_primaryMIDISettings);
+		MIDISettingsEditor editor = new MIDISettingsEditor(_primaryMIDISettings);
 		JPanel p = new JPanel(new MigLayout("fill, insets 0", "0px[grow]0px", "10px[grow]10px"));
-		p.add(_devs, "grow");
+		p.add(editor, "grow");
 		addPanel(p);
 		
 		// provide access to test utility
@@ -66,18 +61,18 @@ public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> implemen
 
 	@Override
 	protected void applyExperimentSettings(RhythmSession session) {
-		session.setSynthDevID(_devs.getToneSynthIndex());
-		session.setTapInputDevID(_devs.getTapInputIndex());
-		session.setTapSynthDevID(_devs.getTapSynthIndex());
-		session.setSoundbankFilename(_devs.getSoundbankFilename());
+		session.setSynthDevID(_primaryMIDISettings.getToneSynthesizerID());
+		session.setTapInputDevID(_primaryMIDISettings.getTapInputID());
+		session.setTapSynthDevID(_primaryMIDISettings.getTapSynthesizerID());
+		session.setSoundbankFilename(_primaryMIDISettings.getSoundbankFilename());
 	}
 
 	@Override
 	protected void putExperimentPrefs(Preferences prefs) {
-		prefs.putInt(RhythmSession.ConfigKeys.toneSynthID.name(), _devs.getToneSynthIndex());
-		prefs.putInt(RhythmSession.ConfigKeys.tapInputDevID.name(), _devs.getTapInputIndex());
-		prefs.putInt(RhythmSession.ConfigKeys.tapSynthID.name(), _devs.getTapSynthIndex());
-		prefs.put(RhythmSession.ConfigKeys.soundbankFilename.name(), _devs.getSoundbankFilename());
+		prefs.putInt(RhythmSession.ConfigKeys.toneSynthID.name(), _primaryMIDISettings.getToneSynthesizerID());
+		prefs.putInt(RhythmSession.ConfigKeys.tapInputDevID.name(), _primaryMIDISettings.getTapInputID());
+		prefs.putInt(RhythmSession.ConfigKeys.tapSynthID.name(), _primaryMIDISettings.getTapSynthesizerID());
+		prefs.put(RhythmSession.ConfigKeys.soundbankFilename.name(), _primaryMIDISettings.getSoundbankFilename());
 	}
 
 	@Override
@@ -89,22 +84,13 @@ public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> implemen
 		String savedSBFile = prefs.get(RhythmSession.ConfigKeys.soundbankFilename.name(), "");
 		if (!savedSBFile.equals("")) {
 			loaded.setSoundbankFilename(savedSBFile);
-			loaded.setIsDefaultSoundBank(false);
+			loaded.setUsingDefaultSoundBank(false);
 		}
-		_devs.updateSelections(loaded);
+		_primaryMIDISettings.copy(loaded);
 	}
 
 	@Override
 	protected String getTitlePrefix() {
 		return String.format("Rhythm Experiment - Build %s", RhythmExperiment.getBuildVersion());
 	}
-
-	@Override
-	public void propertyChange(PropertyChangeEvent evt) {
-		if (evt.getPropertyName().equals("copy")) {
-			// If the copy event occurred, then the primary settings should have been updated.
-			_devs.updateSelections(_primaryMIDISettings);
-		}
-	}
-
 }

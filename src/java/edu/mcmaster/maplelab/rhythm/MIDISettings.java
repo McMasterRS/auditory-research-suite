@@ -3,12 +3,15 @@ package edu.mcmaster.maplelab.rhythm;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
+import javax.sound.midi.MidiSystem;
+
 /**
  * Data object to encapsulate device IDs and soundbank filenames.
  * @author zachbrown
  *
  */
 public class MIDISettings {
+	public static final int VALID_DEV_COUNT = MidiSystem.getMidiDeviceInfo().length;
 	
 	private int _toneSynthesizerID;
 	private int _tapInputID;
@@ -34,7 +37,9 @@ public class MIDISettings {
 	}
 	
 	public void setToneSynthesizerID(int toneSynthesizerID) {
-		_toneSynthesizerID = toneSynthesizerID;
+		if (toneSynthesizerID >= 0 && toneSynthesizerID < VALID_DEV_COUNT) {
+			_toneSynthesizerID = toneSynthesizerID;
+		}
 	}
 	
 	public int getTapInputID() {
@@ -42,7 +47,9 @@ public class MIDISettings {
 	}
 	
 	public void setTapInputID(int tapInputID) {
-		_tapInputID = tapInputID;
+		if (tapInputID >= -1 && tapInputID < VALID_DEV_COUNT) {
+			_tapInputID = tapInputID;
+		}
 	}
 	
 	public int getTapSynthesizerID() {
@@ -50,7 +57,9 @@ public class MIDISettings {
 	}
 	
 	public void setTapSynthesizerID(int tapSynthesizerID) {
-		_tapSynthesizerID = tapSynthesizerID;
+		if (tapSynthesizerID >= -1 && tapSynthesizerID < VALID_DEV_COUNT) {
+			_tapSynthesizerID = tapSynthesizerID;
+		}
 	}
 	
 	public String getSoundbankFilename() {
@@ -61,12 +70,12 @@ public class MIDISettings {
 		_soundbankFilename = filename;
 	}
 	
-	public boolean getIsDefaultSoundBank() {
+	public boolean isUsingDefaultSoundBank() {
 		return _isDefaultSoundbank;
 	}
 	
-	public void setIsDefaultSoundBank(boolean setDefault) {
-		_isDefaultSoundbank = setDefault;
+	public void setUsingDefaultSoundBank(boolean isDefaultSoundbank) {
+		_isDefaultSoundbank = isDefaultSoundbank;
 	}
 	
 	public void addPropertyChangeListener(PropertyChangeListener pcl) {
@@ -78,7 +87,7 @@ public class MIDISettings {
 		_tapInputID = other.getTapInputID();
 		_tapSynthesizerID = other.getTapSynthesizerID();
 		_soundbankFilename = other.getSoundbankFilename();
-		_isDefaultSoundbank = other.getIsDefaultSoundBank();
+		_isDefaultSoundbank = other.isUsingDefaultSoundBank();
 		
 		_PCS.firePropertyChange("copy", this, other);
 	}

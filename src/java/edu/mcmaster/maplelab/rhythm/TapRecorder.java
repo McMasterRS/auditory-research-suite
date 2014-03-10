@@ -205,25 +205,27 @@ public class TapRecorder implements AWTEventListener, Receiver {
         	try {
         		// initialize/get _tapSynthDev setup
         		setupTapSynthesizer();
+        		if (_tapSynthDev != null) {
 
-        		_feedbackReceiver = _tapSynthDev.getReceiver();
-        		if (_session != null) {
-        			float vol = _withTap ? _session.subjectTapGain() : _session.subjectNoTapGain();
-        			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
-        					(short) _session.subjectTapInstrumentNumber(), (short) 0);
-        			for (MidiEvent me : prep) {
-        				_feedbackReceiver.send(me.getMessage(), me.getTick());
-        			}
-        		}
-        		// _session is null if we are calling from the MIDITestPanel before starting trials
-        		// This just runs taps with some basic defaults
-        		else {
-        			float vol = 1.0f;
-        			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
-        					(short) 115 , (short) 0);
-        			for (MidiEvent me : prep) {
-        				_feedbackReceiver.send(me.getMessage(), me.getTick());
-        			}
+            		_feedbackReceiver = _tapSynthDev.getReceiver();
+            		if (_session != null) {
+            			float vol = _withTap ? _session.subjectTapGain() : _session.subjectNoTapGain();
+            			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
+            					(short) _session.subjectTapInstrumentNumber(), (short) 0);
+            			for (MidiEvent me : prep) {
+            				_feedbackReceiver.send(me.getMessage(), me.getTick());
+            			}
+            		}
+            		// _session is null if we are calling from the MIDITestPanel before starting trials
+            		// This just runs taps with some basic defaults
+            		else {
+            			float vol = 1.0f;
+            			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
+            					(short) 115 , (short) 0);
+            			for (MidiEvent me : prep) {
+            				_feedbackReceiver.send(me.getMessage(), me.getTick());
+            			}
+            		}
         		}
     		} 
             catch (Exception e) {

@@ -94,7 +94,7 @@ public class FileBrowseField extends JPanel {
     }
     
     public void setMissingFileIndicator(boolean state) {
-        _missingFileIndicator  = state;
+        _missingFileIndicator = state;
     }
 
     public void setFile(File file) {
@@ -112,7 +112,12 @@ public class FileBrowseField extends JPanel {
     
     public File getFile() {
         String fStr = _fileName.getText();
-        return new File(fStr != null ? fStr : ".");
+        File retval = new File(fStr != null ? fStr : ".");
+        if (_filter == null) {
+        	return retval;
+        }
+        
+        return _filter.accept(retval) ? retval : null;
     }
     
     public void setEnabled(boolean state) {

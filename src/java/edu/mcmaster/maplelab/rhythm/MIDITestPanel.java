@@ -40,13 +40,11 @@ import edu.mcmaster.maplelab.common.sound.*;
 public class MIDITestPanel extends JPanel {
     private final JTextPane _console;
     private static JDialog _dialog = null;
-    private DeviceSelectionPanel _devs;
     private JScrollPane _scrollPane;
         
-    private MIDISettings _primaryMIDISettings;
     private MIDISettings _testMIDISettings;
     
-    public static JDialog createDialog(Component parent, MIDISettings settings) {
+    public static JDialog createDialog(Component parent, MIDISettings parentSettings) {
         Window window = SwingUtilities.windowForComponent(parent);
         
         if (_dialog == null) {
@@ -58,25 +56,24 @@ public class MIDITestPanel extends JPanel {
             }
         }
         _dialog.getContentPane().removeAll();
-        _dialog.getContentPane().add(new MIDITestPanel(settings));
+        _dialog.getContentPane().add(new MIDITestPanel(parentSettings));
         _dialog.pack();
         _dialog.setLocationRelativeTo(parent);
         
         return _dialog;
     }
     
-    public MIDITestPanel(MIDISettings settings) {
+    public MIDITestPanel(final MIDISettings parentSettings) {
         super(new BorderLayout());
         
-        _primaryMIDISettings = settings;
         _testMIDISettings = new MIDISettings();
-        _testMIDISettings.copy(settings);
+        _testMIDISettings.copy(parentSettings);
         
         JPanel top = new JPanel(new MigLayout("fill, insets 0", "5px[][][]push[]5px", "5px[]10px[]"));
         add(top, BorderLayout.NORTH);
         
-        _devs = new DeviceSelectionPanel(_testMIDISettings);
-        top.add(_devs, "span 4, grow, wrap");
+        MIDISettingsEditor devs = new MIDISettingsEditor(_testMIDISettings);
+        top.add(devs, "span 4, grow, wrap");
         
         top.add(new JButton(new ListMidiAction()));
         top.add(new JButton(new PlayAction()));
@@ -96,7 +93,7 @@ public class MIDITestPanel extends JPanel {
         p.add(new JButton(new AbstractAction("Apply Settings") {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				_primaryMIDISettings.copy(_testMIDISettings);
+				parentSettings.copy(_testMIDISettings);
 				
 				Component comp = (Component) e.getSource();
 				Window win = SwingUtilities.windowForComponent(comp);
@@ -167,8 +164,8 @@ public class MIDITestPanel extends JPanel {
             List<Note> tune = tune(150);
             try {
             	ToneGenerator tg = ToneGenerator.getInstance();
-            	tg.setSoundbank(RhythmExperiment.getSoundbankFileFromString(_devs.getSoundbankFilename()));
-            	tg.setMIDISynthID(_devs.getToneSynthIndex());
+            	tg.setSoundbank(RhythmExperiment.getSoundbankFileFromString(_testMIDISettings.getSoundbankFilename()));
+            	tg.setMIDISynthID(_testMIDISettings.getToneSynthesizerID());
                 tg.initializeSequenceToPlay(tune, 1.0f);
                 tg.startSequencerPlayback(true);
             }
@@ -255,15 +252,15 @@ public class MIDITestPanel extends JPanel {
         public void actionPerformed(ActionEvent e) {
             setEnabled(false);
             
-            File soundbankFile = RhythmExperiment.getSoundbankFileFromString(_devs.getSoundbankFilename());
+            File soundbankFile = RhythmExperiment.getSoundbankFileFromString(_testMIDISettings.getSoundbankFilename());
             try {
             	ToneGenerator tg = ToneGenerator.getInstance();
             	tg.setSoundbank(soundbankFile);
-				tg.setMIDISynthID(_devs.getToneSynthIndex());
+				tg.setMIDISynthID(_testMIDISettings.getToneSynthesizerID());
 			} catch (MidiUnavailableException e1) {
 				e1.printStackTrace();
 			}
-            int dev = _devs.getTapInputIndex();
+            int dev = _testMIDISettings.getTapInputID();
             
             // determine notice for selected device
             String message = null;
@@ -278,7 +275,7 @@ public class MIDITestPanel extends JPanel {
             	_tapRecorder.setMIDIInputID(dev);
                 message = "Start tapping via the selected device, or use the computer keyboard";
             }
-            _tapRecorder.setMIDISynthID(_devs.getTapSynthIndex());
+            _tapRecorder.setMIDISynthID(_testMIDISettings.getTapSynthesizerID());
             _tapRecorder.setSoundbank(soundbankFile);
             
             printf(message);
