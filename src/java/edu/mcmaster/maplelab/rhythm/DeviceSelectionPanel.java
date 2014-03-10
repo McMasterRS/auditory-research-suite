@@ -163,10 +163,12 @@ public class DeviceSelectionPanel extends JPanel implements ActionListener, Prop
 		if (e.getSource().equals(_useDefaultSoundbankRButton)) {
 			_soundbankChooser.setEnabled(false);
 			_soundbankChooser.setText(DEFAULTSOUNDBANK);
+			_settings.setSoundbankFilename("");
 			_settings.setIsDefaultSoundBank(true);
 		} else if (e.getSource().equals(_useSpecifiedSoundbankRButton)) {
 			_soundbankChooser.setEnabled(true);
 			_soundbankChooser.setText("");
+			_settings.setSoundbankFilename("");
 			_settings.setIsDefaultSoundBank(false);
 		}
 	}

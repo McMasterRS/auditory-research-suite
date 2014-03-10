@@ -11,8 +11,10 @@
 */
 package edu.mcmaster.maplelab.rhythm.datamodel;
 
+import java.io.File;
 import java.util.*;
 
+import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.Session;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.sound.Pitch;
@@ -437,8 +439,22 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
         setProperty(ConfigKeys.tapSynthID, id);
     }
     
-    public String getSoundbankFilename() {
-    	return getString(ConfigKeys.soundbankFilename, "");
+    /**
+     * Finds a soundbank file based on the stored soundbank filename. Returns the default
+     * internal soundbank file if the user specified file cannot be located. 
+     * 
+     * @return File that contains soundbank
+     */
+    public File getSoundbankFile() {
+    	String filename = getString(ConfigKeys.soundbankFilename, "");
+    	File sbFile = RhythmExperiment.getSoundbankFileFromString(filename);
+		
+    	LogContext.getLogger().fine("Soundbank location: " 
+				+ (sbFile != null ? sbFile.getAbsolutePath() : "null"));
+    	
+    	// Re-save the name, in case the file was changed to the default.
+    	setSoundbankFilename(sbFile.getAbsolutePath());
+    	return sbFile;
     }
     
     public void setSoundbankFilename(String filename) {

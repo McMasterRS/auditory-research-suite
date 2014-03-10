@@ -11,6 +11,8 @@
 */
 package edu.mcmaster.maplelab.common.sound;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -91,8 +93,10 @@ public class ToneGenerator {
     private short _midiBankLSB = MIDI_BANK_LSB_FLUTE;
     private short _midiBankMSB = MIDI_BANK_MSB_FLUTE;
     private int _midiSynthDevID = -1;
-    private MidiDevice _midiSynthDev;
+    private Synthesizer _midiSynthDev;
     private Receiver _synthReceiver;
+    
+    private Soundbank _soundbank;
     
     private Map<Track, Integer> _lastDetunes = new  HashMap<Track, Integer>();
     
@@ -112,6 +116,18 @@ public class ToneGenerator {
     		setMIDISynthID(_midiSynthDevID);
     	}
     	return _midiSynthDev;
+    }
+    
+    public void setSoundbank(File soundbankFile) {
+    	try {
+			_soundbank = MidiSystem.getSoundbank(soundbankFile);
+		} catch (InvalidMidiDataException e) {
+			LogContext.getLogger().warning("Unable to load soundbank:" + soundbankFile.getAbsolutePath());
+			e.printStackTrace();
+		} catch (IOException e) {
+			LogContext.getLogger().warning("Error reading file: " + soundbankFile.getAbsolutePath());
+			e.printStackTrace();
+		}
     }
     
     public static MidiDevice initializeSynth(int deviceID) throws MidiUnavailableException {
@@ -163,9 +179,26 @@ public class ToneGenerator {
     		MidiDevice device = initializeSynth(_midiSynthDevID);
 	        
 	        // assign and open device
-	        _midiSynthDev = device;
+	        _midiSynthDev = (Synthesizer)device;
+	        
     		if (_midiSynthDev != null && !_midiSynthDev.isOpen()) _midiSynthDev.open();
-
+    		
+    		// This all comes after opening the synthesizer because soundbank loading 
+    		// cannot happen until after synthesizer is opened 
+    		if (_soundbank != null && _midiSynthDev.isSoundbankSupported(_soundbank)) {
+	        	LogContext.getLogger().fine("Loading Soundbank: " + _soundbank.getName());
+	        	_midiSynthDev.unloadAllInstruments(_midiSynthDev.getDefaultSoundbank());
+	        	
+	        	// Maybe add some sort of progress indicator at some point to show this is loading...
+	        	// Can take several seconds, maybe more if soundbank is large. 
+	        	_midiSynthDev.loadAllInstruments(_soundbank);
+	        } else {
+	        	LogContext.getLogger().warning(
+	        			"Soundbank null or unsupported, reverting to emergency soundbank: " +
+	        			_midiSynthDev.getDefaultSoundbank().getName());
+	        	// emergency soundbank is by default loaded
+	        }
+    		
     		// link the sequencer to the synth
 	    	if (_sequencer.isOpen()) _sequencer.close();
 	    	if (_midiSynthDev != null) {

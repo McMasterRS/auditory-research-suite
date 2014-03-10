@@ -20,13 +20,12 @@ import static edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.Tria
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
-import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.sound.midi.*;
 import javax.swing.*;
@@ -152,14 +151,21 @@ public class StimulusResponseScreen extends BasicStep {
         });
         /* End Status/Response setup */
         
+        LogContext.getLogger().fine("Loading soundbank file for "
+        		+ (_isWarmup ? "warmup." : "trials."));
+        File soundbankFile = _session.getSoundbankFile();
         try {
         	_tapRecorder = new TapRecorder(_session);
         	_tapRecorder.setMIDIInputID(_session.getTapInputDevID());
         	_tapRecorder.setMIDISynthID(_session.getTapSynthDevID());
+        	_tapRecorder.setSoundbank(soundbankFile);
+        	
+        	// Must set Soundbank prior so ToneGenerator will use it to setup devices.
+        	ToneGenerator.getInstance().setSoundbank(soundbankFile);
         	ToneGenerator.getInstance().setMIDISynthID(_session.getSynthDevID());
+        	
         	// We have to add a key listener to make sure this gets
         	// registered to receive events.
-
         	class TapTarget extends JComponent {
         		public TapTarget() {
         			if (_session.allowComputerKeyInput()) {

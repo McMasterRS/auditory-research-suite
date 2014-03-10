@@ -86,7 +86,11 @@ public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> implemen
 		loaded.setToneSynthesizerID(prefs.getInt(RhythmSession.ConfigKeys.toneSynthID.name(), 0));
 		loaded.setTapInputID(prefs.getInt(RhythmSession.ConfigKeys.tapInputDevID.name(), -1));
 		loaded.setTapSynthesizerID(prefs.getInt(RhythmSession.ConfigKeys.tapSynthID.name(), -1));
-		loaded.setSoundbankFilename(prefs.get(RhythmSession.ConfigKeys.soundbankFilename.name(), ""));
+		String savedSBFile = prefs.get(RhythmSession.ConfigKeys.soundbankFilename.name(), "");
+		if (!savedSBFile.equals("")) {
+			loaded.setSoundbankFilename(savedSBFile);
+			loaded.setIsDefaultSoundBank(false);
+		}
 		_devs.updateSelections(loaded);
 	}
 

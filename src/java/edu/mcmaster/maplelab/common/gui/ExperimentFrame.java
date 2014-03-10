@@ -371,7 +371,7 @@ public abstract class ExperimentFrame <T extends Session<?, R, L>,  R extends Tr
             }
             else {
             	// propFile is null or does not exist... use default internal file.
-            	LogContext.getLogger().warning("User specified properties file is null or does not exist." +
+            	LogContext.getLogger().warning("User specified properties file is null or does not exist. " +
             			"Using default internal properties file.");
             	JOptionPane.showMessageDialog(null, "<html>No valid properties file given. " +
             			"<br>Using default internal properties file: <br>" + defaultPropFile + "</html>",

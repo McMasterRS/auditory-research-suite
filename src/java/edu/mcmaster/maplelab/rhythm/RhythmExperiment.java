@@ -12,6 +12,8 @@
 package edu.mcmaster.maplelab.rhythm;
 
 import java.awt.*;
+import java.io.File;
+import java.net.URISyntaxException;
 import java.util.logging.Level;
 
 import javax.swing.*;
@@ -51,6 +53,41 @@ public class RhythmExperiment extends Experiment<RhythmSession> {
             contentCard.add(new Completion(sMgr, session), "complete");            
             contentCard.add(new JLabel(), "Blank");
         }
+    }
+    
+    /**
+     * Default Soundbank in case user supplied soundbank does not work.
+     * Should be located in Rhythm Directory
+     * See: http://www.schristiancollins.com/generaluser.php
+     */
+    private static final String DEFAULT_SOUNDBANK = "GeneralUser.1.44.sf2";
+    
+    /**
+     * Converts a string filename into a soundbank file. Loads default internal soundbank file
+     * if the given filename fails to create a valid file. 
+     * 
+     * @param filename String representing soundbank file to attempt fetching.
+     * @return File that contains a soundbank: either the one requested, or the default if that fails.
+     */
+    public static File getSoundbankFileFromString(String filename) {
+    	File sbFile = new File(filename); // Load user specified soundbank file
+    	if (sbFile == null || !sbFile.exists()) {
+    		// Could not get user specified soundbank file
+    		LogContext.getLogger().warning("User specified soundbank file is null or does not exist. " +
+        			"Using default internal soundbank file.");
+        	JOptionPane.showMessageDialog(null, "<html>No valid soundbank file given. " +
+        			"<br>Using default internal soundbank file: <br>" + DEFAULT_SOUNDBANK + "</html>",
+        			"Using Default Properties",
+        			JOptionPane.INFORMATION_MESSAGE);
+        	try {
+				sbFile = new File(RhythmExperiment.class.getResource(DEFAULT_SOUNDBANK).toURI());
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+				sbFile = null;
+			}
+    	}
+    	
+    	return sbFile;
     }
     
     

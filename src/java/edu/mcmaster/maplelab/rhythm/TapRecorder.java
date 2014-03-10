@@ -16,6 +16,8 @@ import java.awt.AWTEvent;
 import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.logging.Level;
 
@@ -49,7 +51,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
     private int _midiInputDevID = -1;
     private MidiDevice _midiInput;
     private Integer _tapSynthID = null;
-    private MidiDevice _tapSynthDev;
+    private Synthesizer _tapSynthDev;
     private boolean _allowCompKeyInput;
     private Boolean _lastKeyDown = null;
     private boolean _userInputOn = true;
@@ -69,6 +71,20 @@ public class TapRecorder implements AWTEventListener, Receiver {
     	_sequencer = ToneGenerator.getInstance().getSequencer();
         _allowCompKeyInput = allowComputerKeyInput;
         _suppressionWindow = suppressionWindow;
+    }
+    
+    private Soundbank _soundbank;
+//    private static boolean testingSoundbank = true;
+    public void setSoundbank(File soundbankFile) {
+    	try {
+			_soundbank = MidiSystem.getSoundbank(soundbankFile);
+		} catch (InvalidMidiDataException e) {
+			LogContext.getLogger().warning("Unable to load soundbank:" + soundbankFile.getAbsolutePath());
+			e.printStackTrace();
+		} catch (IOException e) {
+			LogContext.getLogger().warning("Error reading file: " + soundbankFile.getAbsolutePath());
+			e.printStackTrace();
+		}
     }
     
     /**
@@ -187,43 +203,28 @@ public class TapRecorder implements AWTEventListener, Receiver {
         // Must work when _session is null because MIDITestPanel does not have an initialized session.
         if (_session == null || _session.playSubjectTaps()) {
         	try {
-        		MidiDevice device = null;
-        		if (_tapSynthID != null) {
-        			if (_tapSynthID >= 0) {
-                        device = ToneGenerator.initializeSynth(_tapSynthID);
+        		// initialize/get _tapSynthDev setup
+        		setupTapSynthesizer();
+
+        		_feedbackReceiver = _tapSynthDev.getReceiver();
+        		if (_session != null) {
+        			float vol = _withTap ? _session.subjectTapGain() : _session.subjectNoTapGain();
+        			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
+        					(short) _session.subjectTapInstrumentNumber(), (short) 0);
+        			for (MidiEvent me : prep) {
+        				_feedbackReceiver.send(me.getMessage(), me.getTick());
         			}
         		}
+        		// _session is null if we are calling from the MIDITestPanel before starting trials
+        		// This just runs taps with some basic defaults
         		else {
-        			device = ToneGenerator.getInstance().getSynthesizer();
+        			float vol = 1.0f;
+        			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
+        					(short) 115 , (short) 0);
+        			for (MidiEvent me : prep) {
+        				_feedbackReceiver.send(me.getMessage(), me.getTick());
+        			}
         		}
-                
-                if (_tapSynthDev != device || (_tapSynthDev != null && !_tapSynthDev.isOpen())) {
-                	_tapSynthDev = device;
-                	
-                	if (_tapSynthDev != null) {
-                		if (!_tapSynthDev.isOpen()) _tapSynthDev.open();
-                		
-            			_feedbackReceiver = _tapSynthDev.getReceiver();
-            			if (_session != null) {
-            				float vol = _withTap ? _session.subjectTapGain() : _session.subjectNoTapGain();
-                			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
-                					(short) _session.subjectTapInstrumentNumber(), (short) 0);
-                			for (MidiEvent me : prep) {
-                				_feedbackReceiver.send(me.getMessage(), me.getTick());
-                			}
-            			}
-            			// _session is null if we are calling from the MIDITestPanel before starting trials
-            			// This just runs taps with some basic defaults
-            			else {
-            				float vol = 1.0f;
-                			MidiEvent[] prep = ToneGenerator.initializationEvents(vol, 
-                					(short) 3 , (short) 0);
-                			for (MidiEvent me : prep) {
-                				_feedbackReceiver.send(me.getMessage(), me.getTick());
-                			}
-            			}
-                	}
-                }
     		} 
             catch (Exception e) {
             	LogContext.getLogger().log(Level.SEVERE, "Couldn't initialize MIDI feedback device", e);
@@ -236,6 +237,37 @@ public class TapRecorder implements AWTEventListener, Receiver {
         
         if (inputInfo != null) LogContext.getLogger().info("Recording from: " + inputInfo.getName() + 
         		", " + inputInfo.getDescription());
+    }
+    
+    private void setupTapSynthesizer() throws MidiUnavailableException {
+    	if (_tapSynthDev == null || !_tapSynthDev.isOpen()) {
+    		Synthesizer synth = null;
+    		if (_tapSynthID != null) {
+    			if (_tapSynthID >= 0) {
+    				synth = (Synthesizer)ToneGenerator.initializeSynth(_tapSynthID);
+    			}
+    		}
+    		else {
+    			synth = (Synthesizer)ToneGenerator.getInstance().getSynthesizer();
+    		}
+
+    		_tapSynthDev = (Synthesizer)synth;
+
+    		if (_tapSynthDev != null) {
+    			if (!_tapSynthDev.isOpen()) _tapSynthDev.open();
+
+    			if (_soundbank != null && _tapSynthDev.isSoundbankSupported(_soundbank)) {
+    				LogContext.getLogger().fine("Loading Soundbank: "+ _soundbank.getName());
+    				_tapSynthDev.unloadAllInstruments(_tapSynthDev.getDefaultSoundbank());
+    				_tapSynthDev.loadAllInstruments(_soundbank);
+    			} else {
+    				LogContext.getLogger().warning("Soundbank null or unsupported, reverting to emergency soundbank: "
+    						+ _tapSynthDev.getDefaultSoundbank().getName());
+    				// emergency soundbank is by default loaded
+    			}
+    		}
+    	}
+    	// Tap synth is setup. If closed or set null, will need to be setup again.
     }
     
     /**
@@ -282,7 +314,9 @@ public class TapRecorder implements AWTEventListener, Receiver {
         }
         _sequencer.stopRecording();        
         _sequencer.recordDisable(_track);
-        if (_tapSynthDev != null) _tapSynthDev.close();
+        // DO NOT close _tapSynthDev, as this releases all of its resources, including soundbanks.
+        // Otherwise, all resources would have to be reloaded between each trial.
+        /*if (_tapSynthDev != null) _tapSynthDev.close();*/
         if (_midiInput != null) _midiInput.close();
         _track = null;
         _lastOnTick = null;
