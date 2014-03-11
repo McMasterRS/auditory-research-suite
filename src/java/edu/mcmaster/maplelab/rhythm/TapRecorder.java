@@ -16,13 +16,22 @@ import java.awt.AWTEvent;
 import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
 import java.awt.event.KeyEvent;
-import java.io.File;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.logging.Level;
 
-import javax.sound.midi.*;
+import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiDevice.Info;
+import javax.sound.midi.MidiEvent;
+import javax.sound.midi.MidiMessage;
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Receiver;
+import javax.sound.midi.Sequencer;
+import javax.sound.midi.ShortMessage;
+import javax.sound.midi.Soundbank;
+import javax.sound.midi.Synthesizer;
+import javax.sound.midi.Track;
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.sound.MidiInterpreter;
@@ -52,6 +61,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
     private MidiDevice _midiInput;
     private Integer _tapSynthID = null;
     private Synthesizer _tapSynthDev;
+    private Soundbank _soundbank;
     private boolean _allowCompKeyInput;
     private Boolean _lastKeyDown = null;
     private boolean _userInputOn = true;
@@ -73,18 +83,9 @@ public class TapRecorder implements AWTEventListener, Receiver {
         _suppressionWindow = suppressionWindow;
     }
     
-    private Soundbank _soundbank;
 //    private static boolean testingSoundbank = true;
-    public void setSoundbank(File soundbankFile) {
-    	try {
-			_soundbank = MidiSystem.getSoundbank(soundbankFile);
-		} catch (InvalidMidiDataException e) {
-			LogContext.getLogger().warning("Unable to load soundbank:" + soundbankFile.getAbsolutePath());
-			e.printStackTrace();
-		} catch (IOException e) {
-			LogContext.getLogger().warning("Error reading file: " + soundbankFile.getAbsolutePath());
-			e.printStackTrace();
-		}
+    public void setSoundbank(Soundbank soundbank) {
+    	_soundbank = soundbank;
     }
     
     /**
@@ -258,18 +259,26 @@ public class TapRecorder implements AWTEventListener, Receiver {
     		if (_tapSynthDev != null) {
     			if (!_tapSynthDev.isOpen()) _tapSynthDev.open();
 
-    			if (_soundbank != null && _tapSynthDev.isSoundbankSupported(_soundbank)) {
-    				LogContext.getLogger().fine("Loading Soundbank: "+ _soundbank.getName());
-    				_tapSynthDev.unloadAllInstruments(_tapSynthDev.getDefaultSoundbank());
-    				_tapSynthDev.loadAllInstruments(_soundbank);
-    			} else {
-    				LogContext.getLogger().warning("Soundbank null or unsupported, reverting to emergency soundbank: "
-    						+ _tapSynthDev.getDefaultSoundbank().getName());
-    				// emergency soundbank is by default loaded
-    			}
+    			loadSoundbank();
     		}
     	}
     	// Tap synth is setup. If closed or set null, will need to be setup again.
+    }
+    
+    private void loadSoundbank() {
+    	if (_tapSynthDev == null) {
+    		return;
+    	}
+    	if (_soundbank != null && _tapSynthDev.isSoundbankSupported(_soundbank)) {
+			LogContext.getLogger().fine("Loading Soundbank: "+ _soundbank.getName());
+			_tapSynthDev.unloadAllInstruments(_tapSynthDev.getDefaultSoundbank());
+			_tapSynthDev.loadAllInstruments(_soundbank);
+		}
+    	else {
+			LogContext.getLogger().warning("Soundbank null or unsupported, reverting to emergency soundbank: "
+					+ _tapSynthDev.getDefaultSoundbank().getName());
+			// emergency soundbank is by default loaded
+		}
     }
     
     /**

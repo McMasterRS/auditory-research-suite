@@ -164,7 +164,7 @@ public class MIDITestPanel extends JPanel {
             List<Note> tune = tune(150);
             try {
             	ToneGenerator tg = ToneGenerator.getInstance();
-            	tg.setSoundbank(RhythmExperiment.getSoundbankFileFromString(_testMIDISettings.getSoundbankFilename()));
+            	tg.setSoundbank(ToneGenerator.createSoundbank(_testMIDISettings.getSoundbankFilename(), false));
             	tg.setMIDISynthID(_testMIDISettings.getToneSynthesizerID());
                 tg.initializeSequenceToPlay(tune, 1.0f);
                 tg.startSequencerPlayback(true);
@@ -251,11 +251,12 @@ public class MIDITestPanel extends JPanel {
 
         public void actionPerformed(ActionEvent e) {
             setEnabled(false);
-            
-            File soundbankFile = RhythmExperiment.getSoundbankFileFromString(_testMIDISettings.getSoundbankFilename());
+
+        	Soundbank sb = ToneGenerator.createSoundbank(_testMIDISettings.getSoundbankFilename(), false);
+        	
             try {
             	ToneGenerator tg = ToneGenerator.getInstance();
-            	tg.setSoundbank(soundbankFile);
+            	tg.setSoundbank(sb);
 				tg.setMIDISynthID(_testMIDISettings.getToneSynthesizerID());
 			} catch (MidiUnavailableException e1) {
 				e1.printStackTrace();
@@ -276,7 +277,7 @@ public class MIDITestPanel extends JPanel {
                 message = "Start tapping via the selected device, or use the computer keyboard";
             }
             _tapRecorder.setMIDISynthID(_testMIDISettings.getTapSynthesizerID());
-            _tapRecorder.setSoundbank(soundbankFile);
+            _tapRecorder.setSoundbank(sb);
             
             printf(message);
             

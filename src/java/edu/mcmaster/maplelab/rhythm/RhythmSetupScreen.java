@@ -64,7 +64,7 @@ public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> {
 		session.setSynthDevID(_primaryMIDISettings.getToneSynthesizerID());
 		session.setTapInputDevID(_primaryMIDISettings.getTapInputID());
 		session.setTapSynthDevID(_primaryMIDISettings.getTapSynthesizerID());
-		session.setSoundbankFilename(_primaryMIDISettings.getSoundbankFilename());
+		session.setSoundbankLocation(_primaryMIDISettings.getSoundbankFilename());
 	}
 
 	@Override
@@ -72,7 +72,7 @@ public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> {
 		prefs.putInt(RhythmSession.ConfigKeys.toneSynthID.name(), _primaryMIDISettings.getToneSynthesizerID());
 		prefs.putInt(RhythmSession.ConfigKeys.tapInputDevID.name(), _primaryMIDISettings.getTapInputID());
 		prefs.putInt(RhythmSession.ConfigKeys.tapSynthID.name(), _primaryMIDISettings.getTapSynthesizerID());
-		prefs.put(RhythmSession.ConfigKeys.soundbankFilename.name(), _primaryMIDISettings.getSoundbankFilename());
+		prefs.put(RhythmSession.ConfigKeys.soundbankLoc.name(), _primaryMIDISettings.getSoundbankFilename());
 	}
 
 	@Override
@@ -81,7 +81,7 @@ public class RhythmSetupScreen extends SimpleSetupScreen<RhythmSession> {
 		loaded.setToneSynthesizerID(prefs.getInt(RhythmSession.ConfigKeys.toneSynthID.name(), 0));
 		loaded.setTapInputID(prefs.getInt(RhythmSession.ConfigKeys.tapInputDevID.name(), -1));
 		loaded.setTapSynthesizerID(prefs.getInt(RhythmSession.ConfigKeys.tapSynthID.name(), -1));
-		String savedSBFile = prefs.get(RhythmSession.ConfigKeys.soundbankFilename.name(), "");
+		String savedSBFile = prefs.get(RhythmSession.ConfigKeys.soundbankLoc.name(), "");
 		if (!savedSBFile.equals("")) {
 			loaded.setSoundbankFilename(savedSBFile);
 			loaded.setUsingDefaultSoundBank(false);

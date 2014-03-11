@@ -11,16 +11,21 @@
 */
 package edu.mcmaster.maplelab.rhythm.datamodel;
 
-import java.io.File;
-import java.util.*;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Properties;
+
+import javax.sound.midi.Soundbank;
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.Session;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.sound.Pitch;
+import edu.mcmaster.maplelab.common.sound.ToneGenerator;
 import edu.mcmaster.maplelab.common.util.MathUtils;
 import edu.mcmaster.maplelab.rhythm.RhythmExperiment;
 import edu.mcmaster.maplelab.rhythm.RhythmTrialLogger;
+import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession.TrialSpecStyle;
 import edu.mcmaster.maplelab.rhythm.datamodel.RhythmTrial.TrialTestingType;
 
 /**
@@ -73,7 +78,7 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
         toneSynthID,
         tapInputDevID,
         tapSynthID,
-        soundbankFilename,
+        soundbankLoc,
         tapTestSound,
         computerKeyInput,
         recordNoteOff,
@@ -96,6 +101,8 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     	PatternWithNotes,
     	MIDIFile
     }
+    
+    private Soundbank _soundbank;
     
     /**
      * Default ctor.
@@ -440,25 +447,22 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     }
     
     /**
-     * Finds a soundbank file based on the stored soundbank filename. Returns the default
-     * internal soundbank file if the user specified file cannot be located. 
-     * 
-     * @return File that contains soundbank
+     * Get the soundbank location.
      */
-    public File getSoundbankFile() {
-    	String filename = getString(ConfigKeys.soundbankFilename, "");
-    	File sbFile = RhythmExperiment.getSoundbankFileFromString(filename);
-		
-    	LogContext.getLogger().fine("Soundbank location: " 
-				+ (sbFile != null ? sbFile.getAbsolutePath() : "null"));
-    	
-    	// Re-save the name, in case the file was changed to the default.
-    	setSoundbankFilename(sbFile.getAbsolutePath());
-    	return sbFile;
+    public String getSoundbankLocation() {
+    	return getString(ConfigKeys.soundbankLoc, "");
     }
     
-    public void setSoundbankFilename(String filename) {
-    	setProperty(ConfigKeys.soundbankFilename, filename);
+    public void setSoundbankLocation(String filename) {
+    	_soundbank = null;
+    	setProperty(ConfigKeys.soundbankLoc, filename);
+    }
+    
+    public Soundbank getSoundbank() {
+    	if (_soundbank == null) {
+    		_soundbank = ToneGenerator.createSoundbank(getSoundbankLocation(), true);
+    	}
+    	return _soundbank;
     }
      
      /**

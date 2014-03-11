@@ -14,32 +14,49 @@ package edu.mcmaster.maplelab.rhythm;
 
 import static edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.RelativeTrialPosition.BLOCK_IN_METABLOCK;
 import static edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.RelativeTrialPosition.REPETITION;
-import static edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.RelativeTrialPosition.TRIAL_IN_BLOCK;
 import static edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.TrialHierarchy.METABLOCK;
 
-import java.awt.*;
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 
-import javax.sound.midi.*;
-import javax.swing.*;
+import javax.sound.midi.MetaEventListener;
+import javax.sound.midi.MetaMessage;
+import javax.sound.midi.MidiMessage;
+import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Receiver;
+import javax.sound.midi.Sequence;
+import javax.sound.midi.ShortMessage;
+import javax.sound.midi.Soundbank;
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
-
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.AnswerConfidenceResponseInputs;
-import edu.mcmaster.maplelab.common.gui.*;
+import edu.mcmaster.maplelab.common.gui.BasicStep;
+import edu.mcmaster.maplelab.common.gui.InvokeOnAWTQueueRunnable;
+import edu.mcmaster.maplelab.common.gui.StepManager;
 import edu.mcmaster.maplelab.common.sound.MidiInterpreter;
 import edu.mcmaster.maplelab.common.sound.Note;
 import edu.mcmaster.maplelab.common.sound.Pitch;
 import edu.mcmaster.maplelab.common.sound.ToneGenerator;
-import edu.mcmaster.maplelab.rhythm.datamodel.*;
+import edu.mcmaster.maplelab.rhythm.datamodel.RhythmResponseParameters;
+import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession;
+import edu.mcmaster.maplelab.rhythm.datamodel.RhythmTrial;
+import edu.mcmaster.maplelab.rhythm.datamodel.RhythmTrialManager;
 
 
 /**
@@ -153,15 +170,15 @@ public class StimulusResponseScreen extends BasicStep {
         
         LogContext.getLogger().fine("Loading soundbank file for "
         		+ (_isWarmup ? "warmup." : "trials."));
-        File soundbankFile = _session.getSoundbankFile();
+        Soundbank sb = _session.getSoundbank();
         try {
         	_tapRecorder = new TapRecorder(_session);
+        	_tapRecorder.setSoundbank(sb);
         	_tapRecorder.setMIDIInputID(_session.getTapInputDevID());
         	_tapRecorder.setMIDISynthID(_session.getTapSynthDevID());
-        	_tapRecorder.setSoundbank(soundbankFile);
         	
         	// Must set Soundbank prior so ToneGenerator will use it to setup devices.
-        	ToneGenerator.getInstance().setSoundbank(soundbankFile);
+        	ToneGenerator.getInstance().setSoundbank(sb);
         	ToneGenerator.getInstance().setMIDISynthID(_session.getSynthDevID());
         	
         	// We have to add a key listener to make sure this gets
@@ -178,9 +195,9 @@ public class StimulusResponseScreen extends BasicStep {
 
         	getContentPanel().add(_tapTarget, BorderLayout.CENTER);
 
-        	if(_session.isDebug()) {
+        	if (_session.isDebug()) {
         		_tapRecorder.setLogReceiver(new DebugTapForwarder());
-                }
+            }
         }
         catch (MidiUnavailableException ex) {
             LogContext.getLogger().log(Level.SEVERE, "Tap recorder error", ex);
