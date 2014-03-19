@@ -4,7 +4,7 @@
 <!--	<target name="all" depends="mondrian, mondrian.win32" /> -->
 	<target name="all" depends="si" />
 	
-	<property name="jarbundler.jar" value="../lib/jarbundler-1.9.jar"/>
+	<property name="jarbundler.jar" value="../lib/jarbundler-2.2.0.jar"/>
 	<property name="xerces.jar" value="../lib/xercesImpl.jar"/>
 	
 	<condition property="launch4j.dir" value="${basedir}/../lib/launch4j-osx">
@@ -23,7 +23,8 @@
 	                signature="????"
 	                stubfile="SIExperiment"
 	                mainclass="edu.mcmaster.maplelab.si.SIExperiment"
-	                icon="../Resources/McMaster.icns"
+	                icon="../resources/MAPLELab.icns"
+	    			splashfile="$JAVAROOT/../MAPLELabSplashScreen.png"
 	                jvmversion="1.6+"
 	                version="0.6"
 	                infostring="MapleLab SI Experiment, Copyright &#xa9; 2011"
@@ -50,6 +51,7 @@
     			<include name="lib/commons-lang3-3.1.jar"/>
     		</jarfileset>
 	        <resourcefileset dir="../www/si" includes="si.properties"/>
+	    	<resourcefilelist dir="../resources" files="MAPLELabSplashScreen.png"/>
 	        <javafileset dir="../lib/natives" includes="*.jnilib"/>
 	        <javafileset dir="../lib/natives" includes="*.dylib"/>
    		</jarbundler>

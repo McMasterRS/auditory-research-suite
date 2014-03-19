@@ -308,6 +308,7 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
      * Display the screen in a dialog, blocking until OK pressed.
      */
     public void display() {
+    	
         final JDialog d = new JDialog((Frame)null, true);
         d.setTitle(getTitlePrefix() + " - Setup");
         d.getContentPane().add(this);
@@ -332,6 +333,11 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
         d.setMinimumSize(new Dimension(600, 200));
         d.pack();
         d.setLocationRelativeTo(null);
+        
+    	// Check for splash screen and close it
+        SplashScreen splash = SplashScreen.getSplashScreen();
+    	if (splash != null) splash.close();
+    	
         d.setVisible(true);
         
         save();
