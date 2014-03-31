@@ -70,7 +70,6 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
         offsetDegrees,
         probeDetuneAmounts,
         experimentTestingType,
-        accuracyResponseLabel,
         randomizeAcrossRepetitions,
         playbackMeasures,
         beatsPerMeasure,
@@ -416,10 +415,6 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     public TrialTestingType getExperimentTestingType() {
     	String type = getString(ConfigKeys.experimentTestingType, TrialTestingType.OffsetTiming.name());
     	return TrialTestingType.valueOf(type);
-    }
-    
-    public String getAccuracyResponseLabel() {
-    	return getString(ConfigKeys.accuracyResponseLabel, "Accurate?");
     }
     
     public int getSynthDevID() {

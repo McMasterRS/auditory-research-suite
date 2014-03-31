@@ -15,7 +15,7 @@ import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
 
-import edu.mcmaster.maplelab.common.datamodel.Answer;
+import edu.mcmaster.maplelab.common.datamodel.BinaryAnswer;
 import edu.mcmaster.maplelab.common.datamodel.ContinuousResponseParameters;
 import edu.mcmaster.maplelab.common.datamodel.MultiResponse;
 import edu.mcmaster.maplelab.common.datamodel.ResponseParameters;
@@ -67,7 +67,7 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 				s.setPaintLabels(false);
 				s.addChangeListener(_forwarder);				
 				// expect 2 answers, but just use the first 2
-				Answer[] answers = crp.getAnswers();
+				BinaryAnswer[] answers = crp.getAnswers();
 				_sliders.add(new SliderGroup(s, new JLabel(answers[0].toString()), 
 						new JLabel(answers[1].toString())));
 			}

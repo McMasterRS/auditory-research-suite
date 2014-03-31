@@ -17,5 +17,5 @@ public abstract class ResponseParameters<S extends Session<?, ?, ?>, DataType> {
 	
 	public abstract String getQuestion();
 	
-	public abstract Answer[] getAnswers();
+	public abstract BinaryAnswer[] getAnswers();
 }

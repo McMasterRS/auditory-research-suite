@@ -4,7 +4,7 @@ import edu.mcmaster.maplelab.common.datamodel.EnvelopeDuration.Duration;
 
 public class DurationResponse extends Response<Duration> {
 
-	public DurationResponse(Answer answer, Duration value) {
+	public DurationResponse(BinaryAnswer answer, Duration value) {
 		super(answer, value);
 	}
     

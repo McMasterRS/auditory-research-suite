@@ -41,6 +41,8 @@ public class AnswerConfidenceResponseInputs extends ResponseInputs<ConfidenceRes
     private List<JRadioButton> _answerButtons;
     private ButtonGroup _answerGroup;
     
+    private Map<String, AbstractButton> _hotkeysMap;
+    
     /**
      * Default constructor sets the question asked and labels for the two
      * possible choices as indicated.
@@ -96,22 +98,10 @@ public class AnswerConfidenceResponseInputs extends ResponseInputs<ConfidenceRes
      * confidence value is set to be the selected value.
      */
     @Override
-    public void setSelection(KeyEvent e) {
-    	char character = e.getKeyChar();
-    	if (Character.isDigit(character)) {
-    		int index = _confButtons.size() - Character.getNumericValue(character);
-    		setConfidenceSelection(index);
-    		return;
-    	}
-    	
-    	for (JRadioButton b : _answerButtons) {
-    		Answer a = (Answer) b.getClientProperty(Answer.class);
-    		String answerString = a.toString().toLowerCase();
-    		String charString = String.valueOf(character).toLowerCase();
-    		if (answerString.startsWith(charString)) {
-    			b.setSelected(true);
-    			return;
-    		}
+    public void setSelection(KeyEvent e) {    	
+    	AbstractButton button = _hotkeysMap.get(String.valueOf(e.getKeyChar()));
+    	if (button != null) {
+    		button.setSelected(true);
     	}
     }
     
@@ -177,13 +167,14 @@ public class AnswerConfidenceResponseInputs extends ResponseInputs<ConfidenceRes
     private List<JRadioButton> getAnswerButtons() {
         _answerGroup = new ButtonGroup();
         if (_answerButtons == null)  {
-            Answer[] answerVals = getResponseParams()[0].getAnswers();
+            BinaryAnswer[] answerVals = getResponseParams()[0].getAnswers();
             _answerButtons = new ArrayList<JRadioButton>(answerVals.length);
-            for (Answer a : answerVals) {
+            for (BinaryAnswer a : answerVals) {
                 JRadioButton b = new JRadioButton(a.toString());
-                b.putClientProperty(Answer.class, a);
+                b.putClientProperty(BinaryAnswer.class, a);
                 _answerGroup.add(b);
                 _answerButtons.add(b);
+                saveHotkeyMapping(a.getHotkey(), b);
             }
         }
         
@@ -200,10 +191,18 @@ public class AnswerConfidenceResponseInputs extends ResponseInputs<ConfidenceRes
                 b.putClientProperty(ConfidenceLevel.class, c);
                 _confGroup.add(b);
                 _confButtons.add(b);
+                saveHotkeyMapping(c.getHotkey(), b);
             }
         }
         
         return _confButtons;
+    }
+    
+    private void saveHotkeyMapping(String key, AbstractButton value) {
+    	if (_hotkeysMap == null) {
+    		_hotkeysMap = new HashMap<String, AbstractButton>();
+    	}
+    	_hotkeysMap.put(key, value);
     }
     
     /**
@@ -227,10 +226,10 @@ public class AnswerConfidenceResponseInputs extends ResponseInputs<ConfidenceRes
     /**
      * Get the selected answer.
      */
-    private Answer getAnswerInput() {
+    private BinaryAnswer getAnswerInput() {
         for (JRadioButton b : _answerButtons) {
             if (b.isSelected()) {
-                return (Answer) b.getClientProperty(Answer.class);
+                return (BinaryAnswer) b.getClientProperty(BinaryAnswer.class);
             }
         }
         

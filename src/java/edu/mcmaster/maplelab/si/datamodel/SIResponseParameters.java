@@ -1,6 +1,6 @@
 package edu.mcmaster.maplelab.si.datamodel;
 
-import edu.mcmaster.maplelab.common.datamodel.Answer;
+import edu.mcmaster.maplelab.common.datamodel.BinaryAnswer;
 import edu.mcmaster.maplelab.common.datamodel.ContinuousResponseParameters;
 import edu.mcmaster.maplelab.common.datamodel.DurationResponse;
 import edu.mcmaster.maplelab.common.datamodel.EnvelopeDuration.Duration;
@@ -47,7 +47,7 @@ public abstract class SIResponseParameters<T> extends ContinuousResponseParamete
 	}
 
 	@Override
-	public abstract Answer[] getAnswers();
+	public abstract BinaryAnswer[] getAnswers();
 	
 	// TODO: consider using Duration and DurationResponse here
 	private static class SIDurationResponseParameters extends SIResponseParameters<Integer> {
@@ -63,8 +63,8 @@ public abstract class SIResponseParameters<T> extends ContinuousResponseParamete
 		}
 
 		@Override
-		public Answer[] getAnswers() {
-			return Answer.values(_durLow, _durHigh);
+		public BinaryAnswer[] getAnswers() {
+			return BinaryAnswer.values(_durLow, _durHigh);
 		}
 
 		@Override
@@ -87,8 +87,8 @@ public abstract class SIResponseParameters<T> extends ContinuousResponseParamete
 		}
 
 		@Override
-		public Answer[] getAnswers() {
-			return Answer.values(_agreeLow, _agreeHigh);
+		public BinaryAnswer[] getAnswers() {
+			return BinaryAnswer.values(_agreeLow, _agreeHigh);
 		}
 
 		@Override

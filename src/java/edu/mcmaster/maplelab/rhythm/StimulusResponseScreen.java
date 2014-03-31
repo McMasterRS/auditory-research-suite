@@ -19,8 +19,11 @@ import static edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.Tria
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Font;
+import java.awt.Toolkit;
+import java.awt.event.AWTEventListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
@@ -100,6 +103,8 @@ public class StimulusResponseScreen extends BasicStep {
     private RhythmTrial _currTrial;
     private int _completed = 0;
     private int _correct = 0;
+    
+	private final ResponseKeyListener _keyListener;
 
     public StimulusResponseScreen(StepManager steps, RhythmSession session, boolean isWarmup) {
         _isWarmup = isWarmup;
@@ -112,6 +117,7 @@ public class StimulusResponseScreen extends BasicStep {
         setInstructionText(_session.getString(
             _isWarmup ? ConfigKeys.warmupScreenTrialText : ConfigKeys.testScreenTrialText, 
                 null));
+		_keyListener = new ResponseKeyListener();
         
         /* Status/Response setup */
         JPanel bottom = new JPanel(new MigLayout("insets 0, fill"));
@@ -163,7 +169,7 @@ public class StimulusResponseScreen extends BasicStep {
         
         _response.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                updateEnabledState();
+                updatePrevNextState();
             }
         });
         /* End Status/Response setup */
@@ -225,16 +231,15 @@ public class StimulusResponseScreen extends BasicStep {
      */
     @Override
     public void setEnabled(boolean enabled) {
-        updateEnabledState();
+        updatePrevNextState();
         _response.setEnabled(enabled);
     }
     
     /**
      * Update the "next" button to be enabled only when full response selected.
-     *
      */
-    private void updateEnabledState() {
-        super.setEnabled(_response.isResponseComplete());
+    private void updatePrevNextState() {
+        getPrevNextButtons().setEnabled(_response.isResponseComplete());
     }
     
     /** 
@@ -490,11 +495,44 @@ public class StimulusResponseScreen extends BasicStep {
                 public void run() {
                     _statusText.setText(_session.getString(ConfigKeys.enterResponseText, null));
                     setEnabled(true);
+                    _keyListener.setEnabled(true);
                     _response.requestFocusInWindow();
                 }
             });            
         }
     }  
+    
+    /**
+     * Listener for key events corresponding to response selections.
+     */
+    private class ResponseKeyListener implements AWTEventListener {
+    	private boolean _enabled = false;
+		@Override
+		public void eventDispatched(AWTEvent event) {
+			switch(event.getID()) {
+		        case KeyEvent.KEY_PRESSED:
+		        	_response.setSelection((KeyEvent) event);
+		            updatePrevNextState();
+		            break;
+		        case KeyEvent.KEY_RELEASED:
+		            return; //nothing
+			} 
+		}
+		
+		public void setEnabled(boolean enabled) {
+			// avoid adding this twice
+			if (enabled == _enabled) return;
+			
+			if (!enabled) {
+				Toolkit.getDefaultToolkit().removeAWTEventListener(this);
+			}
+			else {
+				Toolkit.getDefaultToolkit().addAWTEventListener(this, 
+                		AWTEvent.KEY_EVENT_MASK);
+			}
+			_enabled = enabled;
+		}
+    }
     
     private class StatusUpdaterRunnable implements Runnable {
         private final RhythmTrial _trial;
@@ -515,6 +553,7 @@ public class StimulusResponseScreen extends BasicStep {
             try {
                 SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
+                    	_keyListener.setEnabled(false);
                     	if (_session.allowResponseFeedback()) {
                     		_statusText.setText(_session.getString(wasCorrect ?
                                     ConfigKeys.accuracyCorrectText : ConfigKeys.accuracyIncorrectText, null)); 

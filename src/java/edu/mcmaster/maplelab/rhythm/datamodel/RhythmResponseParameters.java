@@ -1,6 +1,6 @@
 package edu.mcmaster.maplelab.rhythm.datamodel;
 
-import edu.mcmaster.maplelab.common.datamodel.Answer;
+import edu.mcmaster.maplelab.common.datamodel.BinaryAnswer;
 import edu.mcmaster.maplelab.common.datamodel.ConfidenceLevel;
 import edu.mcmaster.maplelab.common.datamodel.ConfidenceResponse;
 import edu.mcmaster.maplelab.common.datamodel.ResponseParameters;
@@ -23,12 +23,12 @@ public class RhythmResponseParameters extends ResponseParameters<RhythmSession, 
 
 	@Override
 	public String getQuestion() {
-		return getSession().getAccuracyResponseLabel();
+		return getSession().getString("question.label", "Question");
 	}
 
 	@Override
-	public Answer[] getAnswers() {
-		return Answer.values("Yes", "No");
+	public BinaryAnswer[] getAnswers() {
+		return BinaryAnswer.values(getSession());
 	}
 	
 	/**

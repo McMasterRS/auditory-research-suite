@@ -1,25 +1,14 @@
 package edu.mcmaster.maplelab.toj.datamodel;
 
-import edu.mcmaster.maplelab.common.datamodel.Answer;
+import edu.mcmaster.maplelab.common.datamodel.BinaryAnswer;
 import edu.mcmaster.maplelab.common.datamodel.ConfidenceLevel;
 import edu.mcmaster.maplelab.common.datamodel.ConfidenceResponse;
 import edu.mcmaster.maplelab.common.datamodel.ResponseParameters;
 
 public class TOJResponseParameters extends ResponseParameters<TOJSession, ConfidenceLevel> {
 	
-	private enum ConfigLabels {
-		dotLabel,
-		toneLabel
-	}
-	
-	private final String _dotLabel;
-	private final String _toneLabel;
-
 	public TOJResponseParameters(TOJSession session) {
 		super(session);
-		
-		_dotLabel = session.getString(ConfigLabels.dotLabel, "Dot");
-		_toneLabel = session.getString(ConfigLabels.toneLabel, "Tone");
 	}
 
 	@Override
@@ -34,12 +23,12 @@ public class TOJResponseParameters extends ResponseParameters<TOJSession, Confid
 
 	@Override
 	public String getQuestion() {
-		return "Which came first?";
+		return getSession().getString("question.label", "Question");
 	}
 
 	@Override
-	public Answer[] getAnswers() {
-		return Answer.values(_dotLabel, _toneLabel);
+	public BinaryAnswer[] getAnswers() {
+		return BinaryAnswer.values(getSession());
 	}
 
 	public static boolean isDotFirst(ConfidenceResponse response) {

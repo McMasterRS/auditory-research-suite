@@ -30,7 +30,10 @@ public class ConfidenceLevel {
 				(description = session.getString(String.format(keyFormat, counter))) != null; 
 				counter++) {
 			
-			levels.add(new ConfidenceLevel(counter, description));
+			String hotkeyFormat = String.format(keyFormat + ".hotkey", counter);
+			String hotkey = session.getString(hotkeyFormat, "").toLowerCase().substring(0, 1);
+		
+			levels.add(new ConfidenceLevel(counter, description, hotkey));
 		}
 		
 		// Reverse the order, if required
@@ -49,7 +52,7 @@ public class ConfidenceLevel {
 		ArrayList<ConfidenceLevel> levels = new ArrayList<ConfidenceLevel>();
 		int currCount = 0;
 		for (int i = min; currCount < count; i++) {
-			levels.add(new ConfidenceLevel(i, String.valueOf(i)));
+			levels.add(new ConfidenceLevel(i, String.valueOf(i), ""));
 			currCount++;
 		}
 		ConfidenceLevel[] retval = new ConfidenceLevel[levels.size()];
@@ -58,14 +61,20 @@ public class ConfidenceLevel {
 	
 	private final int _ordinal;
 	private final String _description;
+	private final String _hotkey;
 	
-	private ConfidenceLevel(int ordinal, String description) {
+	private ConfidenceLevel(int ordinal, String description, String hotkey) {
 		_ordinal = ordinal;
 		_description = description;
+		_hotkey = hotkey;
 	}
 	
 	public int ordinal() {
 		return _ordinal;
+	}
+	
+	public String getHotkey() {
+		return _hotkey;
 	}
 	
 	@Override

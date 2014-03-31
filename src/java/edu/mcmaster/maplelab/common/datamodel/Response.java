@@ -1,10 +1,10 @@
 package edu.mcmaster.maplelab.common.datamodel;
 
 public abstract class Response<T> {
-	private final Answer _answer;
+	private final BinaryAnswer _answer;
     private final T _value;
 
-    public Response(Answer answer, T value) {
+    public Response(BinaryAnswer answer, T value) {
         _answer = answer;
         _value = value;
     }
@@ -13,7 +13,7 @@ public abstract class Response<T> {
         return _value;
     }
     
-    public Answer getAnswer() {
+    public BinaryAnswer getAnswer() {
         return _answer;
     }
     

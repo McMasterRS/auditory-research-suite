@@ -20,7 +20,7 @@ package edu.mcmaster.maplelab.common.datamodel;
  */
 public class ConfidenceResponse extends Response<ConfidenceLevel> {
 
-    public ConfidenceResponse(Answer answer, ConfidenceLevel conf) {
+    public ConfidenceResponse(BinaryAnswer answer, ConfidenceLevel conf) {
         super(answer, conf);
     }
     

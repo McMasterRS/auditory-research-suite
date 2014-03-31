@@ -13,8 +13,8 @@ public abstract class ContinuousResponseParameters<S extends Session<?, ?, ?>, D
 		_middleValue = (int) ((_rangeMax + _rangeMin) / 2);
 	}
 	
-	protected Answer getAnswerForValue(int value) {
-		if (value == _middleValue) return Answer.NEUTRAL;
+	protected BinaryAnswer getAnswerForValue(int value) {
+		if (value == _middleValue) return BinaryAnswer.NEUTRAL;
 		else if (value < _middleValue) return getAnswers()[0];
 		else return getAnswers()[1];
 	}
@@ -48,7 +48,7 @@ public abstract class ContinuousResponseParameters<S extends Session<?, ?, ?>, D
 	public abstract String getQuestion();
 
 	@Override
-	public abstract Answer[] getAnswers();
+	public abstract BinaryAnswer[] getAnswers();
 	
 	public abstract Response<DataType> getResponseForValue(int value);
 

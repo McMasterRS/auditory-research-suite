@@ -2,7 +2,7 @@ package edu.mcmaster.maplelab.common.datamodel;
 
 public class IntegerResponse extends Response<Integer> {
 
-	public IntegerResponse(Answer answer, Integer value) {
+	public IntegerResponse(BinaryAnswer answer, Integer value) {
 		super(answer, value);
 	}
     
