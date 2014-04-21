@@ -3,6 +3,7 @@ package edu.mcmaster.maplelab.common.datamodel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ListIterator;
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.TrialPositionHierarchy.RelativeTrialPosition;
@@ -76,17 +77,21 @@ public abstract class PredeterminedTrialManager<S extends Session<?, ?, ?>, T ex
 					"Check that properties file actually requests trials.");
 		}
 		
+		int numBlocks = metablock.size();
 		
 		// Count total number of trials in all blocks
 		int totalNumTrials = 0;
-		for (List<T> block : metablock) {
-			totalNumTrials += block.size();
-		}
-		
-		int numBlocks = metablock.size();
+		// Also build list of list iterators, for iterating through each block.
+		//	This allows for unevenly sized blocks
+		List<ListIterator<T>> blockIterators = new ArrayList<ListIterator<T>>();
 		// Build/initialize return list of blocks
 		List<List<T>> retval = new ArrayList<List<T>>(numBlocks);
+		
 		for(int i=0; i < numBlocks; i++) {
+			List<T> block = metablock.get(i);
+			
+			totalNumTrials += metablock.get(i).size();
+			blockIterators.add(block.listIterator());
 			retval.add(new ArrayList<T>());
 		}
 		
@@ -97,20 +102,36 @@ public abstract class PredeterminedTrialManager<S extends Session<?, ?, ?>, T ex
 					"but only have %d experimental trials to pull from.\nMaking %d warmup trials.",
 					warmupCount, totalNumTrials, totalNumTrials));
 			warmupCount = totalNumTrials;
+		}	
+		
+		int addedWarmupTrials = 0;
+		ListIterator<List<T>> metablockIterator = metablock.listIterator();
+		// WARNING TO FUTURE EDITS...
+		// We can iterate infinitely here ONLY because warmupCount has been capped to the total 
+		// number of trials (totalNumTrials) in all blocks in the metablock. So at least 'warmupCount' 
+		// number of trials can be found. 
+		while (addedWarmupTrials < warmupCount) {
+			// Get next block... This if/else construct basically allows infinite 
+			//  cycling through the blocks in metablock
+			if (metablockIterator.hasNext()) {
+				int ithBlock = metablockIterator.nextIndex();
+				metablockIterator.next(); // step block selection forward
+				
+				// Using pre-gathered ListIterators for blocks, so we don't reset them.
+				ListIterator<T> ithBlockIterator = blockIterators.get(ithBlock);
+				if (ithBlockIterator.hasNext()) {
+					T trial = ithBlockIterator.next();
+					retval.get(ithBlock).add(trial);
+					addedWarmupTrials++;
+				} else {
+					// Don't do anything... restarts while loop, and next block is checked.
+				}
+			} else {
+				// have cycled through all blocks, so reset the iterator.
+				metablockIterator = metablock.listIterator();
+			}
 		}
 		
-		/* Step through all Trials from the generated metablock in the following order:
-		 * All 0th elements from blocks [0..numBlocks), then all 1st elements... etc.
-		 * Will add every element up to the warmupCount index. 
-		 */
-		for (int i=0; i < warmupCount; i++) {
-			int ithBlock = i % numBlocks;
-			int ithTrialInBlock = i / numBlocks;
-			// Get the trial from the
-			T trial = metablock.get(ithBlock).get(ithTrialInBlock);
-			// Add this trial to the ithBlock to return
-			retval.get(ithBlock).add(trial);
-		}		
 		
 		// It is possible to end up with empty lists in the retval if fewer warmup trials are requested
 		// than the number of blocks in the metablock.

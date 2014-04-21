@@ -65,7 +65,8 @@ public class SliderResponseInputs extends ResponseInputs<MultiResponse> {
 				s.setMajorTickSpacing(size / divisor);
 				s.setPaintTicks(false); // Defaulted off... can change via enableSliderTickMarks()
 				s.setPaintLabels(false);
-				s.addChangeListener(_forwarder);				
+				s.addChangeListener(_forwarder);
+				s.setFocusable(false); // Make sure we cannot tab cycle to slider controls... 
 				// expect 2 answers, but just use the first 2
 				BinaryAnswer[] answers = crp.getAnswers();
 				_sliders.add(new SliderGroup(s, new JLabel(answers[0].toString()), 

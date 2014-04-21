@@ -1,6 +1,7 @@
 package edu.mcmaster.maplelab.si;
 
 import edu.mcmaster.maplelab.av.AVStimulusResponseScreen;
+import edu.mcmaster.maplelab.av.datamodel.AVBlockType;
 import edu.mcmaster.maplelab.common.datamodel.MultiResponse;
 import edu.mcmaster.maplelab.common.gui.ResponseInputs;
 import edu.mcmaster.maplelab.common.gui.SliderResponseInputs;
@@ -26,7 +27,15 @@ public class SIStimulusResponseScreen extends AVStimulusResponseScreen<MultiResp
 
 	@Override
 	public void updateResponseInputs(SITrial trial) {
-		// No-op.
+		SliderResponseInputs inputs = (SliderResponseInputs) getResponseInputs();
+		AVBlockType trialBlockType = trial.getType();		
+		if (inputs != null) {
+			if (trialBlockType == AVBlockType.VIDEO_ONLY || trialBlockType == AVBlockType.AUDIO_ANIMATION) {
+				inputs.setInputVisibility(1, true);
+			} else {
+				inputs.setInputVisibility(1, false);
+			}
+		}
 	}
 
 }
