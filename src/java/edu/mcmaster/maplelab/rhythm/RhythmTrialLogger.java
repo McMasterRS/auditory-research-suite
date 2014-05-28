@@ -22,8 +22,8 @@ import javax.sound.midi.MidiDevice.Info;
 import edu.mcmaster.maplelab.common.datamodel.FileTrialLogger;
 import edu.mcmaster.maplelab.common.datamodel.FileType;
 import edu.mcmaster.maplelab.common.datamodel.ConfidenceResponse;
-import edu.mcmaster.maplelab.common.sound.MidiInterpreter;
-import edu.mcmaster.maplelab.common.sound.MultiMidiEvent;
+import edu.mcmaster.maplelab.midi.MidiInterpreter;
+import edu.mcmaster.maplelab.midi.MultiMidiEvent;
 import edu.mcmaster.maplelab.rhythm.datamodel.*;
 
 /**

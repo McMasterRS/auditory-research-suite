@@ -17,15 +17,13 @@ import java.util.Properties;
 
 import javax.sound.midi.Soundbank;
 
-import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.common.datamodel.Session;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.sound.Pitch;
-import edu.mcmaster.maplelab.common.sound.ToneGenerator;
 import edu.mcmaster.maplelab.common.util.MathUtils;
+import edu.mcmaster.maplelab.midi.SoundbankManager;
 import edu.mcmaster.maplelab.rhythm.RhythmExperiment;
 import edu.mcmaster.maplelab.rhythm.RhythmTrialLogger;
-import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession.TrialSpecStyle;
 import edu.mcmaster.maplelab.rhythm.datamodel.RhythmTrial.TrialTestingType;
 
 /**
@@ -455,7 +453,7 @@ public class RhythmSession extends Session<RhythmTrialManager, RhythmTrial, Rhyt
     
     public Soundbank getSoundbank() {
     	if (_soundbank == null) {
-    		_soundbank = ToneGenerator.createSoundbank(getSoundbankLocation(), true);
+    		_soundbank = SoundbankManager.createSoundbank(getSoundbankLocation(), true);
     	}
     	return _soundbank;
     }

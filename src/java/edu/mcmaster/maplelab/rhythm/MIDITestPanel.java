@@ -28,6 +28,9 @@ import net.miginfocom.swing.MigLayout;
 
 import edu.mcmaster.maplelab.common.gui.CloseButton;
 import edu.mcmaster.maplelab.common.sound.*;
+import edu.mcmaster.maplelab.midi.MIDIDumpReceiver;
+import edu.mcmaster.maplelab.midi.SoundbankManager;
+import edu.mcmaster.maplelab.midi.ToneGenerator;
 
 /**
  * Simple widget for testing MIDI subsystem.
@@ -164,7 +167,7 @@ public class MIDITestPanel extends JPanel {
             List<Note> tune = tune(150);
             try {
             	ToneGenerator tg = ToneGenerator.getInstance();
-            	tg.setSoundbank(ToneGenerator.createSoundbank(_testMIDISettings.getSoundbankFilename(), false));
+            	tg.setSoundbank(SoundbankManager.createSoundbank(_testMIDISettings.getSoundbankFilename(), false));
             	tg.setMIDISynthID(_testMIDISettings.getToneSynthesizerID());
                 tg.initializeSequenceToPlay(tune, 1.0f);
                 tg.startSequencerPlayback(true);
@@ -252,7 +255,7 @@ public class MIDITestPanel extends JPanel {
         public void actionPerformed(ActionEvent e) {
             setEnabled(false);
 
-        	Soundbank sb = ToneGenerator.createSoundbank(_testMIDISettings.getSoundbankFilename(), false);
+        	Soundbank sb = SoundbankManager.createSoundbank(_testMIDISettings.getSoundbankFilename(), false);
         	
             try {
             	ToneGenerator tg = ToneGenerator.getInstance();

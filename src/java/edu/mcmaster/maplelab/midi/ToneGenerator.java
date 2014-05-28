@@ -9,12 +9,8 @@
 *
 * $Id$
 */
-package edu.mcmaster.maplelab.common.sound;
+package edu.mcmaster.maplelab.midi;
 
-import java.awt.EventQueue;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,11 +33,11 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Soundbank;
 import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 
 import edu.mcmaster.maplelab.common.LogContext;
-import edu.mcmaster.maplelab.rhythm.RhythmExperiment;
+import edu.mcmaster.maplelab.common.sound.Note;
+import edu.mcmaster.maplelab.common.sound.NotesEnum;
+import edu.mcmaster.maplelab.common.sound.Pitch;
 
 
 /**
@@ -51,17 +47,11 @@ import edu.mcmaster.maplelab.rhythm.RhythmExperiment;
  * @since   Apr 17, 2006
  */
 public class ToneGenerator {
-    /**
-     * Default Soundbank in case user supplied soundbank does not work.
-     * Should be located in Rhythm Directory
-     * See: http://www.schristiancollins.com/generaluser.php
-     */
-    private static final String DEFAULT_SOUNDBANK = "GeneralUser.1.44.sf2";
     
 	private static final int ENABLED_CHANNEL_COUNT = 12;
 	
     private static final int MIDI_MAX_VOLUME = 127;
-    private static final int MIDI_NOTE_VELOCITY_CMD = 64;
+    //private static final int MIDI_NOTE_VELOCITY_CMD = 64;
     private static final int PITCH_BEND_MAX = 16383;
     private static final int PITCH_BEND_NONE = 8192;
     
@@ -149,81 +139,6 @@ public class ToneGenerator {
     
     public void setSoundbank(Soundbank soundbank) {
     	_soundbank = soundbank;
-    }
-    
-    public static Soundbank createSoundbank(String soundbankLocation, boolean showWarning) {
-    	Soundbank retval = null;
-    	retval = createSoundbank(soundbankLocation);
-    	if (retval == null) {
-    		if (showWarning) {
-    			Runnable r = new Runnable() {
-					@Override
-					public void run() {
-			    		// Could not get user specified soundbank file
-			    		LogContext.getLogger().warning("User specified soundbank file is null or does not exist. " +
-			        			"Using default internal soundbank file.");
-			        	JOptionPane.showMessageDialog(null, "<html>No valid soundbank file given. " +
-			        			"<br>Using default internal soundbank file: <br>" + DEFAULT_SOUNDBANK + "</html>",
-			        			"Using Default Properties",
-			        			JOptionPane.INFORMATION_MESSAGE);
-					}
-    			};
-    			if (EventQueue.isDispatchThread()) {
-    				r.run();
-    			}
-    			else {
-    				try {
-						SwingUtilities.invokeAndWait(r);
-					} 
-    				catch (InterruptedException e) {
-						e.printStackTrace();
-					} 
-    				catch (InvocationTargetException e) {
-						e.printStackTrace();
-					}
-    			}
-    		}
-    		retval = getDefaultSoundbank();
-    	}
-    	
-    	return retval;
-    }
-    
-    private static Soundbank createSoundbank(String soundbankLocation) {
-    	Soundbank retval = null;
-    	File f = new File(soundbankLocation);
-    	if (f.isFile()) {
-    		try {
-    			retval = MidiSystem.getSoundbank(f);
-    		}
-        	catch (InvalidMidiDataException e) {
-    			LogContext.getLogger().warning("Unable to load soundbank:" + soundbankLocation);
-    			e.printStackTrace();
-    		}
-    		catch (IOException e) {
-    			LogContext.getLogger().warning("Error reading file: " + soundbankLocation);
-    			e.printStackTrace();
-    		}
-    	}
-    	
-		return retval;
-    }
-    
-    private static Soundbank getDefaultSoundbank() {
-    	Soundbank retval = null;
-    	try {
-    		// getResourceAsStream DOES NOT WORK!!!!
-			retval = MidiSystem.getSoundbank(RhythmExperiment.class.getResource(DEFAULT_SOUNDBANK));
-		}
-    	catch (InvalidMidiDataException e) {
-			LogContext.getLogger().warning("Unable to load default soundbank.");
-			e.printStackTrace();
-		}
-		catch (IOException e) {
-			LogContext.getLogger().warning("Error reading default soundbank.");
-			e.printStackTrace();
-		}
-		return retval;
     }
     
     public static MidiDevice initializeSynth(int deviceID) throws MidiUnavailableException {

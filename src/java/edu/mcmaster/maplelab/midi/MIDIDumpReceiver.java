@@ -30,7 +30,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package edu.mcmaster.maplelab.common.sound;
+package edu.mcmaster.maplelab.midi;
 
 
 import java.io.PrintStream;

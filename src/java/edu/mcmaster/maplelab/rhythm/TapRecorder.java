@@ -34,10 +34,10 @@ import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
 
 import edu.mcmaster.maplelab.common.LogContext;
-import edu.mcmaster.maplelab.common.sound.MidiInterpreter;
-import edu.mcmaster.maplelab.common.sound.MultiMidiEvent;
-import edu.mcmaster.maplelab.common.sound.ToneGenerator;
-import edu.mcmaster.maplelab.common.sound.ToneGenerator.ChannelKey;
+import edu.mcmaster.maplelab.midi.MidiInterpreter;
+import edu.mcmaster.maplelab.midi.MultiMidiEvent;
+import edu.mcmaster.maplelab.midi.ToneGenerator;
+import edu.mcmaster.maplelab.midi.ToneGenerator.ChannelKey;
 import edu.mcmaster.maplelab.rhythm.datamodel.RhythmSession;
 
 

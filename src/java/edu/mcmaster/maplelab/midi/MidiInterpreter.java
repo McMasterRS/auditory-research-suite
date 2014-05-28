@@ -1,4 +1,4 @@
-package edu.mcmaster.maplelab.common.sound;
+package edu.mcmaster.maplelab.midi;
 
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;

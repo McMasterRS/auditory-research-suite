@@ -25,6 +25,14 @@
         <include name="edu/mcmaster/maplelab/common/**/*.png" />
         <include name="edu/mcmaster/maplelab/common/**/*.properties" />      	
     </patternset>
+	
+    <patternset id="midi.classes">
+	    <include name="edu/mcmaster/maplelab/midi/*.class" />
+	    <include name="edu/mcmaster/maplelab/midi/**/*.class" />
+        <include name="edu/mcmaster/maplelab/midi/**/*.png" />
+        <include name="edu/mcmaster/maplelab/midi/**/*.properties" />     
+        <include name="edu/mcmaster/maplelab/midi/**/*.sf2" />       	    	
+    </patternset>
 
     <patternset id="rhythm.classes">
 	    <include name="edu/mcmaster/maplelab/rhythm/*.class" />
@@ -63,6 +71,7 @@
 		<jar destfile="${rhythm.jar.path}">
             <fileset dir="${build}">
                 <patternset refid="common.classes" />
+                <patternset refid="midi.classes" />
                 <patternset refid="rhythm.classes" />
             </fileset>
             <manifest>
@@ -128,6 +137,7 @@
     <target name="compile">
 	    <javac nowarn="yes" source="1.6" target="1.6" destdir="${build}" encoding="UTF-8">
 	    	<src path="${src}/common"/>
+	    	<src path="${src}/midi"/>
 	        <src path="${src}/rhythm"/>
 	    	<include name="**/*.java"/>
 	    	<classpath refid="used.jars.path" />
@@ -139,6 +149,7 @@
 			<include name="./*.class"/>
 			<include name="./**/*.class"/>
 			<include name="./**/**/*.class"/>
+			<include name="./**/**/**/*.class"/>
 		</delete>
 	</target>
 
