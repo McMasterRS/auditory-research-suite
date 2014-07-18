@@ -1,0 +1,160 @@
+<?xml version="1.0"?>
+<project name="MapleLab" default="all">
+	<!-- TODO: Refactor these experiment builds into common file w/ simple target differentiation. -->
+    <description>
+	     Create project deployment objects.
+    </description>
+
+	<tstamp>
+		<format property="DTS" pattern="DDD.HH.mm.ss"/>
+	</tstamp>
+	
+    <property name="src" value="${basedir}/edu/mcmaster/maplelab" />
+    <property name="build" value="${basedir}" />
+	
+    <property name="visualizer.jar" value="visualizer.jar" />
+	<property name="visualizer.dist.dir" value="${build}/www/visualizer" />
+    <property name="visualizer.jar.path" location="${visualizer.dist.dir}/${visualizer.jar}"/>	
+
+	<property name="visualizer.props" value="${src}/visualizer/visualizer.properties"/>
+	<property name="visualizer.vprops" value="${src}/visualizer/visualizer.version.properties"/>
+	
+    <patternset id="common.classes">
+    	<include name="edu/mcmaster/maplelab/common/*.class" />
+    	<include name="edu/mcmaster/maplelab/common/**/*.class" />
+        <include name="edu/mcmaster/maplelab/common/**/*.png" />
+        <include name="edu/mcmaster/maplelab/common/**/*.properties" />      	
+    </patternset>
+
+    <patternset id="av.classes">
+	    <include name="edu/mcmaster/maplelab/av/*.class" />
+	    <include name="edu/mcmaster/maplelab/av/**/*.class" />
+        <include name="edu/mcmaster/maplelab/av/**/*.png" />  
+        <include name="edu/mcmaster/maplelab/av/*.properties" />  
+    </patternset>
+
+    <patternset id="visualizer.classes">
+	    <include name="edu/mcmaster/maplelab/visualizer/*.class" />
+	    <include name="edu/mcmaster/maplelab/visualizer/**/*.class" />
+        <include name="edu/mcmaster/maplelab/visualizer/**/*.png" />  
+        <include name="edu/mcmaster/maplelab/visualizer/*.properties" />  
+    </patternset>
+
+    <patternset id="si.classes">
+            <include name="edu/mcmaster/maplelab/si/*.class" />
+            <include name="edu/mcmaster/maplelab/si/**/*.class" />
+        <include name="edu/mcmaster/maplelab/visualizer/**/*.png" />  
+        <include name="edu/mcmaster/maplelab/visualizer/*.properties" />  
+    </patternset>
+        	
+	<path id="used.jars.path">
+        <fileset dir="lib">
+	        <include name="commons-lang3-3.1.jar" />
+        	<include name="miglayout-4.0.jar" />
+        	<include name="jogl.all.jar" />
+        	<include name="joal.jar" />
+        	<include name="gluegen-rt.jar" />
+   			<include name="rococoa-cocoa-0.5.jar"/>
+   			<include name="rococoa-core-0.5.jar"/>
+   			<include name="jna-3.2.4.jar"/>
+   			<include name="cglib-2.2.jar"/>
+   			<include name="slf4j-api-1.5.8.jar"/>
+   			<include name="slf4j-jdk14-1.5.8.jar"/>
+   			<include name="asm-3.1.jar"/>
+        </fileset>
+    </path>	
+	
+    <target name="all" depends="visualizer"/>
+	
+	<target name="visualizer" depends="visualizer.jar.publish">
+	    <ant antfile="${basedir}/app/visualizer-app-build.xml" dir="${basedir}/app" />
+	</target>
+	
+    <target name="visualizer.jar.publish" depends="visualizer.version, compile">
+		<jar destfile="${visualizer.jar.path}">
+            <fileset dir="${build}">
+                <patternset refid="common.classes" />
+                <patternset refid="av.classes" />
+		<patternset refid="si.classes" />
+                <patternset refid="visualizer.classes" />
+            </fileset>
+            <manifest>
+                    <attribute name="Built-By" value="${user.name}" />
+            </manifest>			
+		</jar>
+
+		<copy file="${visualizer.props}" toDir="${visualizer.dist.dir}" overwrite="true" />
+    </target>	
+	
+	<!-- Get the SVN build version. -->
+	<target name="svn.version" if="is.svn">
+		<exec executable="svn">
+			<arg value="info"/>
+			<redirector outputproperty="build-num">
+				<outputfilterchain>
+			    	<linecontains>
+						<contains value="Revision:"/>
+					</linecontains>
+			        <tokenfilter>
+			        	<!-- Strip anything but the number. -->
+			        	<trim/>
+			        	<replaceregex pattern="Revision: " replace=""/>
+			        </tokenfilter>
+			    </outputfilterchain>
+			</redirector>
+		</exec>
+	</target>
+	
+	<!-- Get the SVN build version from git. -->
+	<target name="git.version" unless="is.svn">
+		<exec executable="git">
+			<arg value="svn" />
+			<arg value="info" />
+        	<redirector outputproperty="build-num">
+        		<outputfilterchain>
+        			<linecontains>
+					  	 <contains value="Revision:"/>
+				 	</linecontains>
+        			<tokenfilter>
+        				<!-- Strip anything but the number. -->
+        				<trim/>
+        				<replaceregex pattern="Revision: " replace=""/>
+        			</tokenfilter>
+        		</outputfilterchain>
+        	</redirector>
+    	</exec>
+	</target>
+
+	<property name="is.svn" value="true" />
+	<target name="visualizer.version" depends="svn.version, git.version" >
+		
+		<echo>Got build num.</echo>
+		<echo>Got build num=${build-num}.</echo>
+		
+		<!-- Write the property file using the current date and time. -->
+		<propertyfile file="${visualizer.vprops}" comment="Temporal Order Judgement Experiment Build Information File">
+			<entry key="buildVersion" type="int" value="${build-num}"/>
+			<entry key="buildDate" type="date" value="now" pattern="yyyy-MM-dd HH-mm-ss zzz"/>
+		</propertyfile>
+	</target>
+	
+    <target name="compile">
+	    <javac nowarn="yes" source="1.6" target="1.6" destdir="${build}" encoding="UTF-8">
+	    	<src path="${src}/common"/>
+	        <src path="${src}/av"/>
+	        <src path="${src}/visualizer"/>
+	    	<include name="**/*.java"/>
+	    	<classpath refid="used.jars.path" />
+        </javac>
+    </target>	
+	
+	<target name="clean">
+		<delete dir="edu/mcmaster/maplelab">
+			<include name="*.class"/>
+			<include name="./**/*.class"/>
+			<include name="./**/**/*.class"/>
+		</delete>
+		<ant antfile="${basedir}/app/visualizer-app-build.xml" dir="${basedir}/app" target="clean"/>
+	</target>
+
+</project>

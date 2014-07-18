@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project name="kubovylab" default="all" basedir=".">
+<!--	<target name="all" depends="mondrian, mondrian.win32" /> -->
+	<target name="all" depends="visualizer" />
+	
+	<property name="jarbundler.jar" value="../lib/jarbundler-2.2.0.jar"/>
+	<property name="xerces.jar" value="../lib/xercesImpl.jar"/>
+	
+	<condition property="launch4j.dir" value="${basedir}/../lib/launch4j-osx">
+		<os family="mac"/>
+	</condition>
+	
+	<!-- Build the Rhythm Experiment application -->
+	<target name="visualizer" description="Create application bundle for visualizer experiment">
+	    <taskdef name="jarbundler"
+	             classpath="${jarbundler.jar}:${xerces.jar}" 
+	             classname="net.sourceforge.jarbundler.JarBundler"/>
+
+	    <jarbundler dir="${basedir}" verbose="true" showPlist="true"
+	                name="Visualizer Experiment"
+	                shortname="VisualizerExperiment"
+	                signature="????"
+	                stubfile="VisualizerExperiment"
+	                mainclass="edu.mcmaster.maplelab.visualizer.VisualizerExperiment"
+	                icon="../resources/MAPLELab.icns"
+	    			splashfile="$JAVAROOT/../MAPLELabSplashScreen.png"
+	                jvmversion="1.6+"
+	                version="0.6"
+	                infostring="MapleLab Visualizer Experiment, Copyright &#xa9; 2011"
+	                bundleid="edu.mcmaster.maplelab.visualizer.VisualizerExperiment" 
+					>
+    	
+	        <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
+    		<javaproperty name="jna.library.path" value="$JAVAROOT"/>
+
+    		<jarfileset dir="../www/visualizer" includes="visualizer.jar"/>
+    	
+    		<jarfileset dir="..">
+    			<include name="lib/miglayout-4.0.jar"/>
+    			<include name="lib/jogl.all.jar"/>
+    			<include name="lib/joal.jar"/>
+    			<include name="lib/gluegen-rt.jar"/>
+    			<include name="lib/rococoa-cocoa-0.5.jar"/>
+    			<include name="lib/rococoa-core-0.5.jar"/>
+    			<include name="lib/jna-3.2.4.jar"/>
+    			<include name="lib/cglib-2.2.jar"/>
+    			<include name="lib/slf4j-api-1.5.8.jar"/>
+    			<include name="lib/slf4j-jdk14-1.5.8.jar"/>
+    			<include name="lib/asm-3.1.jar"/>
+    			<include name="lib/commons-lang3-3.1.jar"/>
+    		</jarfileset>
+	        <resourcefileset dir="../www/visualizer" includes="visualizer.properties"/>
+	    	<resourcefilelist dir="../resources" files="MAPLELabSplashScreen.png"/>
+	        <javafileset dir="../lib/natives" includes="*.jnilib"/>
+	        <javafileset dir="../lib/natives" includes="*.dylib"/>
+   		</jarbundler>
+		
+		<delete dir="tmp" quiet="true" />
+		<mkdir dir="tmp"/>
+		<mkdir dir="tmp/datafiles" />
+		<copy todir="tmp/datafiles">
+		    <fileset dir="../../../datafiles/examples">
+		    	<include name="aud/"/>
+		    	<include name="vis/"/>
+		    	<include name="video/"/>
+		    	<exclude name="video/*.*"/>
+		    </fileset>
+	  	</copy>
+		<copy todir="tmp">
+		    <fileset dir="../../../src/java/edu/mcmaster/maplelab/visualizer">
+		    	<include name="visualizer.properties"/>
+		    </fileset>
+	  	</copy>
+		<copy todir="tmp">
+			<fileset dir=".">
+				<include name="Visualizer Experiment.app/"/>
+			</fileset>
+		</copy>
+		<zip destfile="VisualizerExperiment.zip" encoding="UTF-8">
+		    <zipfileset dir="tmp" filemode="755" />
+		</zip>
+		
+	</target>
+
+	
+	<target name="clean">
+		<delete dir="${basedir}">
+			<include name="VisualizerExperiment.zip" />
+		</delete>
+		<delete verbose="true" includeEmptyDirs="true">
+			<fileset dir="Visualizer Experiment.app" />
+		</delete>
+	</target>
+</project>	

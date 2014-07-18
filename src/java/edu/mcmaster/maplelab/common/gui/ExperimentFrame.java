@@ -61,13 +61,21 @@ public abstract class ExperimentFrame <T extends Session<?, R, L>,  R extends Tr
     private DebugConsole _console;
     private boolean _isFullScreen;
     private Container _rootContainer;
+    private boolean _propertiesFileNotSpecifiedWarning;
     
     /**
      * This is the default constructor
      * @param setup 
      */
+    
     public ExperimentFrame(SimpleSetupScreen<T> setup) {
+    	this(setup, true);
+    }
+    
+    public ExperimentFrame(SimpleSetupScreen<T> setup, boolean warning) {
         super("Experiment", selectScreenConfiguration());
+        
+        _propertiesFileNotSpecifiedWarning = warning;
 
         Logger logger = LogContext.getLogger();
         logger.setLevel(Level.WARNING);
@@ -371,12 +379,14 @@ public abstract class ExperimentFrame <T extends Session<?, R, L>,  R extends Tr
             }
             else {
             	// propFile is null or does not exist... use default internal file.
-            	LogContext.getLogger().warning("User specified properties file is null or does not exist. " +
-            			"Using default internal properties file.");
-            	JOptionPane.showMessageDialog(null, "<html>No valid properties file given. " +
-            			"<br>Using default internal properties file: <br>" + defaultPropFile + "</html>",
-            			"Using Default Properties",
-            			JOptionPane.INFORMATION_MESSAGE);
+            	if (_propertiesFileNotSpecifiedWarning) {
+	            	LogContext.getLogger().warning("User specified properties file is null or does not exist. " +
+	            			"Using default internal properties file.");
+	            	JOptionPane.showMessageDialog(null, "<html>No valid properties file given. " +
+	            			"<br>Using default internal properties file: <br>" + defaultPropFile + "</html>",
+	            			"Using Default Properties",
+	            			JOptionPane.INFORMATION_MESSAGE);
+            	}
             	
             	URL url = getClass().getResource(defaultPropFile);
                 in = getClass().getResourceAsStream(defaultPropFile);
@@ -409,5 +419,4 @@ public abstract class ExperimentFrame <T extends Session<?, R, L>,  R extends Tr
         LogContext.getLogger().log(Level.SEVERE, msg, ex);
         add(new JLabel(msg));
     }
-
 } 

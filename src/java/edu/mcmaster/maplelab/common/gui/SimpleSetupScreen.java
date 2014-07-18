@@ -50,7 +50,11 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
     private final String _prefsPrefix;
     private JCheckBox _fullScreen;
     private JCheckBox _demoMode;
-
+    
+    public void setDemoMode(boolean isDemo) {
+    	_demoMode.setSelected(isDemo);
+    }
+    
     public SimpleSetupScreen(String prefsPrefix) {
         this(prefsPrefix, false, true);
     }
@@ -197,6 +201,10 @@ public abstract class SimpleSetupScreen<E extends Session<?, ?, ?>> extends JPan
      */
     public File getDataDir() {
         return _dataDir.getFile();
+    }
+    
+    public void setDataDir(String pathName) {
+    	_dataDir.setFile(new File(pathName));
     }
     
     /**
