@@ -328,7 +328,15 @@ public class TapRecorder implements AWTEventListener, Receiver {
         // DO NOT close _tapSynthDev, as this releases all of its resources, including soundbanks.
         // Otherwise, all resources would have to be reloaded between each trial.
         /*if (_tapSynthDev != null) _tapSynthDev.close();*/
-        if (_midiInput != null) _midiInput.close();
+        
+        // DO NOT close _midiInput. Otherwise, it will cause "not recording taps" problem.
+        // This is due to a bug in javax.sound.midi.MidiDevice --- a re-opened MidiDevice won't function anymore.
+        // The workaround is "not closing it between sessions or trials".
+        //
+        // Later when the MidiDevice bug is fixed, we can uncomment the line below. 
+        // The device will be re-opened in method initializeSequencerForRecording().
+        //if (_midiInput != null) _midiInput.close();
+
         _track = null;
         _lastOnTick = null;
         _skippedOnEvents.clear(); // in case stop preceded a corresponding note-off
