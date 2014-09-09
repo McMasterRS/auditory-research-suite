@@ -206,6 +206,9 @@ public class RhythmTrial extends Trial<ConfidenceResponse> {
     			retval.add(new Note(silenceDuration));
     			break;
     		case '*':
+    	        int silence = (int)(getBaseIOIOffsetDegree() * getBaseIOI());
+    	        retval.add(new Note(silence));
+
     			retval.add(new Note(probePitch, probeVelocity, probeDuration));
     			break;
     		default:
