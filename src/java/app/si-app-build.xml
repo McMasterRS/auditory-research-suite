@@ -24,7 +24,7 @@
 	                stubfile="SIExperiment"
 	                mainclass="edu.mcmaster.maplelab.si.SIExperiment"
 	                icon="../resources/MAPLELab.icns"
-	    			splashfile="$JAVAROOT/../MAPLELabSplashScreen.png"
+	    			splashfile="$JAVAROOT/../MAPLELabSplashScreen2.png"
 	                jvmversion="1.6+"
 	                version="0.6"
 	                infostring="MapleLab SI Experiment, Copyright &#xa9; 2011"
@@ -51,7 +51,7 @@
     			<include name="lib/commons-lang3-3.1.jar"/>
     		</jarfileset>
 	        <resourcefileset dir="../www/si" includes="si.properties"/>
-	    	<resourcefilelist dir="../resources" files="MAPLELabSplashScreen.png"/>
+	    	<resourcefilelist dir="../resources" files="MAPLELabSplashScreen2.png"/>
 	        <javafileset dir="../lib/natives" includes="*.jnilib"/>
 	        <javafileset dir="../lib/natives" includes="*.dylib"/>
    		</jarbundler>

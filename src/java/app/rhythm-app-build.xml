@@ -30,7 +30,7 @@
 	                stubfile="RhythmExperiment"
 	                mainclass="edu.mcmaster.maplelab.rhythm.RhythmExperiment"
 	                icon="../resources/MAPLELab.icns"
-	    			splashfile="$JAVAROOT/../MAPLELabSplashScreen.png"
+	    			splashfile="$JAVAROOT/../MAPLELabSplashScreen2.png"
 	                jvmversion="1.6*"
 	                version="0.6"
 	                infostring="MapleLab Rhythm Experiment, Copyright &#xa9; 2013"
@@ -45,7 +45,7 @@
     			<include name="lib/miglayout-4.0.jar"/>
     		</jarfileset>
 	        <resourcefilelist dir="../www/rhythm" files="rhythm.properties"/>
-	    	<resourcefilelist dir="../resources" files="MAPLELabSplashScreen.png"/>
+	    	<resourcefilelist dir="../resources" files="MAPLELabSplashScreen2.png"/>
    		</jarbundler>
 		
 		<delete dir="tmp" quiet="true" />
