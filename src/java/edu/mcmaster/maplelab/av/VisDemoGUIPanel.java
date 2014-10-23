@@ -9,11 +9,13 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -32,13 +34,10 @@ import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
 
-import org.apache.commons.lang3.StringUtils;
-
 import edu.mcmaster.maplelab.av.datamodel.AVBlockType;
 import edu.mcmaster.maplelab.av.datamodel.AVSession;
 import edu.mcmaster.maplelab.av.datamodel.AVTrial;
 import edu.mcmaster.maplelab.av.media.MediaParams;
-import edu.mcmaster.maplelab.av.media.MediaParams.MediaParamValue;
 import edu.mcmaster.maplelab.av.media.MediaType;
 import edu.mcmaster.maplelab.av.media.MediaType.MediaWrapper;
 import edu.mcmaster.maplelab.av.media.Playable;
@@ -47,6 +46,7 @@ import edu.mcmaster.maplelab.av.media.animation.AnimationPanel;
 import edu.mcmaster.maplelab.av.media.animation.AnimationParser;
 import edu.mcmaster.maplelab.av.media.animation.AnimationSequence;
 import edu.mcmaster.maplelab.common.LogContext;
+import edu.mcmaster.maplelab.common.datamodel.Session;
 import edu.mcmaster.maplelab.common.gui.DemoGUIPanel;
 import edu.mcmaster.maplelab.common.gui.FileBrowseField;
 
@@ -148,6 +148,7 @@ public abstract class VisDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel
 
         //add(new JLabel("Video Enabled:"), "right, split, span");
         _useVideo = new JCheckBox();
+		//_useVideo = null;
         //add(_useVideo, "left, grow, wrap");
 		
 		// files 
@@ -161,6 +162,7 @@ public abstract class VisDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel
 		
 		//add(new JLabel("Audio File"), "right, span, split");
 		_audFile = new FileBrowseField(false);
+		//_audFile = null;
 		//add(_audFile, "growx, wrap");
 		
 		add(new JLabel("Visual File"),"right, span, split");
@@ -169,16 +171,18 @@ public abstract class VisDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel
 		
 		//add(new JLabel("Video File"), "right, span, split");
 		_vidFile = new FileBrowseField(false);
+		//_vidFile = null;
 		//add(_vidFile, "growx, wrap");
 		//_vidFile.setEnabled(false);
 		
 		p = new JPanel(new MigLayout("insets 0, fill"));
 		_startButton = new JButton("Start");
 		_startButton.addActionListener(new StartUpdater());
+		_startButton.addActionListener(_fUpdater);
 		p.add(_startButton, "center");
 		add(p, "span, center, grow");
 		
-		//_fUpdater.update();
+		_fUpdater.restore();
 	}
 	
 	private JPanel genParamControls(AVSession<?, T, ?> session, MediaType<?> type) {
@@ -333,47 +337,44 @@ public abstract class VisDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel
 	 * Class for updating file fields.
 	 */
 	private class FilePathUpdater implements ActionListener{
-
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			update();
+			save();
 		}
-		
-		private File fileFor(MediaType<?> type) {
-            List<String> paramNames = type.getParams(getSession());
-            List<MediaParamValue> selections = new ArrayList<MediaParams.MediaParamValue>(paramNames.size()); 
-            for(String p : paramNames) {
-                JComboBox sel = _paramSelectors.get(type).get(p);
-                if(sel == null) {
-                    throw new IllegalStateException("Missing combo box for parameter type " + p);
-                }
-                selections.add((MediaParamValue) sel.getSelectedItem());
-            }
-            
-            File f = type.getExpectedFile(getSession(), selections);
-
-            if(f == null) {
-                String basename = type.getExpectedFilename(getSession(), selections);
-                LogContext.getLogger().severe("Unable find file with form: " + StringUtils.abbreviateMiddle(basename, "...", 50) + ".*");
-                // We return a file even though it's invalid so the file browser can indicate it's invalid.
-                return new File(basename);
-            }
-            
-            return f;
-            
-		}
-		
-		public void update() {
-		    
-		    File f = fileFor(MediaType.AUDIO);
-		    _audFile.setFile(f);
-		    
-            f = fileFor(MediaType.ANIMATION);
-            _visFile.setFile(f);
-
-            f = fileFor(MediaType.VIDEO);
-            _vidFile.setFile(f);
-		}
+				
+	    private Preferences prefs() {
+	        Preferences prefs = Preferences.userNodeForPackage(getClass());
+	        // Create a new node.
+	        prefs = prefs.node("visualizer.setup");
+	        return prefs; 
+	    }
+	
+	    private void save() {
+	        Preferences prefs = prefs();
+	        prefs.put(Session.ConfigKeys.dataDir.name(), _visFile.getFile().getAbsolutePath());
+	        
+	        try {
+	            prefs.flush();
+	        }
+	        catch (BackingStoreException e) {
+	            e.printStackTrace();
+	            LogContext.getLogger().log(Level.WARNING, "Couldn't save prefs.", e);
+	        }
+	    }
+	
+	    private void restore() {
+	        Preferences prefs = prefs();
+	        
+	        //String home = System.getProperty("user.home");
+	        //if(home == null) {
+	        //    home = ".";
+	        //}
+	        
+	        String path = prefs.get(Session.ConfigKeys.dataDir.name(),  null);
+	        if(path != null) 
+	            _visFile.setFile(new File(path));	        
+	    }
+	    
 	}
 	
 	/**
@@ -433,11 +434,11 @@ public abstract class VisDemoGUIPanel<T extends AVTrial<?>> extends DemoGUIPanel
      * @author <a href="mailto:simeon.fitch@mseedsoft.com">Simeon H.K. Fitch</a>
      * @since Jan 24, 2012
      */
+	
     public class MediaParamsModel extends DefaultComboBoxModel {
 
         public MediaParamsModel(MediaParams vals) {
             super(vals.getValues().toArray());
         }
     }	
-
 }
