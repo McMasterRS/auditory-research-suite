@@ -24,6 +24,7 @@ import edu.mcmaster.maplelab.common.datamodel.FileType;
 import edu.mcmaster.maplelab.common.datamodel.ConfidenceResponse;
 import edu.mcmaster.maplelab.midi.MidiInterpreter;
 import edu.mcmaster.maplelab.midi.MultiMidiEvent;
+import edu.mcmaster.maplelab.midi.ToneGenerator;
 import edu.mcmaster.maplelab.rhythm.datamodel.*;
 
 /**
@@ -217,8 +218,8 @@ public class RhythmTrialLogger extends
             fields.put(TapKeys.type, _type.toString());
 
             long tick = _currEvent.getTick();
-            String beat = _type != TapType.participant ? String.valueOf(tick) : "-";
-            String tap = _type == TapType.participant ? String.valueOf(tick) : "-";
+            String beat = _type != TapType.participant ? String.valueOf(tick-ToneGenerator.INITIALIZATION_TIMING_OFFSET) : "-";	// guanw
+            String tap = _type == TapType.participant ? String.valueOf(tick-ToneGenerator.INITIALIZATION_TIMING_OFFSET) : "-";	// guanw
             DataType data = _type == TapType.participant ? DataType.tap_subject :
                     DataType.tap_computer;
 

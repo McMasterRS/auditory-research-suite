@@ -594,11 +594,11 @@ public class StimulusResponseScreen extends BasicStep {
             	int vel = MidiInterpreter.getVelocity(sm);
             	String format = "%8d -> %s, midi note %s, velocity %s, %s";
                 if (sm.getCommand() == ShortMessage.NOTE_ON) {
-                	LogContext.getLogger().fine(String.format(format, l, "tap", key, vel, pitch));
+                	LogContext.getLogger().fine(String.format(format, l - ToneGenerator.INITIALIZATION_TIMING_OFFSET, "tap", key, vel, pitch)); // guanw
                     
                 }
                 else if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-                	LogContext.getLogger().fine(String.format(format, l, "release", key, vel, pitch));
+                	LogContext.getLogger().fine(String.format(format, l - ToneGenerator.INITIALIZATION_TIMING_OFFSET, "release", key, vel, pitch));	// guanw 
                 }
             }
         }

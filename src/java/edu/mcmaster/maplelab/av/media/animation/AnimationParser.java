@@ -31,6 +31,7 @@ import edu.mcmaster.maplelab.common.LogContext;
  */
 
 public class AnimationParser {
+	private static final String VERSION_KEY = "version";
 	private static final String COLOR_DATA_KEY = "colorData";
 	private static final String SIZE_DATA_KEY = "sizeData";
 	private static final String LUMINANCE_DATA_KEY = "luminanceData";
@@ -51,10 +52,243 @@ public class AnimationParser {
 		// method accepts a file  and returns AnimationSequence
 		// assign frames from file contents
 		
+		// 1 if not forced to reload and there is a cache, then just use it
 		String filename = file.getName();
 		AnimationSequence retval = forceReload ? null : _animationCache.get(filename);
 		if (retval != null) return retval;
+		
+		// 2 read version from the file. If none, use the old parser; otherwise, use the new parser
+		BufferedReader reader = new BufferedReader(new FileReader(file));	
+		String line = null;
+		
+		try {
+			while ((line = reader.readLine()) != null) {
+				if (line.charAt(0)=='%') continue;
+				
+				Scanner scanner = new Scanner(line);
+				String property = scanner.next();
+				if (property.contains(VERSION_KEY)) 
+					retval = newParseFile(file, aspectRatio);
+				else
+					retval = oldParseFile(file, aspectRatio);
+			}
+		}
+		catch (IOException ex) {
+			LogContext.getLogger().log(Level.SEVERE, "Animation file reading error", ex);
+			ex.printStackTrace();
+		}
+		// close the reader
+		finally { 
+			try { 
+				reader.close();
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+		
+		return retval;
+	}
 
+	// new Parser parse versioned animation files
+	public static AnimationSequence newParseFile(File file, Float aspectRatio) throws FileNotFoundException {
+		/*
+		BufferedReader reader = null;
+
+		ArrayList<AnimationFrame> frameList = new ArrayList<AnimationFrame>();
+
+		float aspect = aspectRatio != null && aspectRatio > 0 ? aspectRatio : 1.0f;
+		
+		try {
+			reader = new BufferedReader(new FileReader(file));	
+			String line = null;
+			boolean reachDataLine = false;
+			
+			int nPoints = 0;
+			int [][] orders = new int [100][3];
+			
+			//int colsPerDot = 2;
+
+			while ((line = reader.readLine()) != null) {
+				LogContext.getLogger().finer(line);
+				
+				if (line.charAt(0)=='%') continue;
+
+				Scanner scanner = new Scanner(line);
+				
+				if (!reachDataLine) {
+					String item = scanner.next();
+					
+					String timeStr = "time";
+					String sizeStr = "size";
+					String colorStr = "color";
+					String shapeStr = "shape";
+					
+					if (timeStr.contains(item.toLowerCase())) {	// reach title line
+						
+						while ((item=scanner.next())!=null) {
+							int order;
+							if (item.toLowerCase().charAt(0)=='x') {
+								nPoints++;
+								orders[nPoints-1][0] = orders[nPoints-1][1] = orders[nPoints-1][2] = -1;
+								order = 0;
+							}
+							else if (item.toLowerCase().charAt(0)=='y') {
+								
+							}
+							else if (colorStr.contains(item.toLowerCase())) {
+								orders[nPoints-1][0] = order++;
+							}
+							else if (shapeStr.contains(item.toLowerCase())) {
+								orders[nPoints-1][1] = order++;								
+							}
+							else if (sizeStr.contains(item.toLowerCase())) {
+								orders[nPoints-1][2] = order++;								
+							}
+						
+						}
+						reachDataLine = true;
+					}
+				}
+				else {								
+					// at this point, we should be at frame lines
+					float time = scanner.nextFloat();
+					List<AnimationPoint> dotList = new ArrayList<AnimationPoint>();
+	
+					// search this line only
+					while (scanner.hasNext()) {
+						String item = scanner.next();
+						if (item.charAt(0)=='%') break;
+						
+						while (true) {
+							int cols = 0;
+							Double sizeDouble = null;
+							Vector3d colorVec = null;
+							Point2d point = null;
+							AnimationShapeDrawable shape = null;
+							
+							// should always have x and y
+							String xString = scanner.next();
+							String yString = scanner.next();
+							cols += 2;
+							
+							try {
+								// attempt to get the point location
+								point = new Point2d(Double.parseDouble(xString), 
+										Double.parseDouble(yString)/aspect);
+								
+								// now attempt to gather, then match any secondary properties
+								// for the animation point
+								// XXX: could this be more efficient while remaining robust?
+								String val = "";
+								while (cols < colsPerDot) {
+									String next = scanner.next();
+									if (next.equals("-")) {
+										cols++;
+										continue;
+									}
+									else if (shape == null) {
+										// check for shape, which will be single token
+										try {
+											shape = AnimationShapeDrawable.valueOf(next.toUpperCase());
+											cols++;
+											continue;
+										}
+										catch (Exception e) { }
+									}
+									
+									// concatenate token
+									val += next;
+									
+									// color
+									if (colorData && colorVec == null) {
+										Scanner s = new Scanner(val);
+										if (s.findInLine(COLOR_PATTERN) != null) {
+											MatchResult colorMatch = s.match();
+											colorVec = new Vector3d(Double.parseDouble(colorMatch.group(1)), 
+													Double.parseDouble(colorMatch.group(2)), 
+													Double.parseDouble(colorMatch.group(3)));		
+											cols++;
+										}
+									}
+									
+									// size
+									if (sizeData && sizeDouble == null) {
+										Scanner s = new Scanner(val);
+										String res = s.findInLine(SIZE_PATTERN);
+										// have to check against just "size" in case of space there
+										if (res != null && !res.equals("size")) {
+											MatchResult sizeMatch = s.match();
+											sizeDouble = Double.parseDouble(sizeMatch.group(1));
+											cols++;
+										}
+									}
+								}
+								
+								dotList.add(new AnimationPoint(point, colorVec, sizeDouble, shape));
+								// INNER LOOP ITERATION ENDS
+								if(!scanner.hasNext()) {
+								    break;
+								}
+							}
+							catch (Exception e) {
+								// if this is a "blank" animation point, just
+								// move past all of its entries and add the blank
+								if (xString.equals("-") || yString.equals("-")) {
+									while (cols < colsPerDot && scanner.hasNext()) {
+										scanner.next();
+										cols++;
+									}
+									// add the "blank" animation point - blanks
+									// must be present for interpolation purposes later
+									dotList.add(new AnimationPoint(point, colorVec, sizeDouble, shape));
+									// INNER LOOP ITERATION ENDS
+								}
+								// if we're at the end of the line, see if there
+								// is a luminance value at the end
+								else {
+									while (scanner.hasNext()) {
+										if (scanner.hasNextDouble()) {
+											lum = scanner.nextDouble();
+										}
+										else {
+											scanner.next();
+										}
+									}
+									break; // INNER LOOP ENDS
+								}
+							} 
+						}
+					}
+					frameList.add(new AnimationFrame(time, dotList, lum));	
+				}	// if
+			} 	// while
+		}	// try
+		catch (IOException ex) {
+			LogContext.getLogger().log(Level.SEVERE, "Animation file reading error", ex);
+			ex.printStackTrace();
+		}
+		// close the reader
+		finally { 
+			try { 
+				reader.close();
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+
+		// Cache current animation sequence
+		String filename = file.getName();
+		AnimationSequence aniSeq = new AnimationSequence(filename, frameList, aspect);
+		_animationCache.put(filename, aniSeq);
+
+		return aniSeq; */
+		return null;
+	}
+
+	
+	public static AnimationSequence oldParseFile(File file, Float aspectRatio) throws FileNotFoundException {
+		String filename = file.getName();
+		
 		BufferedReader reader = null;
 
 		ArrayList<AnimationFrame> frameList = new ArrayList<AnimationFrame>();

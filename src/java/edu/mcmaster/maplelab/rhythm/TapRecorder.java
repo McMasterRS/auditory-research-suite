@@ -17,6 +17,7 @@ import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
 import java.awt.event.KeyEvent;
 import java.util.HashSet;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -407,6 +408,19 @@ public class TapRecorder implements AWTEventListener, Receiver {
     	if (_track == null || !_sequencer.isRecording()) return;
 
         long ticks = _sequencer.getTickPosition();
+        /*
+        while(ticks<3192) {
+        	ticks = _sequencer.getTickPosition();
+        	try {
+				Thread.sleep(5);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+        
+        _sequencer.stop();
+        */
         event.setTick(ticks);
         event = convertEvent(event);
         
@@ -515,7 +529,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
      * @see javax.sound.midi.Receiver#send(javax.sound.midi.MidiMessage, long)
      */
     public void send(MidiMessage message, long timeStamp) {
-    	recordEvent(new MidiEvent(message, timeStamp));
+    	recordEvent(new MidiEvent(message, timeStamp));    	
     }    
 
     /**
