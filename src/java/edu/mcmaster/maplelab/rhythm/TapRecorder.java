@@ -33,6 +33,7 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Soundbank;
 import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
+import javax.swing.JOptionPane;
 
 import edu.mcmaster.maplelab.common.LogContext;
 import edu.mcmaster.maplelab.midi.MidiInterpreter;
@@ -76,6 +77,7 @@ public class TapRecorder implements AWTEventListener, Receiver {
     public TapRecorder(RhythmSession session) throws MidiUnavailableException {
     	this(session.allowComputerKeyInput(), session.getSuppressionWindow());
     	_session = session;
+    	//ToneGenerator.getInstance().setReverberation(_session.getReverberation());
     }
 
     public TapRecorder(boolean allowComputerKeyInput, long suppressionWindow) throws MidiUnavailableException {
@@ -421,6 +423,9 @@ public class TapRecorder implements AWTEventListener, Receiver {
         
         _sequencer.stop();
         */
+        
+        //JOptionPane.showMessageDialog(null, "Eggs are not supposed to be green.");
+        
         event.setTick(ticks);
         event = convertEvent(event);
         

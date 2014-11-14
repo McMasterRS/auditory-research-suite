@@ -68,7 +68,8 @@ public abstract class Session<TM extends TrialManager<?, T>, T extends Trial<?>,
         buildDate,
         playbackGain,
         speedMode,
-        propertyPrefix
+        propertyPrefix,
+        reverberation
     }
     
     /**
@@ -399,6 +400,12 @@ public abstract class Session<TM extends TrialManager<?, T>, T extends Trial<?>,
     	 return getClampedFloat(ConfigKeys.playbackGain, 1.0f, 0.0f, 1.0f);
      }
      
+     /** 
+      * Get reverberation level: a integer in the range [0, 127]
+      */
+     public int getReverberation() {
+    	 return getInteger(ConfigKeys.reverberation, 64);	// 64 is the default when reverberation is not specified in the property file
+     }
      /**
       * Set RAID property
       * @param val Value for RAID

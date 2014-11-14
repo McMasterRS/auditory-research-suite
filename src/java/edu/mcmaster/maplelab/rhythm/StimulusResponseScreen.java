@@ -186,6 +186,7 @@ public class StimulusResponseScreen extends BasicStep {
         	// Must set Soundbank prior so ToneGenerator will use it to setup devices.
         	ToneGenerator.getInstance().setSoundbank(sb);
         	ToneGenerator.getInstance().setMIDISynthID(_session.getSynthDevID());
+        	ToneGenerator.getInstance().setReverberation(_session.getReverberation());
         	
         	// We have to add a key listener to make sure this gets
         	// registered to receive events.

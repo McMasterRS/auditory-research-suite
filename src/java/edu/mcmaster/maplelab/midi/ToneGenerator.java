@@ -23,6 +23,7 @@ import javax.sound.midi.MetaEventListener;
 import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiDevice.Info;
+import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
@@ -47,7 +48,7 @@ import edu.mcmaster.maplelab.common.sound.Pitch;
  * @since   Apr 17, 2006
  */
 public class ToneGenerator {
-    
+
 	private static final int ENABLED_CHANNEL_COUNT = 12;
 	
     private static final int MIDI_MAX_VOLUME = 127;
@@ -117,6 +118,8 @@ public class ToneGenerator {
     
     private Soundbank _soundbank;
     
+    private int _reverberation = 64;	// ranging [0, 127]
+
     private Map<Track, Integer> _lastDetunes = new  HashMap<Track, Integer>();
     
     private ToneGenerator() throws MidiUnavailableException {
@@ -139,6 +142,15 @@ public class ToneGenerator {
     
     public void setSoundbank(Soundbank soundbank) {
     	_soundbank = soundbank;
+    }
+    
+    public void setReverberation(int reverb) {
+    	_reverberation = Math.min(Math.max(0, reverb), 127);
+    	
+        // Set reverb (guanw)
+        MidiChannel midiChannels[] = _midiSynthDev.getChannels();
+        for (int i = 0; i < midiChannels.length; i++) 
+            midiChannels[i].controlChange(91, _reverberation);
     }
     
     public static MidiDevice initializeSynth(int deviceID) throws MidiUnavailableException {
