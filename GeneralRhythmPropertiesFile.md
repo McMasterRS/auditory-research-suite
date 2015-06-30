@@ -1,0 +1,270 @@
+This is a properties file to setup a rhythm experiment.
+
+It is testing for probe detune, with detune amounts of 0 or 1200 cents, with baseIOIs of 400 and 600.
+
+```
+#
+# Rhythm Experiment applet configuration file
+#
+
+# Use this property to differentiate between different versions of properties
+# in the experiment.  Properties that use this prefix will become PREFIX.[name]
+# instead of [name].
+#propertyPrefix=
+
+# Experiment data
+experimentID=0
+subExperimentID=0
+
+# Debug options
+# Flag to turn on debug mode, showing console
+debug=true
+# Flag to divide IOIs by 10 for testing experiment quickly.
+speedMode=false
+
+# ***** Experiment Details *****
+
+# Number of times blocks should be presented.
+# Blocks sets are sets of [no. of offsetDegrees] trials.
+# A set of blocks covers every baseIOI with and without tapping,
+# so the number of blocks in a full set is [no. baseIOIs]*2
+# Each set of blocks will be randomized independently, unless specified
+# otherwise
+blockSetRepetitions=2
+# randomizeAcrossRepetitions: true indicates that all trials within a block will be
+#                    randomized, even across repetitions
+randomizeAcrossRepetitions=false
+# Metablocks are groups of blocks, possibly repeated
+metablocks=1
+
+# Randomization options
+randomizeBlocks=true
+randomizeTrials=true
+
+# -- Generated Note playback options --
+# Gain level for playback as a percentage of maximum [0.0, 1.0]
+playbackGain=1.0
+
+# Set the Middle-C value to make instrument specification easier with
+# different SoundBanks, as each use a different representation. 
+# Value is normally labeled either "C3", "C4", or "C5". This defaults to C4.
+# Octave values from 5 below to 5 above are allowed around this Middle C, as per MIDI specification.
+# For example, if set to C4, this allows notes in octaves from -1 to 9.
+middleC=C4
+
+# Set trial specification method to one of the following:
+# 0) HighLowPitches
+# 1) PatternWithNotes
+# 2) MIDIFile  ***UNIMPLEMENTED***
+# Defaults to PatternWithNotes (Using Pattern matching)
+trialSpecificationStyle=PatternWithNotes
+
+# -- Options to generate using High/Low Pitches (HighLowPitches) --
+# Note value played on the stressed beat.
+highPitch=C5
+# Note value played on non-stressed beats.
+lowPitch=G4
+# Number of measures played
+playbackMeasures=3
+# Number of beats per measures (first beat is the stressed one)
+beatsPerMeasure=4
+# Number of IOI units of silence after sounded measures (not including offset)
+silenceMultiplier=3
+
+# -- Options to generate using Pattern Specification (PatternWithNotes) --
+# Specified with the characters 'p' (primary), 's' (secondary), 't' (tertiary),
+# '_' (silence), '*' (probe). Capitalization and spaces are ignored.
+# e.g. P s t s    P s t s    P s t s    P _ _ _ *
+trialNotePattern= P sss P sss Psss P ___*
+# Pitch is given as a Note value
+# Velocity is an integer in [0,127] (defaults to 64)
+# Duration is a percentage of the baseIOI that the note should play. Float value (defaults to 1.0)
+# Note values for primary
+primaryPitch=C5
+primaryVelocity=64
+primaryDuration=1
+# Note values for secondary
+secondaryPitch=E4
+secondaryVelocity=64
+secondaryDuration=1
+# Note values for tertiary
+tertiaryPitch=E3
+tertiaryVelocity=64
+tertiaryDuration=1
+# Note values for probe (If unspecified, will default to the same as the primary pitch.)
+probePitch=
+probeVelocity=
+probeDuration=
+# Silence 
+silenceDuration=1
+
+# If this is set to true, rhythm will be generated using the Percussion channel instruments.
+usePercussionChannel=false
+# General midi bank number to select for playback instrument. [0..127]
+# If usePercussionChannel is false, this sets the instrument to use
+# Otherwise (when usePercussionChannel is true) this sets the drum-kit to use, which is normally
+# a value in the set [0,8,16,24,32,40,48,56], but can vary based on the Soundbank being used. 
+instrumentNumber=115
+
+# List of integers specifying the inter-onset time between notes in milliseconds. 
+# This is basically a psychologists way of discussing tempo. 
+# An IOI of 1000 means that notes are spaced 1 second apart, and would 
+# correspond to a musical tempo marking of 60 beats per minute.
+baseIOIs=400,600
+# List representing fraction of baseIOI that probe tone should be offset [0-1]
+# So for example, a 0.1 for BaseIOI=600 means trials at 600+/-60 (540 and 660).
+offsetDegrees=0
+
+# List of probe detune offsets, which pitchbend the probe by cents (hundredths of semitones).
+# Can take any values, allowing arbitrary detuning to the extremes allowed by MIDI.
+# Leaving empty or setting to just '0' will effectively cause the experiment to run as before the
+# inclusion of probe detunes. 
+probeDetuneAmounts=0,1200
+
+# Indicates what type of testing this experiment will run.
+# If value is "OffsetTiming", will check subject responses against offset timing.
+#	(Make sure to only have zero or one probeDetuneAmounts value when testing timing.)
+# If value is "ProbeDetune", will check subject responses against probe detune.
+#	(Make sure to only have zero or one offsetDegrees value when testing detune.)
+# No current support for recording both types simultaneously.
+experimentTestingType=ProbeDetune
+
+# This labels the first question (Yes/No). Change based on experiment, 
+# Labels for Question/Answer of response. 
+# e.g. "Accurate timing" or "Accurate tuning"
+question.label=  Accurate tuning?
+answerPositive.label=	Yes (y)
+answerNegative.label=	No (n)
+
+answerPositive.hotkey=	y
+answerNegative.hotkey= 	n
+# Hotkeys must all be unique, or erroneous behaviour will occur.
+# Only first character from string will be used for hotkey 
+confidence.-2.hotkey=	1
+confidence.-1.hotkey=	2
+confidence.0.hotkey=	3
+confidence.1.hotkey=	4
+confidence.2.hotkey=	5
+
+# Number of milliseconds to wait before playback of stimulus.
+preStimulusSilence=1000
+# Number of milliseconds to wait after playback of stimulus.
+postStimulusSilence=2000
+
+# -- General text displays --
+withTapText=<html>Please <span style="font-weight: bold; color: blue;">tap</span> with sound.
+withoutTapText=<html>Please <span style="font-weight: bold; text-decoration: underline; color: red;">do not tap</span> with sound.
+enterResponseText=<html>Please respond and click "Next".
+
+# -- Subject feedback options -- 
+# If feedback is off (allowFeedback=false), then the text does not matter
+allowFeedback=true
+accuracyCorrectText=<html>Your response was <span style="color: green;">correct</span>!
+accuracyIncorrectText=<html>Your response was not correct.
+resultsFormatText=<html><small>%d of %d correct (%d%%)
+
+# -- Subject input options --
+# Allow computer keyboard taps
+computerKeyInput=true
+# Record midi note-off events
+recordNoteOff=false
+# Whether to record the actual tap note (if valid and available - 
+# computer keyboard note is generated) or the tap note override.
+# Defaults to true.
+recordActualTapNote=true
+# Whether to log/record the actual tap velocity (if valid and available) 
+# or the tap velocity override. Defaults to true.
+recordActualTapVelocity=true
+# Number of milliseconds within which to ignore repeat note-on events
+suppressionWindow=50
+
+# -- Subject tap sounds --
+# Play a sound for subject taps
+subjectTapSound=true
+# Value to override the subject's tap velocity, or -1 to use the actual 
+# (or default, for computer key presses) tap velocity
+subjectTapVelocity=77
+# Note for subject tap sounds
+subjectTapNote=E4
+# Gain level for subject tap sounds as a percentage of maximum [0.0, 1.0]
+subjectTapGain=1
+# Gain level for subject tap sounds DURING NON-TAP TRIALS as a percentage of maximum [0.0, 1.0]
+# Absence of this property or a negative value will default to the value of subjectTapGain.
+subjectNoTapGain=1
+# General midi bank number for subject tap sounds
+subjectTapInstrumentNumber=22
+
+# -- Response confidence levels --
+# The minimum (numerically) confidence value
+confidenceMin=-2
+# Indicates the numeric order (descending) in which the confidence levels 
+# will appear: true indicates high-to-low, false indicates low-to-high
+confidenceOrderHighToLow=true
+# Levels must be of the form: "confidence.[integer:confidenceMin-?]"
+# Values may not be skipped, although order does not matter
+confidence.-2=Very unconfident
+confidence.-1=Somewhat unconfident
+confidence.0=Unsure
+confidence.1=Somewhat confident
+confidence.2=Very confident
+
+
+# ***** Experiment Stages *****
+
+# Number of milliseconds to wait until proceeding to the next trial
+trialDelay=2000
+# Number of warmup trials
+numWarmupTrials=3
+# Text to display during the trial delay time before a warmup trial
+warmupDelayText=<html><span style="color: teal;">The warmup trial is about to begin...</span>
+# Text to display during the trial delay time before the first recorded trial
+firstDelayText=<html><span style="color: teal;">The first trial is about to begin...</span>
+# Text to display during the trial delay time for all other trials
+trialDelayText=<html><span style="color: teal;">The next trial is about to begin...</span>
+
+# -- Introduction Screen --
+introScreenTitle=Introduction
+introScreenText=\
+<html><p>Welcome! In this experiment, you will hear a regularly occurring pattern of beats with which you will be instructed to \
+either tap along, or listen without tapping. The beats will occur in a repeating sequence ; 1-2-3-4  1-2-3-4 . . .  , where the 1st \
+beat is accented (emphasized). This sequence will repeat 4 times, but on the last 1-2-3-4 pattern, the 2nd, 3rd, and 4th beat are \
+silent. One final accented beat will occur afterwards. Your job is to identify if the final beat occurs on time, or whether it is not on \
+time.</p> \
+<p>Please click the <b>Next</b> button to begin.
+
+# -- Warmup Preparation Screen --
+preWarmupTitle=Warmup Preparation
+preWarmupText=\
+<html><p>You will get the chance to complete a few practice trails and then we will continue with the experimental trial. Good luck!\
+<p>Note: When you click NEXT the beat will begin immediately with instructions to tap.</p> \
+<p>Click <b>Next</b> to continue.</p>
+
+# -- Warmup mode Stimulus/Response screen.
+warmupScreenTrialTitle=Experiment Warmup
+warmupScreenTrialText=\
+<html><p>This is a warmup trial. Please listen to the following and select your response.<br>\
+
+
+# -- Pre-trial Instruction Screen --
+preTrialTitle=Beginning Experiment Trials
+preTrialText=\
+<html><p>Now we'll start the experiment.</p>\
+<p>Note: When you click NEXT the tones will begin immediately with instructions to tap.</p>\
+<p>Click <b>Next</b> to continue.</p>
+
+# -- Stimulus/Response screen.
+testScreenTrialTitle=Experiment Trial
+testScreenTrialText=\
+<html><p>This is an experimental trial. Please listen to the following and select your response.</p>\
+
+# Set orientation of Status and Response blocks
+# Use "verticalTop", "verticalBottom", "horizontalLeft", "horizontalRight", or "suppressed" 
+# to orient the location of the status box. Defaults to "horizontalLeft".
+statusOrientation=
+
+# -- Completion Announcement Screen --
+completionTitle=Complete
+completionText=\
+<html> We're done. Thank you for your participation!<br><br>\
+Please call the research assistant.
+```

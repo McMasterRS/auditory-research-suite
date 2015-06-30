@@ -1,0 +1,273 @@
+This sets up a general toj.properties file for an SI experiment.
+
+Includes video and audio blocks.
+
+```
+#
+# TOJ Experiment configuration file
+#
+
+# Use this property to differentiate between different versions of properties
+# in the experiment.  Properties that use this prefix will become PREFIX.[name]
+# instead of [name].
+#propertyPrefix=
+
+# Experiment data
+experimentID=0
+subExperimentID=0
+
+# Flag to turn on debug mode, showing console
+debug=true
+# Full screen mode - not applicable in demo mode
+fullScreen=false
+
+
+# ***** Experiment Details *****
+# Block types to include, as well as single-block structure
+# and randomization parameters
+# single[type]Block: true indicates that all trials of this type, from all
+#                    repetitions, should be forced into a single block (within
+#                    each metablock)
+# single[type]FullRandom: true indicates that all trials within a block will be
+#                    randomized, even across repetitions
+includeAudioBlock=false
+singleAudioBlock=false
+singleAudioFullRandom=false
+includeAnimationBlock=false
+singleAnimationBlock=false
+singleAnimationFullRandom=false
+includeVideoBlock=false
+singleVideoBlock=false
+singleVideoFullRandom=false
+includeAudioAnimationBlock=true
+singleAudioAnimationBlock=false
+singleAudioAnimationFullRandom=false
+
+# Number of times blocks should be presented.
+# Blocks are sets of (for properties applicable to that block)
+# [soundOffsets * pitches * tone durations * strike durations * sizeOf(numAnimationPoints)] trials.
+# A set of blocks covers every block type specified (so, up to 4 blocks).
+# Each set of blocks will be randomized independently (if so specified).
+blockSetRepetitions=1
+# Metablocks are groups of blocks, possibly repeated
+metablocks=1
+# Randomization options
+randomizeBlocks=true
+randomizeTrials=true
+
+
+# -- Visual options --
+# Screen width and height - used to set the animation and/or video window size
+# Values that are too large will not have enough room to render
+screenWidth=640
+screenHeight=480
+
+
+# -- Animation options --
+# Animation point aspect scales point locations according to the
+# given relationship between x and y values (animationPointAspect=x/y).
+# If greater than zero, this value overrides "pointAspectRatio" in animation files.
+animationPointAspect=0
+# Base radius for animation points - sizes in the animation files
+# are relative based on this value, which does not scale linearly
+animationPointSize=0.1
+# Maximum number of animation points/dots included - more than one value here
+# creates sets of trials for each case
+numAnimationPoints=3
+# Indicator for whether the points/dots in the animation should have
+# lines connecting them
+connectDots=false
+# Note: the following two values should likely be the same . . . 
+# How much time the renderer should look ahead into the future 
+# to determine the frame that it is currently rendering.  This value 
+# cannot be greater than the monitor refresh period.  (milliseconds)
+# Negative values indicate looking into the past for frames.
+animationFrameAdvance=0
+# How far ahead the frame render should be called.  This value 
+# cannot be greater than the monitor refresh period.  (milliseconds)
+# Negative values indicate a delay.
+renderCallAhead=0
+
+
+# -- Audio options --
+# Time in milliseconds to wait between audio playback completion polling.
+# Note: polling only applies after the expected audio duration has already 
+# elapsed but the audio is still playing.
+audioPollWait=100
+# Gain level for playback as a percentage of maximum [0.0, 1.0]
+playbackGain=.8
+# List representing milliseconds that tone should be offset   
+soundOffsets=400, -300, -200, -100, 0, 100, 200, 300, 400
+# How far ahead the audio playback should be called.  (milliseconds)
+# Negative values indicate a delay.
+audioCallAhead=5
+
+
+# Parameters in the file format string are specified as '${PARAM_NAME}'
+# Files are then constructed by replacing every occurrence of ${PARAM_NAME} with
+# all possible values extracted from the entry 'PARAM_NAME=[value], [value], [value], ...'
+#
+# For all entries, capitalization matters!
+#
+# Most media will only need one file extension to be specified.  In the case
+# of multiple, they will be checked IN ORDER for the existence of the desired
+# media file.  (So, 'dnn.avi' would be used, if it exists, instead of 'dnn.dv',
+# even if 'dnn.dv' also exists.)
+
+# -- Parameters and file specification --
+
+# Audio durations are used for legacy format audio file names and for
+# video file names, if needed.
+videoParams=pitches, visualDurations, audioDurations
+videoFileFormat=${pitches}${visualDurations}${audioDurations}
+videoFileExtensions=avi, dv
+videoFileSubDirectory=video
+animationParams=pitches, visualDurations
+animationFileFormat=${pitches}${visualDurations}_
+animationFileExtensions=txt
+animationFileSubDirectory=vis
+# Frequencies, spectrums, and envelope & duration values are
+# used to construct file names via the modern format (F-S-ED.wav)
+audioParams=frequencies, spectrums, envelopeDurations
+audioFileFormat=${frequencies}-${spectrums}-${envelopeDurations}
+audioFileExtensions=wav
+audioFileSubDirectory=aud
+
+# Indicate if parameters appearing in more than one file type should be synchronized
+# if those types both appear in the same trial (audio and animation).  That is, should
+# parameter types be combined independently (synchronizeParameters=false) for two 
+# different media sources.  Default is 'true'.  Does not apply to the Demo GUI.
+synchronizeParameters=true
+
+# -- Parameter Set Definitions --
+pitches=d
+pitches.label=Pitch:
+pitches.labels=D
+
+# Should be one or more of {l, s, n, x} (long, short, normal, none).
+visualDurations=n
+visualDurations.label=Visual duration:
+visualDurations.labels=Normal
+
+# Should be one or more of {l, s, n, x} (long, short, normal, none).
+audioDurations=n
+audioDurations.label=Audio duration:
+audioDurations.labels=Normal
+
+# For spaces, use '\u00A0'
+frequencies=330Hz
+frequencies.label=Frequency:
+spectrums=Puretone
+spectrums.label=Spectrum:
+envelopeDurations=Flat-228ms, Perc-400ms
+envelopeDurations.label=Envelope & Duration:
+envelopeDurations.labels=Flat\u00A0228ms, Perc\u00A0400ms
+
+
+# -- Answer labels --
+# First letter of answer will become keyboard shortcut to selection, 
+# so different starting letters are preferable.
+# Long answer labels may mess up the experiment GUI layout.
+
+# Labels for Question/Answer of response. 
+question.label= Which came first?
+answerPositive.label=Dot (d)
+answerNegative.label=Tone (t)
+
+answerPositive.hotkey=	D
+answerNegative.hotkey= 	T
+# Hotkeys must all be unique, or erroneous behaviour will occur.
+# Only first character from string will be used for hotkey 
+confidence.-2.hotkey=	1
+confidence.-1.hotkey=	2
+confidence.0.hotkey=	3
+confidence.1.hotkey=	4
+confidence.2.hotkey=	5
+
+
+# -- Response confidence levels --
+# The minimum (numerically) confidence value
+confidenceMin=-2
+# Indicates the numeric order (descending) in which the confidence levels 
+# will appear: true indicates high-to-low, false indicates low-to-high
+confidenceOrderHighToLow=true
+# Levels must be of the form: "confidence.[integer:confidenceMin-?]"
+# Values may not be skipped, although order does not matter
+confidence.-2=Very unconfident
+confidence.-1=Somewhat unconfident
+confidence.0=Unsure
+confidence.1=Somewhat confident
+confidence.2=Very confident
+
+# Number of milliseconds to wait before playback of stimulus.
+preStimulusSilence=2000
+# Number of milliseconds to wait after playback of stimulus.
+postStimulusSilence=2000
+
+# -- General text displays --
+duringTrialText=<html>Please watch carefully</span>.
+enterResponseText=<html>Please respond and click "Next".
+
+# -- Subject feedback options -- 
+# If feedback is off (allowFeedback=false), then the text does not matter
+allowFeedback=false
+accuracyCorrectText=<html>Your response was <span style="color: green;">correct</span>!
+accuracyIncorrectText=<html>Your response was not correct.
+resultsFormatText=<html><small>%d of %d correct (%d%%)
+
+
+# ***** Experiment Stages *****
+
+# Number of milliseconds to wait until proceeding to the next trial
+trialDelay=2000
+# Number of warmup trials
+numWarmupTrials=5
+# Text to display during the trial delay time before a warmup trial
+warmupDelayText=<html>The warmup trial is about to begin...</span>
+# Text to display during the trial delay time before the first recorded trial
+firstDelayText=<html>The first trial is about to begin...</span>
+# Text to display during the trial delay time for all other trials
+trialDelayText=<html>The next trial is about to begin...</span>
+
+# -- Introduction Screen --
+introScreenTitle=Introduction
+introScreenText=\
+<html><p>Welcome! Thank you for participating in this experiment. <br><br> In this simple experiment, you will be presented with a tone through the headphones you are wearing, and a white dot that will appear in the middle of a fixation cross on the screen. Your task will be to indicate whether the tone or the dot came first. As well, we will ask you to rate your confidence. Do not be fooled - this might be harder than it seems! <br><br>Good luck! </p> \
+<p>Please click the <b>Next</b> button to continue.
+
+# -- Warmup Preparation Screen --
+preWarmupTitle=Warmup Preparation
+preWarmupText=\
+<html><p>You will now get the chance to complete a few warmup trials that are similar to those you will complete during the actual experiment.\
+<p><i>Note: When you click NEXT the trial will begin immediately </i></p> \
+<p>Click <b>Next</b> to continue.</p>
+
+# -- Warmup mode Stimulus/Response screen.
+warmupScreenTrialTitle=Experiment Warmup
+warmupScreenTrialText=\
+<html><p>Please watch and listen to the following and select your responses.<br>\
+
+
+# -- Pre-trial Instruction Screen --
+preTrialTitle=Beginning Experiment Trials
+preTrialText=\
+<html><p>Great job! We will now start the experiment. The trials you will complete are similar to those you just completed in the warmup.</p>\
+<p><i>Note: When you click NEXT the trial will begin immediately.</i></p>
+<p>Click <b>Next</b> to continue.</p>
+
+# -- Stimulus/Response screen.
+testScreenTrialTitle=Experiment Trial
+testScreenTrialText=\
+<html><p>Please watch and listen to the following and select your responses.</p>\
+
+# Set orientation of Status and Response blocks
+# Use "verticalTop", "verticalBottom", "horizontalLeft", "horizontalRight", or "suppressed" 
+# to orient the location of the status box. Defaults to "horizontalLeft".
+statusOrientation=horizontalLeft
+
+# -- Completion Announcement Screen --
+completionTitle=Complete
+completionText=\
+<html> We're done. Thank you for your participation!<br><br>\
+Please call the research assistant.
+```
