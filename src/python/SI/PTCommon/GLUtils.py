@@ -26,6 +26,7 @@ class PT3DCanvas(wx.glcanvas.GLCanvas):
     def __init__(self, parent, renderDelegate):
         wx.glcanvas.GLCanvas.__init__(self, parent, -1)
         self.renderDelegate = renderDelegate
+        self.context = wx.glcanvas.GLContext(self)
         self.init = False
         self.timer = None
 
@@ -39,15 +40,15 @@ class PT3DCanvas(wx.glcanvas.GLCanvas):
 
     def OnSize(self, event):
         size = self.size = self.GetClientSize()
-        if self.GetContext():
-            self.SetCurrent()
+        if self.context:
+            self.SetCurrent(self.context)
             glViewport(0, 0, size.width, size.height)
         self.renderDelegate.resize(size.width, size.height)
         event.Skip()
 
     def OnPaint(self, event):
         dc = wx.PaintDC(self)
-        self.SetCurrent()
+        self.SetCurrent(self.context)
         if not self.init:
             self.InitGL()
             self.init = True
@@ -73,7 +74,7 @@ class PT3DCanvas(wx.glcanvas.GLCanvas):
             self.timer.Stop()
         
     def OnAnimate(self, evt):
-        self.SetCurrent()
+        self.SetCurrent(self.context)
         self.renderDelegate.draw()
         glFlush()
         self.SwapBuffers()        

@@ -31,7 +31,7 @@ class ResponsePanel(wx.Panel):
         
         self._init_ctrls()
         
-        self.boxSizer1.AddSpacer((10,10))
+        self.boxSizer1.AddSpacer(10)
 
         self.Fit()
         self.Enable(False)
@@ -65,11 +65,11 @@ class ResponsePanel(wx.Panel):
             parent.Add(self.slider2, 0, border=0, flag=wx.EXPAND)
             parent.Add(self.staticText4, 0, border=0, flag=0)
         else:
-            parent.AddSpacer((20,10))
+            parent.AddSpacer(20)
             parent.Add(self.first, 0, border=0, flag=wx.ALIGN_LEFT)
-            parent.AddSpacer((20,10))
+            parent.AddSpacer(20)
             parent.Add(self.conf, 0, border=0, flag=wx.ALIGN_RIGHT)
-            parent.AddSpacer((20,10))
+            parent.AddSpacer(20)
 
     def _init_coll_boxSizer1_Items(self, parent):
         if self.isExperimentSI():
@@ -90,7 +90,7 @@ class ResponsePanel(wx.Panel):
 #        self.SetClientSize(wx.Size(611, 128))
 #        self.SetBestFittingSize(wx.Size(387, 128))
         self.SetAutoLayout(True)
-        self.focusPanel = wx.Panel(self, -1, (0, 0), None) #holds focus for key events
+        self.focusPanel = wx.Panel(self, -1, (0, 0)) #holds focus for key events
             
         if self.isExperimentSI():
             self.staticText1 = wx.StaticText(

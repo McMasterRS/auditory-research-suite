@@ -118,8 +118,8 @@ class DemoGUIControls(wx.Panel):
         grid_sizer_1.Fit(self)
         grid_sizer_1.SetSizeHints(self)
         grid_sizer_1.AddGrowableCol(1)
+        grid_sizer_1.AddGrowableCol(2)
         grid_sizer_1.AddGrowableCol(3)
-        grid_sizer_1.AddGrowableCol(4)
     
 
 

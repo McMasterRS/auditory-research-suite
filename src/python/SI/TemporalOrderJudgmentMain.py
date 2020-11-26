@@ -30,7 +30,7 @@ from TemporalOrderJudgment.ExperimentData import *
 import csv, time
 import wx
 
-app = wx.PySimpleApp()
+app = wx.App()
 
 # 0) Pilot/ replication of original movie findings 3 reps, 3 pitch=(e,d,g), aud = (l,s,p), vis=(l,s)
 # 1) Upped number of reps to 6 (also plugged headphones in!) 

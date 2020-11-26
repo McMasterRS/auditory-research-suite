@@ -136,7 +136,7 @@ class DialogMessage(object):
         
     def show(self, parent):
         import wx
-        newFont = wx.SystemSettings_GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        newFont = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
 
         newFont.SetPointSize(25)
         

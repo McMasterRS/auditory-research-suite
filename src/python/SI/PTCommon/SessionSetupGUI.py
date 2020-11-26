@@ -22,8 +22,8 @@ from PTCommon.Pitch import *
 class SessionSetupGUI(wx.Dialog):
     """GUI Screen for accepting setup parameters."""
     def __init__(self, session, ctrls, parent=None, id=-1, title='Setup', 
-                  pos=wx.DefaultPosition, size=None,
-                  style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME):
+                  pos=wx.DefaultPosition, size=(600,800),
+                  style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER):
         wx.Dialog.__init__(self, parent, id=id, title=title, pos=pos, size=size, style=style)
         self.session = session
         self._createWidgets(ctrls)
@@ -43,17 +43,18 @@ class SessionSetupGUI(wx.Dialog):
         self.SetSizer(self.sizer)
         self.SetAutoLayout(1)
      
-        self.sizer.AddGrowableCol(1)
+        
         
         for i, d in enumerate(ctrls):
             self._addField(i, *d)
 
-        l = len(ctrls)
-        self.sizer.AddGrowableRow(l)
-        
+
         self.addExtraWidgets();
 
         self.ok = wx.Button(self, wx.ID_OK, label='OK')
+        l = len(ctrls)
+        self.sizer.AddGrowableRow(l)
+        self.sizer.AddGrowableCol(1)
         self.ok.SetDefault()
         # Filler
         self.sizer.Layout()
