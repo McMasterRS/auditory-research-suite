@@ -1,0 +1,132 @@
+experimentID=0
+subExperimentID=0
+
+debug=true
+fullScreen=false
+
+includeAudioBlock=false
+singleAudioBlock=false
+singleAudioFullRandom=false
+includeAnimationBlock=false
+singleAnimationBlock=false
+singleAnimationFullRandom=false
+includeVideoBlock=false
+singleVideoBlock=false
+singleVideoFullRandom=false
+includeAudioAnimationBlock=true
+singleAudioAnimationBlock=false
+singleAudioAnimationFullRandom=false
+
+blockSetRepetitions=1
+metablocks=1
+randomizeBlocks=true
+randomizeTrials=true
+
+screenWidth=640
+screenHeight=480
+
+animationPointAspect=0
+animationPointSize=0.1
+numAnimationPoints=3
+connectDots=false
+animationFrameAdvance=0
+renderCallAhead=0
+
+audioPollWait=100
+playbackGain=.8
+soundOffsets=400, -300, -200, -100, 0, 100, 200, 300, 400
+audioCallAhead=5
+
+videoParams=pitches, visualDurations, audioDurations
+videoFileFormat=${pitches}${visualDurations}${audioDurations}
+videoFileExtensions=avi, dv
+videoFileSubDirectory=video
+animationParams=pitches, visualDurations
+animationFileFormat=${pitches}${visualDurations}_
+animationFileExtensions=txt
+animationFileSubDirectory=vis
+audioParams=frequencies, spectrums, envelopeDurations
+audioFileFormat=${frequencies}-${spectrums}-${envelopeDurations}
+audioFileExtensions=wav
+audioFileSubDirectory=aud
+
+synchronizeParameters=true
+
+pitches=d
+pitches.label=Pitch:
+pitches.labels=D
+
+visualDurations=n
+visualDurations.label=Visual duration:
+visualDurations.labels=Normal
+
+audioDurations=n
+audioDurations.label=Audio duration:
+audioDurations.labels=Normal
+
+frequencies=330Hz
+frequencies.label=Frequency:
+spectrums=Puretone
+spectrums.label=Spectrum:
+envelopeDurations=Flat-228ms, Perc-400ms
+envelopeDurations.label=Envelope & Duration:
+envelopeDurations.labels=Flat\u00A0228ms, Perc\u00A0400ms
+
+question.label= Which came first?
+answerPositive.label=Dot (d)
+answerNegative.label=Tone (t)
+
+answerPositive.hotkey=	D
+answerNegative.hotkey= 	T
+confidence.-2.hotkey=	1
+confidence.-1.hotkey=	2
+confidence.0.hotkey=	3
+confidence.1.hotkey=	4
+confidence.2.hotkey=	5
+
+
+confidenceMin=-2
+confidenceOrderHighToLow=true
+confidence.2=Very confident
+confidence.-1=Somewhat unconfident
+confidence.-2=Very unconfident
+confidence.1=Somewhat confident
+confidence.0=Unsure
+
+preStimulusSilence=2000
+postStimulusSilence=2000
+
+duringTrialText=<html>Please watch carefully</span>.
+enterResponseText=<html>Please respond and click "Next".
+
+allowFeedback=false
+accuracyCorrectText=<html>Your response was <span style="color: green;">correct</span>!
+accuracyIncorrectText=<html>Your response was not correct.
+resultsFormatText=<html><small>%d of %d correct (%d%%)
+
+trialDelay=2000
+numWarmupTrials=5
+warmupDelayText=<html>The warmup trial is about to begin...</span>
+firstDelayText=<html>The first trial is about to begin...</span>
+trialDelayText=<html>The next trial is about to begin...</span>
+
+introScreenTitle=Introduction
+introScreenText=<html><p>Welcome! Thank you for participating in this experiment. <br><br> In this simple experiment, you will be presented with a tone through the headphones you are wearing, and a white dot that will appear in the middle of a fixation cross on the screen. Your task will be to indicate whether the tone or the dot came first. As well, we will ask you to rate your confidence. Do not be fooled - this might be harder than it seems! <br><br>Good luck! </p> <p>Please click the <b>Next</b> button to continue.
+
+preWarmupTitle=Warmup Preparation
+preWarmupText=<html><p>You will now get the chance to complete a few warmup trials that are similar to those you will complete during the actual experiment.<p><i>Note: When you click NEXT the trial will begin immediately </i></p><p>Click <b>Next</b> to continue.</p>
+
+warmupScreenTrialTitle=Experiment Warmup
+warmupScreenTrialText=<html><p>Please watch and listen to the following and select your responses.<br>
+
+
+preTrialTitle=Beginning Experiment Trials
+preTrialText=<html><p>Great job! We will now start the experiment. The trials you will complete are similar to those you just completed in the warmup.</p><p><i>Note: When you click NEXT the trial will begin immediately.</i></p><p>Click <b>Next</b> to continue.</p>
+
+testScreenTrialTitle=Experiment Trial
+testScreenTrialText=<html><p>Please watch and listen to the following and select your responses.</p>
+
+statusOrientation=horizontalLeft
+
+completionTitle=Complete
+completionText=<html> We're done. Thank you for your participation!<br><br>Please call the research assistant.
