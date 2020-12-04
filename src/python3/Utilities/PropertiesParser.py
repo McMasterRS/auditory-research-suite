@@ -48,3 +48,9 @@ class PropertiesParser:
     def copyKeyAsArray(self, key):
         s = self.raw[key].replace(" ", "")
         self.prop[key] = s.split(",")
+    
+    # Convert key into array of ints
+    def copyKeyAsIntArray(self, key):
+        s = self.raw[key].replace(" ", "")
+        self.prop[key] = s.split(",")
+        self.prop[key] = [int(i) for i in s]

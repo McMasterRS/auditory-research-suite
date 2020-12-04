@@ -45,7 +45,18 @@ def readTojProperties(p):
         "fullScreen"        : "bool",
 
         # Experiment Details
-        # TODO
+        "includeAudioBlock" : "bool",
+        "singleAudioBlock" : "bool",
+        "singleAudioFullRandom" : "bool",
+        "includeAnimationBlock" : "bool",
+        "singleAnimationBlock" : "bool",
+        "singleAnimationFullRandom" : "bool",
+        "includeVideoBlock" : "bool",
+        "singleVideoBlock" : "bool", 
+        "singleVideoFullRandom" : "bool",
+        "includeAudioAnimationBlock" : "bool",
+        "singleAudioAnimationBlock" : "bool",
+        "singleAudioAnimationFullRandom" : "bool",
 
         # Visual Options
         "screenWidth" : "int",
@@ -60,7 +71,10 @@ def readTojProperties(p):
         "renderCallAhead" : "int",
 
         # Audio Options
-        # TODO
+        "audioPollWait" : "int",
+        "playbackGain" : "float",
+        "soundOffsets" : "intArray",
+        "audioCallAhead" : "int",
 
         # Parameters and file specification
         "videoParams" : "array",
@@ -78,14 +92,51 @@ def readTojProperties(p):
         "synchronizeParameters" : "bool",
 
         # Parameter set definitions
-        # TODO
+        "pitches" : "str",
+        "pitches.label" : "str",
+        "pitches.labels" : "str",
+
+        "visualDurations" : "str",
+        "visualDurations.label" : "str",
+        "visualDurations.labels" : "str",
+
+        "audioDurations" : "str",
+        "audioDurations.label" : "str",
+        "audioDurations.labels" : "str",
+
+        "frequencies" : "str",
+        "frequencies.label" : "str",
+        "spectrums" : "str",
+        "spectrums.label" : "str",
+        "envelopeDurations" : "array",
+        "envelopeDurations.label" : "str",
+        "envelopeDurations.labels" : "str",
 
         # Answer Labels
-        # TODO
+        "question.label" : "str",
+        "answerPositive.label" : "str",
+        "answerNegative.label" : "str",
+        
+        "answerPositive.hotkey" : "str",
+        "answerNegative.hotkey" : "str",
+        "confidence.-2.hotkey" : "str",
+        "confidence.-1.hotkey" : "str",
+        "confidence.0.hotkey" : "str",
+        "confidence.1.hotkey" : "str",
+        "confidence.2.hotkey" : "str",
 
         # Response confidence levels
+        "confidenceMin" : "int",
+        "confidenceOrderHighToLow" : "bool",
+        "confidence.-2" : "str",
+        "confidence.-1" : "str",
+        "confidence.0" : "str",
+        "confidence.1" : "str",
+        "confidence.2" : "str",
 
         # Silence durations
+        "preStimulusSilence" : "int",
+        "postStimulusSilence" : "int",
 
         # General text displays
         "duringTrialText" : "str",

@@ -6,5 +6,6 @@ bin
 *.pyc
 .metadata
 .DS_Store
-
+*.code-workspace
+.env
 

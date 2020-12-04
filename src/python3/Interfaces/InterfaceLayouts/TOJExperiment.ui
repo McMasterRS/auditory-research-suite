@@ -242,7 +242,7 @@ p, li { white-space: pre-wrap; }
         </layout>
        </item>
        <item>
-        <widget class="QGraphicsView" name="plot"/>
+        <widget class="PlotWidget" name="plot"/>
        </item>
        <item>
         <layout class="QHBoxLayout" name="TestInput" stretch="1,0,0">
@@ -277,24 +277,24 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item>
-          <widget class="QGroupBox" name="whichCameFirst">
+          <widget class="QGroupBox" name="gbQuestion">
            <property name="title">
-            <string>Which came first?</string>
+            <string>Question</string>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout">
               <item>
-               <widget class="QRadioButton" name="rbDot">
+               <widget class="QRadioButton" name="rbAnswerPositive">
                 <property name="text">
-                 <string>Dot</string>
+                 <string>Positive answer</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QRadioButton" name="rbTone">
+               <widget class="QRadioButton" name="rbAnswerNegative">
                 <property name="text">
-                 <string>Tone</string>
+                 <string>Negative Answer</string>
                 </property>
                </widget>
               </item>
@@ -325,35 +325,35 @@ p, li { white-space: pre-wrap; }
             <item>
              <widget class="QRadioButton" name="rbConf5">
               <property name="text">
-               <string>Very confident</string>
+               <string>Confidence Button 5</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QRadioButton" name="rbConf4">
               <property name="text">
-               <string>Somewhat confident</string>
+               <string>Confidence Button 4</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QRadioButton" name="rbConf3">
               <property name="text">
-               <string>Neither confident nor unconfident</string>
+               <string>Confidence Button 3</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QRadioButton" name="rbConf2">
               <property name="text">
-               <string>Somewhat unconfident</string>
+               <string>Confidence Button 2</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QRadioButton" name="rbConf1">
               <property name="text">
-               <string>Very unconfident</string>
+               <string>Confidence Button 1</string>
               </property>
              </widget>
             </item>
@@ -361,6 +361,91 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
         </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="page_4">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="spacing">
+        <number>20</number>
+       </property>
+       <property name="topMargin">
+        <number>15</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="lbCompleteTitle">
+         <property name="font">
+          <font>
+           <pointsize>18</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Placeholder4</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextBrowser" name="tbCompleteText">
+         <property name="palette">
+          <palette>
+           <active>
+            <colorrole role="Base">
+             <brush brushstyle="SolidPattern">
+              <color alpha="255">
+               <red>240</red>
+               <green>240</green>
+               <blue>240</blue>
+              </color>
+             </brush>
+            </colorrole>
+           </active>
+           <inactive>
+            <colorrole role="Base">
+             <brush brushstyle="SolidPattern">
+              <color alpha="255">
+               <red>240</red>
+               <green>240</green>
+               <blue>240</blue>
+              </color>
+             </brush>
+            </colorrole>
+           </inactive>
+           <disabled>
+            <colorrole role="Base">
+             <brush brushstyle="SolidPattern">
+              <color alpha="255">
+               <red>240</red>
+               <green>240</green>
+               <blue>240</blue>
+              </color>
+             </brush>
+            </colorrole>
+           </disabled>
+          </palette>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="html">
+          <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:12pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;placeholder4&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::NoTextInteraction</set>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -428,6 +513,13 @@ p, li { white-space: pre-wrap; }
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PlotWidget</class>
+   <extends>QGraphicsView</extends>
+   <header>pyqtgraph</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
