@@ -278,6 +278,9 @@ p, li { white-space: pre-wrap; }
          </item>
          <item>
           <widget class="QGroupBox" name="gbQuestion">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="title">
             <string>Question</string>
            </property>
@@ -318,6 +321,9 @@ p, li { white-space: pre-wrap; }
          </item>
          <item>
           <widget class="QGroupBox" name="howConfident">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="title">
             <string>Confidence</string>
            </property>

@@ -1,4 +1,4 @@
-import os, datetime, itertools
+import os, datetime, itertools, random
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from Utilities.GetPath import *
 
@@ -24,14 +24,17 @@ class TOJExperimentPanel(QtWidgets.QWidget):
 
         self.trials = []
         self.currentTrial = []
-        self.currentTrialCount = 0
+        self.totalTrialCount = 0
+        self.blocks = []
         self.currentBlock = 0
+        self.totalBlockCount = 0
         self.currentMetablock = 0
 
-        # For book keeping purposes
+        
         self.currentMetablockTrial = 0
         self.currentMetablockBlock = 0
         self.currentBlockTrial = 0
+        self.currentRepetition = 0
 
         self.stateTimer = QtCore.QTimer()
         self.stateTimer.timeout.connect(self.updateState)
@@ -40,7 +43,7 @@ class TOJExperimentPanel(QtWidgets.QWidget):
 
         self.data = data
         self.setupUI()
-        self.newTrial()
+        self.genBlocks()
     
     ###########################################
     #                    UI                   #
@@ -53,7 +56,8 @@ class TOJExperimentPanel(QtWidgets.QWidget):
         uic.loadUi(getGui('TOJExperiment.ui'), self)
 
         # Plot
-        self.vis = Visualizer(self.plot, self)
+        self.vis = Visualizer(self.plot, self, self.data.properties["animationPointSize"], self.data.properties["playbackGain"], self.data.properties["connectDots"])
+        self.vis.data.defaultOffset = self.data.properties["audioCallAhead"]
 
         # Navigation buttons
         self.btNext.clicked.connect(lambda: self.movePage(1))
@@ -97,6 +101,7 @@ class TOJExperimentPanel(QtWidgets.QWidget):
 
     # Move between the instruction pages
     def movePage(self, dir):
+        # Moving between text
         if self.state == "IDLE":
             self.currentPage += dir
             self.swPages.setCurrentIndex(self.currentPage)
@@ -107,16 +112,41 @@ class TOJExperimentPanel(QtWidgets.QWidget):
             elif self.currentPage == 2:
                 self.resetTrialUI()
                 self.updateState()
+
+        # Moving to info after warmup trials
+        elif self.state == "TRIAL_FIRST_DELAY":
+            if self.currentPage != 1:
+                self.currentPage = 1
+            else:
+                self.currentPage = 2
+                self.resetTrialUI()
+                self.updateState()
+
+            self.swPages.setCurrentIndex(self.currentPage)
+
+        # Moving between trials
         else:
-            self.updateState()
+            self.getResponse()
     
     # Reset the UI for a new trial run
     def resetTrialUI(self):
         self.setButtons(False)
+
+        self.rbAnswerPositive.setAutoExclusive(False)
         self.rbAnswerPositive.setChecked(False)
+        self.rbAnswerPositive.setAutoExclusive(True)
+
+        self.rbAnswerNegative.setAutoExclusive(False)
         self.rbAnswerNegative.setChecked(False)
+        self.rbAnswerNegative.setAutoExclusive(True)
+
         for rb in self.confidenceButtons:
+            rb.setAutoExclusive(False)
             rb.setChecked(False)
+            rb.setAutoExclusive(True)
+
+        self.gbQuestion.setEnabled(False)
+        self.howConfident.setEnabled(False)
 
     ###########################################
     #               Experiment                #
@@ -145,41 +175,166 @@ class TOJExperimentPanel(QtWidgets.QWidget):
                 if exists:
                     filenames.append(filename)
                     break
-        print(filenames)
         return filenames
 
     # generate blocks
     def genBlocks(self):
+
+        blockCount = 0
+
+        # Load audio block properties
+        if self.data.properties["includeAudioBlock"]:
+            audioFilenames = self.genFilenames("audio")
+            trialBlock = []
+
+            for name in audioFilenames:
+                for offset in self.data.properties["soundOffsets"]:
+                    trial = {
+                        "audioFile" : name,
+                        "visFile" : None,
+                        "audioOffset" : offset,
+                        "numDots" : None
+                    }
+
+                    trialBlock.append(trial)
+
+            blockDict = {"ID" : blockCount, "data" : trialBlock, "reps" : 1}
+
+            self.blocks.append(blockDict)
+            blockCount += 1
+
+        # Load animation block properties
+        if self.data.properties["includeAnimationBlock"]:
+            animationFilenames = self.genFilenames("animation")
+            trialBlock = []
+            
+            for name in animationFilenames:
+                for points in self.data.properties["numAnimationPoints"]:
+                    trial = {
+                        "audioFile" : None,
+                        "visFile" : name,
+                        "audioOffset" : None,
+                        "numDots" : points
+                    }
+
+                    trialBlock.append(trial)
+
+            blockDict = {"ID" : blockCount, "data" : trialBlock, "reps" : 1}
+
+            self.blocks.append(blockDict)
+            blockCount += 1
+
+        # Load anim/audio block properties
         if self.data.properties["includeAudioAnimationBlock"]:
             audioFilenames = self.genFilenames("audio")
             animationFilenames = self.genFilenames("animation")
+            trialBlock = []
 
-            self.vis.setData(animationFilenames[0], self.data.properties["numAnimationPoints"], self.data.properties["animationPointSize"])
-           
+            for name in audioFilenames:
+                for name2 in animationFilenames:
+                    for offset in self.data.properties["soundOffsets"]:
+                        for points in self.data.properties["numAnimationPoints"]:
+                            trial = {
+                                "audioFile" : name, 
+                                "visFile" : name2,
+                                "audioOffset" : offset,
+                                "numDots" : points
+                            }
 
+                            trialBlock.append(trial)
+
+            blockDict = {"ID" : blockCount, "data" : trialBlock, "reps" : 1}
+
+            self.blocks.append(blockDict)
+
+        # Randomize blocks
+        if self.data.properties["randomizeBlocks"]:
+            random.shuffle(self.blocks)
+
+        # Randomize trials
+        if self.data.properties["randomizeTrials"]:
+            for block in self.blocks:
+                random.shuffle(block["data"])
+            
+    def getResponse(self):
+            # Make sure a response is selected
+            if self.rbAnswerPositive.isChecked():
+                self.currentTrial["subjResponse"] = self.rbAnswerPositive.text()
+            elif self.rbAnswerNegative.isChecked():
+                self.currentTrial["subjResponse"] = self.rbAnswerNegative.text()
+            else:
+                msgbox = QtWidgets.QMessageBox.critical(self, "Error", "Please select a response")
+                return
+
+            # Make sure a confidence is selected
+            for i, button in enumerate(self.confidenceButtons):
+                if button.isChecked():
+                    # Set the confidence level, append the trial and reset
+                    self.currentTrial["confidence"] = self.data.properties["confidenceMin"] + i
+                    self.trials.append(self.currentTrial)
+                    self.resetTrialUI()
+                    self.updateState()
+                    return
+
+            msgbox = QtWidgets.QMessageBox.critical(self, "Error", "Please select a confidence level")
+            return
+    
     # Start a new trial
     def newTrial(self):
-        currentTrial = {"exp_id" : self.data.properties["experimentID"],
-                        "sub_exp_id" : self.data.properties["subExperimentID"],
-                        "exp_build" : self.config["exp_build"],
-                        "exp_build_date" : self.config["exp_build_date"],
-                        "ra_id" : self.data.RAID,
-                        "subject" : self.data.subjID,
-                        "session" : self.data.sessID,
-                        "trial_num" : len(self.trials) + 1,
-                        "block_num" : self.currentBlock + 1,
-                        "metablock_num" : self.currentMetablock + 1,
-                        "block_instance" : 0, # FIXME
-                        "repetition_num" : 0, # FIXME
-                        "trial_in_metablock" : self.currentMetablockTrial + 1,
-                        "block_in_metablock" : self.currentMetablockBlock + 1,
-                        "trial_in_block" : self.currentBlockTrial + 1,
-                        "time_stamp" : datetime.datetime.now().strftime("%b %d, %Y; %I:%M:%S %p")
+
+        self.currentBlockTrial += 1
+        self.totalTrialCount += 1
+        self.currentMetablockTrial += 1
+
+        # if we've finished the current block, move to the next one
+        if self.currentBlockTrial > len(self.blocks[self.currentBlock]["data"]):
+            self.currentBlock += 1
+            self.currentBlockTrial = 0
+            self.blocks[self.currentBlock]["reps"] += 1
+            
+            # If we've finished the current metablock, repeat if needed but otherwise move to next metablock
+            if self.currentBlock > len(self.blocks):
+                
+                self.currentRepetition += 1
+                if self.currentRepetition >= self.data.properties["blockSetRepetitions"]:
+                    self.currentRepetition = 0
+                    self.currentMetablockTrial = 0
+                    self.currentMetablock += 1
+                
+                    # If we've finished all the metablocks, end the experiment
+                    if self.currentMetablock >= self.data.properties["metablocks"]:
+
+                        self.state = "FINISH"
+                        self.updateState()
+                        return
+
+                # TODO - re-scramble all data in blocks
+
+        self.currentTrial = {"exp_id" : self.data.properties["experimentID"],
+                            "sub_exp_id" : self.data.properties["subExperimentID"],
+                            "exp_build" : self.config["exp_build"],
+                            "exp_build_date" : self.config["exp_build_date"],
+                            "ra_id" : self.data.RAID,
+                            "subject" : self.data.subjID,
+                            "session" : self.data.sessID,
+                            "trial_num" : self.totalTrialCount + 1,
+                            "block_num" : self.blocks[self.currentBlock]["ID"],
+                            "metablock_num" : self.currentMetablock + 1,
+                            "block_instance" : self.blocks[self.currentBlock]["reps"],
+                            "repetition_num" : 0, # FIXME
+                            "trial_in_metablock" : self.currentMetablockTrial + 1,
+                            "block_in_metablock" : self.currentMetablockBlock + 1,
+                            "trial_in_block" : self.currentBlockTrial + 1,
+                            "time_stamp" : datetime.datetime.now().strftime("%b %d, %Y; %I:%M:%S %p")
         }
 
-        self.genBlocks()
+        currentData = self.blocks[self.currentBlock]["data"][self.currentBlockTrial]
+        self.currentTrial.update(currentData)
+        self.vis.setData(currentData)
 
+    # Update the state of the experiment
     def updateState(self):
+        print(self.state)
         # Not yet started
         if (self.state == "IDLE"):
             self.state = "WARMUP_DELAY"
@@ -190,6 +345,8 @@ class TOJExperimentPanel(QtWidgets.QWidget):
             self.lbStatus.setText(self.data.properties["warmupDelayText"])
             self.state = "WARMUP_TRIAL"    
             self.stateTimer.start(self.data.properties["preStimulusSilence"])
+            self.currentBlockTrial = random.randint(0, len(self.blocks[self.currentBlock]["data"]) - 1)
+            self.newTrial()
  
         # Warmup trial
         elif(self.state == "WARMUP_TRIAL"):
@@ -205,13 +362,17 @@ class TOJExperimentPanel(QtWidgets.QWidget):
 
         # Waiting for user response
         elif(self.state == "WARMUP_RESPOND"):
+            self.vis.clearPlot()
             self.lbStatus.setText(self.data.properties["enterResponseText"])
             self.stateTimer.stop()
             self.btNext.setEnabled(True)
+            self.gbQuestion.setEnabled(True)
+            self.howConfident.setEnabled(True)
             
             # Start the real trials if the warmup is complete
             self.warmupTrialCount += 1
             if self.warmupTrialCount == self.data.properties["numWarmupTrials"]:
+                self.setText("introScreen", "preTrial", "testScreenTrial", "completion")
                 self.state = "TRIAL_FIRST_DELAY"
             else:
                 self.state = "WARMUP_DELAY"
@@ -221,12 +382,16 @@ class TOJExperimentPanel(QtWidgets.QWidget):
             self.lbStatus.setText(self.data.properties["firstDelayText"])
             self.state = "TRIAL"
             self.stateTimer.start(self.data.properties["preStimulusSilence"])
+            self.currentBlockTrial = 0
+            self.totalTrialCount = 0
+            self.newTrial()
 
         # Trial delay
         elif(self.state == "TRIAL_DELAY"):
             self.lbStatus.setText(self.data.properties["trialDelayText"])
             self.state = "TRIAL"
             self.stateTimer.start(self.data.properties["preStimulusSilence"])
+            self.newTrial()
 
         # Run trial
         elif(self.state == "TRIAL"):
@@ -242,8 +407,19 @@ class TOJExperimentPanel(QtWidgets.QWidget):
 
         # Waiting for user response
         elif(self.state == "RESPOND"):
+            self.vis.clearPlot()
             self.lbStatus.setText(self.data.properties["enterResponseText"])
             self.stateTimer.stop()
             self.btNext.setEnabled(True)
+            self.gbQuestion.setEnabled(True)
+            self.howConfident.setEnabled(True)
             self.state = "TRIAL_DELAY"
+
+        # Finish the experiment
+        elif(self.state == "FINISH"):
+            self.swPages.setCurrentIndex(3)
+            for trial in self.trials:
+                for key, value in trial.items():
+                    print("{0}: {1}".format(key, value))
+                print("")
    

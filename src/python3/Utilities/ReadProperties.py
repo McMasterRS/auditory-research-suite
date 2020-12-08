@@ -58,6 +58,11 @@ def readTojProperties(p):
         "singleAudioAnimationBlock" : "bool",
         "singleAudioAnimationFullRandom" : "bool",
 
+        "blockSetRepetitions" : "int",
+        "metablocks" : "int",
+        "randomizeBlocks" : "bool",
+        "randomizeTrials" : "bool",
+
         # Visual Options
         "screenWidth" : "int",
         "screenHeight" : "int",
@@ -65,7 +70,7 @@ def readTojProperties(p):
         # Animation Options
         "animationPointAspect" : "float",
         "animationPointSize" : "float",
-        "numAnimationPoints" : "int",
+        "numAnimationPoints" : "intArray",
         "connectDots" : "bool",
         "animationFrameAdvance" : "int",
         "renderCallAhead" : "int",

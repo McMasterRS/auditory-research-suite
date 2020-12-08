@@ -107,7 +107,11 @@
         <item row="3" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
-           <widget class="QLineEdit" name="tbDataDirectory"/>
+           <widget class="QLineEdit" name="tbDataDirectory">
+            <property name="text">
+             <string>C:\Users\Tom\Documents\Github\auditory-research-suite\datafiles\examples</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QPushButton" name="btBrowse">
@@ -151,7 +155,7 @@
               <string>Use Data Directory</string>
              </property>
              <property name="checked">
-              <bool>true</bool>
+              <bool>false</bool>
              </property>
             </widget>
            </item>
@@ -159,6 +163,9 @@
             <widget class="QRadioButton" name="rbSpecDir">
              <property name="text">
               <string>Use Specified Directory</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -183,6 +190,9 @@
             <widget class="QLineEdit" name="tbPropertiesFile">
              <property name="enabled">
               <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>C:\Users\Tom\Documents\Github\auditory-research-suite\src\python3\testFiles</string>
              </property>
             </widget>
            </item>

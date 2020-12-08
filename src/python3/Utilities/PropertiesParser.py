@@ -26,6 +26,8 @@ class PropertiesParser:
             self.copyKeyAsBool(key)
         elif copyType == "array":
             self.copyKeyAsArray(key)
+        elif copyType == "intArray":
+            self.copyKeyAsIntArray(key)
         
     # Directly copy key from one dict to the other
     def copyKeyAsString(self, key):
@@ -53,4 +55,4 @@ class PropertiesParser:
     def copyKeyAsIntArray(self, key):
         s = self.raw[key].replace(" ", "")
         self.prop[key] = s.split(",")
-        self.prop[key] = [int(i) for i in s]
+        self.prop[key] = [int(i) for i in self.prop[key]]
