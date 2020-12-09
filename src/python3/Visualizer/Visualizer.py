@@ -81,4 +81,4 @@ class Visualizer():
             self.plotTimer.setInterval(dt)
         else:
             self.plotTimer.stop()
-            self.parent.updateState()
+            self.parent.state.updateState()

@@ -127,4 +127,4 @@ class VisualizerData():
         mn = np.argmin(rawData['f2'])
         minT = rawData['f0'][mn] * 1000
         # Use this to find the audio offset
-        self.audOffset = minT - self.audOffset - self.defaultOffset
+        self.audOffset = minT + self.audOffset - self.defaultOffset
