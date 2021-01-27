@@ -267,7 +267,7 @@ class TOJState:
         elif (self.state == "WARMUP_DELAY"):
             self.state = "WARMUP_TRIAL"    
             self.stateTimer.start(self.data.properties["preStimulusSilence"])
-            self.currentBlockTrial = random.randint(0, len(self.blocks[self.currentBlock]["data"]) - 1)
+            self.currentBlockTrial = random.randint(0, len(self.blocks[self.currentBlock]["data"]) - 2)
             self.newTrial()
  
         # Warmup trial

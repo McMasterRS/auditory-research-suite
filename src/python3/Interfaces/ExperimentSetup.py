@@ -22,7 +22,7 @@ class ExperimentSetup(QtWidgets.QWidget):
 
         # Setup UI
         uic.loadUi(getGui('TOJSetup.ui'), self)
-        #self.tbDataDirectory.setText(os.getcwd())
+        self.tbDataDirectory.setText(os.getcwd())
         self.btBrowse.clicked.connect(lambda: self.browseDataDirectory("data"))
         self.btBrowseProperties.clicked.connect(lambda: self.browseDataDirectory("prop"))
         self.rbDataDir.toggled.connect(self.toggleProperties)

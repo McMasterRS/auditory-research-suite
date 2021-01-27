@@ -1,5 +1,1 @@
 exp_id,sub_exp_id,exp_build,exp_build_date,ra_id,subject,session,trial_num,block_num,metablock_num,block_instance,repetition_num,trial_in_metablock,block_in_metablock,trial_in_block,time_stamp,audioFile,visFile,audioOffset,numDots,animationStart,aniStrikeDelay,audioStart,audioToneDelay,confidence,subjResponse,responseCorrect
-0,0,0,0,1,1,1,1,0,1,1,0,3,1,1,"Dec 08, 2020; 08:34:56 PM",330Hz-Puretone-Flat-228ms.wav,dn_.txt,-300,3,0,0,0,0,2,Dot (d),False
-0,0,0,0,1,1,1,2,0,1,1,0,4,1,2,"Dec 08, 2020; 08:35:08 PM",330Hz-Puretone-Perc-400ms.wav,dn_.txt,-300,3,0,0,0,0,1,Dot (d),False
-0,0,0,0,1,1,1,3,0,1,1,0,5,1,3,"Dec 08, 2020; 08:35:18 PM",330Hz-Puretone-Perc-400ms.wav,dn_.txt,400,3,0,0,0,0,2,Dot (d),True
-0,0,0,0,1,1,1,4,0,1,1,0,6,1,4,"Dec 08, 2020; 08:35:27 PM",330Hz-Puretone-Flat-228ms.wav,dn_.txt,400,3,0,0,0,0,2,Dot (d),True

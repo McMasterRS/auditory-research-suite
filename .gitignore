@@ -9,3 +9,4 @@ bin
 *.code-workspace
 .env
 
+src/python3/test.csv

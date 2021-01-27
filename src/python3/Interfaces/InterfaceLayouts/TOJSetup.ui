@@ -109,7 +109,7 @@
           <item>
            <widget class="QLineEdit" name="tbDataDirectory">
             <property name="text">
-             <string>C:\Users\Tom\Documents\Github\auditory-research-suite\datafiles\examples</string>
+             <string/>
             </property>
            </widget>
           </item>
@@ -155,7 +155,7 @@
               <string>Use Data Directory</string>
              </property>
              <property name="checked">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -165,7 +165,7 @@
               <string>Use Specified Directory</string>
              </property>
              <property name="checked">
-              <bool>true</bool>
+              <bool>false</bool>
              </property>
             </widget>
            </item>
@@ -192,7 +192,7 @@
               <bool>false</bool>
              </property>
              <property name="text">
-              <string>C:\Users\Tom\Documents\Github\auditory-research-suite\src\python3\testFiles</string>
+              <string/>
              </property>
             </widget>
            </item>
