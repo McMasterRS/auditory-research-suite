@@ -35,29 +35,44 @@ class TOJState:
 
     # Generate filenames based on the format strings in properties
     def genFilenames(self, prefix):
-         # Extract values for the parameters and convert any strings into single-item lists
-        nameParams = [self.data.properties[param] for param in self.data.properties[prefix + "Params"]]
-        nameParams = [[p] if isinstance(p, str) else p for p in nameParams]
 
-        # Replace the string literal with numerical literals
-        # e.g. "{var1}{var2}{var3}" is converted into "{0}{1}{2}"
-        nameFormat = self.data.properties[prefix + "FileFormat"].replace("$", "")
-        for i, param in enumerate(self.data.properties[prefix + "Params"]):
-            nameFormat = nameFormat.replace(param, str(i))
+        if self.data.properties["loadTrialsFromFolder"] == False:
+            # Extract values for the parameters and convert any strings into single-item lists
+            nameParams = [self.data.properties[param] for param in self.data.properties[prefix + "Params"]]
+            nameParams = [[p] if isinstance(p, str) else p for p in nameParams]
 
-        # Generate all combinations of the parameters
-        paramCombinations = list(itertools.product(*nameParams))
+            # Replace the string literal with numerical literals
+            # e.g. "{var1}{var2}{var3}" is converted into "{0}{1}{2}"
+            nameFormat = self.data.properties[prefix + "FileFormat"].replace("$", "")
+            for i, param in enumerate(self.data.properties[prefix + "Params"]):
+                nameFormat = nameFormat.replace(param, str(i))
 
-        filenames = []
-        # Apply params to filename
-        for params in paramCombinations:
-            # Loop through file extensions and use the first that is found to exist
-            for ext in self.data.properties[prefix + "FileExtensions"]:
-                filename, exists = mergePathsVerify([self.data.dataDir, self.data.properties[prefix + "FileSubDirectory"], nameFormat.format(*params) + "." + ext])
-                if exists:
-                    filenames.append(filename)
-                    break
-        return filenames
+            # Generate all combinations of the parameters
+            paramCombinations = list(itertools.product(*nameParams))
+
+            filenames = []
+            # Apply params to filename
+            for params in paramCombinations:
+                # Loop through file extensions and use the first that is found to exist
+                for ext in self.data.properties[prefix + "FileExtensions"]:
+                    filename, exists = mergePathsVerify([self.data.dataDir, self.data.properties[prefix + "FileSubDirectory"], nameFormat.format(*params) + "." + ext])
+                    if exists:
+                        filenames.append(filename)
+                        break
+            return filenames
+
+        else:
+
+            # Extract filenames by looping through all files in that folder
+            dataDir = self.data.dataDir
+            path = os.path.join(dataDir, self.data.properties[prefix + "FileSubDirectory"])
+            filenames = []
+
+            for filename in os.listdir(path):
+                filenames.append(filename)
+
+            return filenames
+
 
     # generate blocks
     def genBlocks(self):
@@ -379,10 +394,10 @@ class TOJState:
                     os.path.basename(trial["visFile"]),
                     trial["audioOffset"],
                     trial["numDots"],
-                    0,
-                    0,
-                    0,
-                    0,
+                    self.parent.vis.timings["animationStart"],
+                    self.parent.vis.timings["animationDelay"],
+                    self.parent.vis.timings["audioStart"],
+                    self.parent.vis.timings["audioDelay"],
                     trial["confidence"],
                     trial["subjResponse"],
                     trial["responseCorrect"]

@@ -1,6 +1,7 @@
 import pyqtgraph as pg
 import numpy as np
 from PyQt5 import QtCore
+from datetime import datetime
 
 from Visualizer.VisualizerData import VisualizerData
 
@@ -12,6 +13,9 @@ class Visualizer():
         self.data = VisualizerData(defaultSize, defaultGain)
         self.frame = 0
         self.connectDots = connectDots
+
+        # Timings used for the output file
+        self.timings = {}
 
         # Set the plot up for visualization
         self.lines = pg.GraphItem(pos = np.array([(-100,-100)]))
@@ -36,6 +40,7 @@ class Visualizer():
     def setData(self, data):
         self.data.loadData(data)
         self.frame = 0
+        self.timings = {}
 
     def clearPlot(self):
         self.lines.setData(pos = np.array([(-100,-100)]))
@@ -45,6 +50,9 @@ class Visualizer():
         self.plotTimer.start(0)
         self.audTimer.start(self.data.audOffset)
         self.frame = 0
+        time = datetime.now()
+        self.timings = {"animationStart" : time, "animationDelay" : 0,
+                        "audioStart" : time, "audioDelay" : 0}
 
     def playAudio(self):
         self.data.audio.play()
