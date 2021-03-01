@@ -57,6 +57,8 @@ class Visualizer():
         lines = np.array([(i[0], i[1], i[2], 255, 1) for i in self.data.pens[self.frame]] , dtype=[('red',np.ubyte),('green',np.ubyte),('blue',np.ubyte),('alpha',np.ubyte),('width',float)])
         
         # Ugly but the only way it'll let me toggle the lines
+        # Pushed a fix for this to matplotlib but not sure when it'll be 
+        # included in the full version. Ugly will have to do for now
         if self.connectDots:
             self.lines.setData(pos = np.array(self.data.pos[self.frame]),
                             adj = adj,

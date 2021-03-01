@@ -81,6 +81,9 @@ def readTojProperties(p):
         "soundOffsets" : "intArray",
         "audioCallAhead" : "int",
 
+        # Option to load trial info from folder
+        "loadTrialsFromFolder" : "bool",
+
         # Parameters and file specification
         "videoParams" : "array",
         "videoFileFormat" : "str",
