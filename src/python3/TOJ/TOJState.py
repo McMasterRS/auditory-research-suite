@@ -1,15 +1,13 @@
 from PyQt5 import QtGui, QtCore
 import os, datetime, itertools, random, csv
 from Utilities.GetPath import *
+from _version import __version__, __versionDate__
 import numpy as np
-
-EXP_BUILD = 0
-EXP_BUILD_DATE = 0
 
 class TOJState:
     def __init__(self, parent, data):
 
-        self.config = {"exp_build" : EXP_BUILD, "exp_build_date" : EXP_BUILD_DATE}
+        self.config = {"exp_build" : __version__, "exp_build_date" : __versionDate__}
 
         self.state = "IDLE"
         self.data = data
@@ -204,6 +202,15 @@ class TOJState:
 
                         self.updateState()
                         return
+
+                    # Randomize blocks
+                    if self.data.properties["randomizeBlocks"]:
+                        random.shuffle(self.blocks)
+
+                    # Randomize trials
+                    if self.data.properties["randomizeTrials"]:
+                        for block in self.blocks:
+                            random.shuffle(block["data"])
 
                 # TODO - re-scramble all data in blocks
 
