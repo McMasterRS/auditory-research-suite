@@ -241,10 +241,8 @@ def readSIProperties(p):
         "screenWidth": "int",
         "screenHeight": "int",
         "showTickMarks": "bool",
-        "statusOrientation": "str",
 
         # Animation Options
-        # "animationPointAspect": "float",
         "animationPointSize": "float",
         "numAnimationPoints": "intArray",
         "connectDots": "bool",
@@ -293,8 +291,10 @@ def readSIProperties(p):
         "envelopeDurations.labels": "str",
 
         # Slider labels
+        "duration.label": "str",
         "durationLow": "str",
         "durationHigh": "str",
+        "agreement.label": "str",
         "agreementLow": "str",
         "agreementHigh": "str",
 

@@ -64,8 +64,10 @@ class SIExperimentPanel(QtWidgets.QWidget):
         self.btPrev.clicked.connect(lambda: self.movePage(-1))
 
         # Slider labels
+        self.gbQuestion.setTitle(self.data.properties["duration.label"])
         self.lbDurationLow.setText(self.data.properties["durationLow"])
         self.lbDurationHigh.setText(self.data.properties["durationHigh"])
+        self.howConfident.setTitle(self.data.properties["agreement.label"])
         self.lbAgreementLow.setText(self.data.properties["agreementLow"])
         self.lbAgreementHigh.setText(self.data.properties["agreementHigh"])
 
