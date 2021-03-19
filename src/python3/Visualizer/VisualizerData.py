@@ -43,6 +43,7 @@ class VisualizerData():
 
         # Animation data
         if data["visFile"] is None:
+            self.audOffset = 0
             return
 
         self.isAnim = True

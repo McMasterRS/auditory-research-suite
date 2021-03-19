@@ -5,13 +5,14 @@ from Utilities.ReadProperties import readTojProperties, readSIProperties
 
 
 class ExperimentData:
-    def __init__(self, RAID, subjID, sessID, dataDir, demo, properties, propertiesVer):
+    def __init__(self, RAID, subjID, sessID, dataDir, demo, properties, propFile, propertiesVer):
         self.RAID = RAID
         self.subjID = subjID
         self.sessID = sessID
         self.dataDir = dataDir
         self.demo = demo
         self.properties = properties
+        self.propFile = propFile
         self.propertiesVer = propertiesVer
 
 
@@ -80,6 +81,7 @@ class ExperimentSetup(QtWidgets.QWidget):
             dataDir=self.tbDataDirectory.text(),
             demo=self.cbDemo.isChecked(),
             properties=properties,
+            propFile=propFile,
             propertiesVer=self.cbProperties.currentText()
         )
 

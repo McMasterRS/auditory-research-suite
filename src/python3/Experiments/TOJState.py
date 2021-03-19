@@ -1,8 +1,4 @@
-from PyQt5 import QtGui, QtCore
 import os
-import datetime
-import itertools
-import random
 import csv
 from Utilities.GetPath import *
 from Experiments.ExperimentState import ExperimentState
@@ -18,7 +14,6 @@ class TOJState(ExperimentState):
     def setResponseValues(self, response, conf):
         self.currentTrialData["subjResponse"] = response
         self.currentTrialData["confidence"] = conf
-        self.trials.append(self.currentTrialData)
 
         # Convert the response into a positive or negative offset
         if response == self.data.properties["answerPositive.label"]:
@@ -32,6 +27,8 @@ class TOJState(ExperimentState):
         else:
             self.currentTrialData["responseCorrect"] = False
 
+        self.trials.append(self.currentTrialData)
+
         if (self.data.properties["debug"]):
             print("Response: " + str(response))
             print("Confidence: " + str(conf))
@@ -43,35 +40,37 @@ class TOJState(ExperimentState):
         if (self.data.properties["debug"]):
             print("Current State: " + self.state)
 
+        # This just helps make this entire function more readable
+        currentState = self.state
+
         # Update the interface first
         self.parent.updateState(self.state)
 
         # Then update the experiment based on the current state
 
         # Not yet started
-        if (self.state == "IDLE"):
+        if (currentState == "IDLE"):
             self.state = "WARMUP_DELAY"
             self.updateState()
 
         # Pre-warmup trial delay
-        elif (self.state == "WARMUP_DELAY"):
+        elif (currentState == "WARMUP_DELAY"):
             self.state = "WARMUP_TRIAL"
             self.stateTimer.start(self.data.properties["preStimulusSilence"])
-            self.currentTrial = -1
             self.newTrial()
 
         # Warmup trial
-        elif(self.state == "WARMUP_TRIAL"):
+        elif(currentState == "WARMUP_TRIAL"):
             self.state = "WARMUP_PAUSE"
             self.stateTimer.stop()
 
         # Pause after trial
-        elif(self.state == "WARMUP_PAUSE"):
+        elif(currentState == "WARMUP_PAUSE"):
             self.state = "WARMUP_RESPOND"
             self.stateTimer.start(self.data.properties["postStimulusSilence"])
 
         # Waiting for user response
-        elif(self.state == "WARMUP_RESPOND"):
+        elif(currentState == "WARMUP_RESPOND"):
             self.stateTimer.stop()
 
             # Start the real trials if the warmup is complete
@@ -82,36 +81,35 @@ class TOJState(ExperimentState):
                 self.state = "WARMUP_DELAY"
 
         # Sets text for first trial
-        elif(self.state == "TRIAL_FIRST_DELAY"):
+        elif(currentState == "TRIAL_FIRST_DELAY"):
             self.state = "TRIAL"
             self.stateTimer.start(self.data.properties["preStimulusSilence"])
-            # Set to -1 because it iterates to 0 on the first run of newTrial
             self.resetCounters()
             self.newTrial()
 
         # Trial delay
-        elif(self.state == "TRIAL_DELAY"):
+        elif(currentState == "TRIAL_DELAY"):
             self.state = "TRIAL"
             self.stateTimer.start(self.data.properties["preStimulusSilence"])
             self.newTrial()
 
         # Run trial
-        elif(self.state == "TRIAL"):
+        elif(currentState == "TRIAL"):
             self.state = "PAUSE"
             self.stateTimer.stop()
 
         # Pause after trial
-        elif(self.state == "PAUSE"):
+        elif(currentState == "PAUSE"):
             self.state = "RESPOND"
             self.stateTimer.start(self.data.properties["postStimulusSilence"])
 
         # Waiting for user response
-        elif(self.state == "RESPOND"):
+        elif(currentState == "RESPOND"):
             self.stateTimer.stop()
             self.state = "TRIAL_DELAY"
 
         # Finish the experiment
-        elif(self.state == "FINISH"):
+        elif(currentState == "FINISH"):
             self.stateTimer.stop()
             self.saveCSV()
 
@@ -124,7 +122,8 @@ class TOJState(ExperimentState):
 
     # Save the data to file
     def saveCSV(self):
-        with open("./testFiles/test.csv", "w", newline="") as csvfile:
+        filename = os.path.splitext(self.data.propFile)[0] + ".csv"
+        with open(filename, "w", newline="") as csvfile:
             csvWriter = csv.writer(csvfile, delimiter=',')
             # headers
             csvWriter.writerow(["exp_id", "sub_exp_id", "exp_build",
@@ -140,6 +139,24 @@ class TOJState(ExperimentState):
                                 ])
             # rows
             for trial in self.trials:
+
+                # Validate test the filenames and replace some values with N/A if set to None
+                if trial["audioFile"] == None:
+                    audioFileName = "NA"
+                    trial["audioStart"] = "NA"
+                    trial["audioDelay"] = "NA"
+                    trial["audioOffset"] = 0
+                else:
+                    audioFileName = os.path.basename(trial["audioFile"])
+
+                if trial["visFile"] == None:
+                    visFileName = "NA"
+                    trial["animationStart"] = "NA"
+                    trial["animationDelay"] = "NA"
+                    trial["numDots"] = 0
+                else:
+                    os.path.basename(trial["visFile"])
+
                 csvWriter.writerow([
                     trial["exp_id"],
                     trial["sub_exp_id"],
@@ -157,14 +174,14 @@ class TOJState(ExperimentState):
                     trial["block_in_metablock"],
                     trial["trial_in_block"],
                     trial["time_stamp"],
-                    os.path.basename(trial["audioFile"]),
-                    os.path.basename(trial["visFile"]),
+                    audioFileName,
+                    visFileName,
                     trial["audioOffset"],
                     trial["numDots"],
-                    self.parent.vis.timings["animationStart"],
-                    self.parent.vis.timings["animationDelay"],
-                    self.parent.vis.timings["audioStart"],
-                    self.parent.vis.timings["audioDelay"],
+                    trial["animationStart"],
+                    trial["animationDelay"],
+                    trial["audioStart"],
+                    trial["audioDelay"],
                     trial["confidence"],
                     trial["subjResponse"],
                     trial["responseCorrect"]

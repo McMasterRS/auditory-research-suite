@@ -306,7 +306,7 @@ def readSIProperties(p):
 
         # Silence durations
         "preStimulusSilence": "int",
-        # "postStimulusSilence": "int",
+        "postStimulusSilence": "int",
 
         # General text displays
         "duringTrialText": "str",

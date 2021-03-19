@@ -17,15 +17,13 @@ class ExperimentState:
         self.parent = parent
 
         self.warmupTrialCount = 0
+        self.blocks = []
+        self.blockPrototypes = {}
 
         self.stateTimer = QtCore.QTimer()
         self.stateTimer.timeout.connect(self.updateState)
 
-        self.blocks = []
-        self.blockPrototypes = {}
-
         self.resetCounters()
-
         self.genBlocks()
 
     def resetCounters(self):
@@ -43,9 +41,9 @@ class ExperimentState:
         # Yes, I could just use fancy maths to make this obsolite, but this makes the code far more readable
         self.currentMetablockRepCount = {"Audio": 0, "Animation": 0, "AudioAnimation": 0}
 
+        self.currentBlockTrial = -1
         self.currentMetablockTrial = -1
         self.currentMetablockBlock = 0
-        self.currentBlockTrial = -1
 
     # Generate filenames based on the format strings in properties
     def genFilenames(self, prefix):

@@ -54,7 +54,7 @@ class Visualizer():
             self.audTimer.start(self.data.audOffset)
         self.frame = 0
         time = datetime.now()
-        self.timings = {"animationStart": time, "animationDelay": 0,
+        self.timings = {"animationStart": time, "animationDelay": self.data.audOffset,
                         "audioStart": time, "audioDelay": 0}
 
     def playAudio(self):
@@ -65,6 +65,7 @@ class Visualizer():
     def progressAudio(self):
         if not self.data.audio.isPlaying():
             self.audComplete.stop()
+            self.parent.state.currentTrialData.update(self.timings)
             self.parent.state.updateState()
         return
 
@@ -106,4 +107,5 @@ class Visualizer():
         else:
             self.plotTimer.stop()
             self.lines.setData(pos=np.array([(-100, -100)]))
+            self.parent.state.currentTrialData.update(self.timings)
             self.parent.state.updateState()

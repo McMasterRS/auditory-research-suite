@@ -50,10 +50,10 @@ class SIExperimentPanel(QtWidgets.QWidget):
         if self.data.properties["fullScreen"] == True:
             self.showFullScreen()
         else:
+            self.swPages.setCurrentIndex(2)
             sizeDiff = [self.width() - self.plot.width(), self.height() - self.plot.height()]
             self.resize(sizeDiff[0] + self.data.properties["screenWidth"], sizeDiff[1] + self.data.properties["screenHeight"])
-            #self.setFixedWidth(sizeDiff[0] + self.data.properties["screenWidth"])
-            #self.setFixedHeight(sizeDiff[1] + self.data.properties["screenHeight"])
+            self.swPages.setCurrentIndex(0)
 
         # Plot
         self.vis = Visualizer(self.plot, self, self.data.properties["animationPointSize"], self.data.properties["playbackGain"], self.data.properties["connectDots"])
@@ -120,6 +120,7 @@ class SIExperimentPanel(QtWidgets.QWidget):
         elif self.getState() == "TRIAL_FIRST_DELAY":
             if self.currentPage != 1:
                 self.currentPage = 1
+                self.setText("introScreen", "preTrial", "testScreenTrial", "completion")
             else:
                 self.currentPage = 2
                 self.resetTrialUI()
@@ -135,8 +136,8 @@ class SIExperimentPanel(QtWidgets.QWidget):
     def resetTrialUI(self):
         self.setButtons(False)
 
-        self.hsQuestion.setTickPosition(int((self.data.properties["durationMin"] + self.data.properties["durationMax"]) / 2.0))
-        self.hsAgreement.setTickPosition(int((self.data.properties["agreementMin"] + self.data.properties["agreementMax"]) / 2.0))
+        self.hsQuestion.setValue(int((self.data.properties["durationMin"] + self.data.properties["durationMax"]) / 2.0))
+        self.hsAgreement.setValue(int((self.data.properties["agreementMin"] + self.data.properties["agreementMax"]) / 2.0))
 
         self.gbQuestion.setEnabled(False)
         self.howConfident.setEnabled(False)
@@ -156,8 +157,21 @@ class SIExperimentPanel(QtWidgets.QWidget):
     #               Experiment                #
     ###########################################
 
+    # Used in the warmup trials to ensure that an input has been selected
+    def checkResponse(self):
+        if not self.questionChanged:
+            msgbox = QtWidgets.QMessageBox.critical(self, "Error", "Please select a duration")
+            return False
+
+        if not self.agreementChanged:
+            msgbox = QtWidgets.QMessageBox.critical(self, "Error", "Please select an agreement level")
+            return False
+
+        return True
+
+    # Actually extracts the response from the UI
     def getResponse(self):
-            # Make sure a response is selected
+        # Make sure a response is selected
         if self.questionChanged:
             response = self.hsQuestion.value()
         else:
@@ -194,9 +208,6 @@ class SIExperimentPanel(QtWidgets.QWidget):
             self.btNext.setEnabled(True)
             self.gbQuestion.setEnabled(True)
             self.howConfident.setEnabled(True)
-
-            if self.state.warmupTrialCount <= self.data.properties["numWarmupTrials"]:
-                self.setText("introScreen", "preTrial", "testScreenTrial", "completion")
 
         # Sets text for first trial
         elif(state == "TRIAL_FIRST_DELAY"):

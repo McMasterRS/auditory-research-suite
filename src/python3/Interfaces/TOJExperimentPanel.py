@@ -48,8 +48,6 @@ class TOJExperimentPanel(QtWidgets.QWidget):
             self.swPages.setCurrentIndex(2)
             sizeDiff = [self.width() - self.plot.width(), self.height() - self.plot.height()]
             self.resize(sizeDiff[0] + self.data.properties["screenWidth"], sizeDiff[1] + self.data.properties["screenHeight"])
-            #self.setFixedWidth(sizeDiff[0] + self.data.properties["screenWidth"])
-            #self.setFixedHeight(sizeDiff[1] + self.data.properties["screenHeight"])
             self.swPages.setCurrentIndex(0)
 
         # Plot
@@ -116,7 +114,7 @@ class TOJExperimentPanel(QtWidgets.QWidget):
             if self.currentPage != 1:
                 if self.checkResponse() == True:
                     self.currentPage = 1
-                    self.setText("introScreen", "preTrial", "warmupScreenTrial", "completion")
+                    self.setText("introScreen", "preTrial", "testScreenTrial", "completion")
                 else:
                     return
             else:
@@ -168,7 +166,6 @@ class TOJExperimentPanel(QtWidgets.QWidget):
         return False
 
     # Actually extracts the response from the UI
-
     def getResponse(self):
         # Make sure a response is selected
         if self.rbAnswerPositive.isChecked():
@@ -213,7 +210,6 @@ class TOJExperimentPanel(QtWidgets.QWidget):
 
         # Sets text for first trial
         elif(state == "TRIAL_FIRST_DELAY"):
-            self.setText("introScreen", "preTrial", "testScreenTrial", "completion")
             self.lbStatus.setText(self.data.properties["firstDelayText"])
 
         # Trial delay
