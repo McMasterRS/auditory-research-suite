@@ -88,6 +88,10 @@ def readTojProperties(p):
         # Option to load trial info from folder
         "loadTrialsFromFolder": "bool",
 
+        # Playlist system
+        "usePlaylist": "bool",
+        "playlistName": "str",
+
         # Parameters and file specification
         "videoParams": "array",
         "videoFileFormat": "str",
@@ -250,6 +254,10 @@ def readSIProperties(p):
         # Audio Options
         "playbackGain": "float",
         "soundOffsets": "intArray",
+
+        # Playlist system
+        "usePlaylist": "bool",
+        "playlistName": "str",
 
         # Option to load trial info from folder
         "loadTrialsFromFolder": "bool",

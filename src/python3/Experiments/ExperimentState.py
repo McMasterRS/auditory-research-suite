@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtWidgets
 import os
+import csv
 import datetime
 import itertools
 import random
@@ -47,7 +48,6 @@ class ExperimentState:
 
     # Generate filenames based on the format strings in properties
     def genFilenames(self, prefix):
-
         if self.data.properties["loadTrialsFromFolder"] == False:
             # Extract values for the parameters and convert any strings into single-item lists
             nameParams = [self.data.properties[param] for param in self.data.properties[prefix + "Params"]]
@@ -74,103 +74,174 @@ class ExperimentState:
 
             if len(filenames) == 0:
                 msgbox = QtWidgets.QMessageBox.warning(self.parent, "Warning - No files detected for {0} block".format(prefix),
-                                                       "Unable to locate any files for the '{0}' block. Please ensure that the correct data directory is selected and that the properties file contains the relevant file parameters".format(prefix))
+                                                       "Unable to locate any files for the {0} block. Please ensure that the correct data directory is selected and that the properties file contains the relevant file parameters".format(prefix))
 
             return filenames
 
         else:
-
             # Extract filenames by looping through all files in that folder
             dataDir = self.data.dataDir
             path = os.path.join(dataDir, self.data.properties[prefix + "FileSubDirectory"])
             filenames = []
 
             for filename in os.listdir(path):
-                filenames.append(filename)
+                if os.path.splitext(filename)[1][1:] in self.data.properties["{0}FileExtensions".format(prefix)]:
+                    filenames.append(os.path.join(path, filename))
+                    print(os.path.join(path, filename))
 
             if len(filenames) == 0:
                 msgbox = QtWidgets.QMessageBox.warning(self.parent, "Warning - No files detected for {0} block".format(prefix),
-                                                       "Unable to locate any files for the '{0}' block. Please ensure that the correct data directory is selected")
+                                                       "Unable to locate any files for the {0} block. Please ensure that the correct data directory is selected".format(prefix))
             return filenames
+
+    # Populate the prototype blocks array from the playlist file
+    def genBlocksFromPlaylist(self, f):
+
+        blockTrials = {"Audio": [], "Animation": [], "AudioAnimation": []}
+
+        # Loop through all
+        with open(f, mode="r", encoding="utf-8-sig") as csvFile:
+            blockReader = csv.DictReader(csvFile, delimiter=",")
+            for trial in blockReader:
+                type = trial["type"]
+
+                # Replace any of the blank rows with None
+                trial = {k: None if v == "" else v for k, v in trial.items()}
+
+                # Prefix all filenames with their directories
+                if "Audio" in type:
+                    trial["audioFile"], e1 = mergePathsVerify([self.data.dataDir, self.data.properties["audioFileSubDirectory"], trial["audioFile"]])
+                    trial["audioOffset"] = int(trial["audioOffset"])
+                    if not e1:
+                        msgbox = QtWidgets.QMessageBox.warning(self.parent, "Warning - Cannot find file",
+                                                               "File {0} cannot be found. Please ensure the correct data directory is selected".format(trial["audioFile"]))
+                        continue
+                if "Animation" in type:
+                    trial["visFile"], e2 = mergePathsVerify([self.data.dataDir, self.data.properties["animationFileSubDirectory"], trial["visFile"]])
+                    trial["numDots"] = int(trial["numDots"])
+                    if not e2:
+                        msgbox = QtWidgets.QMessageBox.warning(self.parent, "Warning - Cannot find file",
+                                                               "File {0} cannot be found. Please ensure the correct data directory is selected".format(trial["visFile"]))
+                        continue
+
+                trial.pop("type")
+
+                blockTrials[type].append(dict(trial))
+
+                for key, block in blockTrials.items():
+                    self.blockPrototypes[key] = {"type": key, "data": block, "single": self.data.properties["single{0}Block".format(key)]}
+
+    # Builds a playlist file using the current block prototypes
+    def buildPlaylist(self, f):
+
+        rows = []
+
+        # Extract the trials from each prototype
+        for block in self.blockPrototypes:
+            for trial in self.blockPrototypes[block]["data"]:
+                t = trial.copy()
+
+                # Add the trial type and trim the folder from the path
+                t["type"] = block
+                if t["audioFile"] is not None:
+                    t["audioFile"] = os.path.basename(t["audioFile"])
+                if t["visFile"] is not None:
+                    t["visFile"] = os.path.basename(t["visFile"])
+
+                rows.append(t)
+
+        # Save the rows to CSV
+        with open(f, mode="w", encoding="utf-8-sig", newline='') as csvFile:
+            writer = csv.DictWriter(csvFile, ["type", "audioFile", "visFile", "audioOffset", "numDots"])
+            writer.writeheader()
+            writer.writerows(rows)
 
     # generate blocks
     def genBlocks(self):
 
+        # Playlist settings
+        playlistBuilder = False
+        if self.data.properties["usePlaylist"]:
+            f, exists = mergePathsVerify([self.data.dataDir, self.data.properties["playlistName"] + ".csv"])
+            if exists:
+                self.genBlocksFromPlaylist(f)
+                self.generateBlockList()
+                return
+            else:
+                playlistBuilder = True
+
         # Load audio block properties
-        if self.data.properties["includeAudioBlock"]:
-            audioFilenames = self.genFilenames("audio")
-            trialBlock = []
+        audioFilenames = self.genFilenames("audio")
+        trialBlock = []
 
-            # For every audio file
-            for name in audioFilenames:
-                # For every audio offset
-                for offset in self.data.properties["soundOffsets"]:
-                    trial = {
-                        "audioFile": name,
-                        "visFile": None,
-                        "audioOffset": offset,
-                        "numDots": None,
-                        "reps": 0,
-                    }
+        # For every audio file
+        for name in audioFilenames:
+            # For every audio offset
+            for offset in self.data.properties["soundOffsets"]:
+                trial = {
+                    "audioFile": name,
+                    "visFile": None,
+                    "audioOffset": offset,
+                    "numDots": None
+                }
 
-                    trialBlock.append(trial)
+                trialBlock.append(trial)
 
-            blockDict = {"type": "Audio", "data": trialBlock, "single": self.data.properties["singleAudioBlock"]}
-            self.blockPrototypes["Audio"] = blockDict
+        self.blockPrototypes["Audio"] = {"type": "Audio", "data": trialBlock, "single": self.data.properties["singleAudioBlock"]}
 
         # Load animation block properties
-        if self.data.properties["includeAnimationBlock"]:
-            animationFilenames = self.genFilenames("animation")
-            trialBlock = []
+        animationFilenames = self.genFilenames("animation")
+        trialBlock = []
 
-            # For every animation file
-            for name in animationFilenames:
-                # For every number of animation points
-                for points in self.data.properties["numAnimationPoints"]:
-                    trial = {
-                        "audioFile": None,
-                        "visFile": name,
-                        "audioOffset": None,
-                        "numDots": points,
-                        "reps": 0,
-                    }
+        # For every animation file
+        for name in animationFilenames:
+            # For every number of animation points
+            for points in self.data.properties["numAnimationPoints"]:
+                trial = {
+                    "audioFile": None,
+                    "visFile": name,
+                    "audioOffset": None,
+                    "numDots": points
+                }
 
-                    trialBlock.append(trial)
+                trialBlock.append(trial)
 
-            blockDict = {"type": "Animation", "data": trialBlock, "single": self.data.properties["singleAnimationBlock"]}
-            self.blockPrototypes["Animation"] = blockDict
+        self.blockPrototypes["Animation"] = {"type": "Animation", "data": trialBlock, "single": self.data.properties["singleAnimationBlock"]}
 
         # Load anim/audio block properties
-        if self.data.properties["includeAudioAnimationBlock"]:
-            audioFilenames = self.genFilenames("audio")
-            animationFilenames = self.genFilenames("animation")
-            trialBlock = []
+        audioFilenames = self.genFilenames("audio")
+        animationFilenames = self.genFilenames("animation")
+        trialBlock = []
 
-            # For every audio file
-            for name in audioFilenames:
-                # For every animation file
-                for name2 in animationFilenames:
-                    # For every sound offset
-                    for offset in self.data.properties["soundOffsets"]:
-                        # For every number of animation points
-                        for points in self.data.properties["numAnimationPoints"]:
-                            trial = {
-                                "audioFile": name,
-                                "visFile": name2,
-                                "audioOffset": offset,
-                                "numDots": points,
-                                "reps": 0
-                            }
+        # For every audio file
+        for name in audioFilenames:
+            # For every animation file
+            for name2 in animationFilenames:
+                # For every sound offset
+                for offset in self.data.properties["soundOffsets"]:
+                    # For every number of animation points
+                    for points in self.data.properties["numAnimationPoints"]:
+                        trial = {
+                            "audioFile": name,
+                            "visFile": name2,
+                            "audioOffset": offset,
+                            "numDots": points
+                        }
 
-                            trialBlock.append(trial)
+                        trialBlock.append(trial)
 
-            blockDict = {"type": "AudioAnimation", "data": trialBlock, "single": self.data.properties["singleAudioAnimationBlock"]}
-            self.blockPrototypes["AudioAnimation"] = blockDict
+        self.blockPrototypes["AudioAnimation"] = {"type": "AudioAnimation", "data": trialBlock, "single": self.data.properties["singleAudioAnimationBlock"]}
+
+        if playlistBuilder:
+            self.buildPlaylist(f)
 
         self.generateBlockList()
 
     # Use the prototypes to generate a list of blocks
     def generateBlockList(self):
+
+        if (self.data.properties["debug"]):
+            print("Generating Block List")
 
         # Generate list of block types in use
         usedBlocks = []
@@ -188,6 +259,9 @@ class ExperimentState:
             self.blocks.append(self.blockPrototypes[block].copy())
 
         self.shuffleBlocks()
+
+        if (self.data.properties["debug"]):
+            print(self.blocks)
 
     def shuffleBlocks(self):
         if (self.data.properties["randomizeBlocks"]):
