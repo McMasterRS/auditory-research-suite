@@ -1,6 +1,8 @@
 from Utilities.PropertiesParser import PropertiesParser
 
 # Read the file and extract a dict with all the data
+
+
 def readPropertiesFile(p):
 
     dat = {}
@@ -9,7 +11,7 @@ def readPropertiesFile(p):
 
     # Convert lines into a dict
     for line in f:
-        
+
         # Strip blank lines
         if line.strip() == "":
             continue
@@ -21,13 +23,15 @@ def readPropertiesFile(p):
         # If theres an error, return the line that caused the issue
         if len(splitLine) != 2:
             continue
-            #return False, line
+            # return False, line
 
-        dat[splitLine[0]] = splitLine[1]
+        dat[splitLine[0]] = splitLine[1].strip()
 
     return True, dat
 
 # Extract the useful information from a .properties file
+
+
 def readTojProperties(p):
     e, raw = readPropertiesFile(p)
 
@@ -37,158 +41,313 @@ def readTojProperties(p):
 
     typeDict = {
         # Experiment Data
-        "experimentID"      : "int",
-        "subExperimentID"   : "int",
+        "experimentID": "str",
+        "subExperimentID": "str",
 
         # Flags
-        "debug"             : "bool",
-        "fullScreen"        : "bool",
+        "debug": "bool",
+        "fullScreen": "bool",
 
         # Experiment Details
-        "includeAudioBlock" : "bool",
-        "singleAudioBlock" : "bool",
-        "singleAudioFullRandom" : "bool",
-        "includeAnimationBlock" : "bool",
-        "singleAnimationBlock" : "bool",
-        "singleAnimationFullRandom" : "bool",
-        "includeVideoBlock" : "bool",
-        "singleVideoBlock" : "bool", 
-        "singleVideoFullRandom" : "bool",
-        "includeAudioAnimationBlock" : "bool",
-        "singleAudioAnimationBlock" : "bool",
-        "singleAudioAnimationFullRandom" : "bool",
+        "includeAudioBlock": "bool",
+        "singleAudioBlock": "bool",
+        "singleAudioFullRandom": "bool",
+        "includeAnimationBlock": "bool",
+        "singleAnimationBlock": "bool",
+        "singleAnimationFullRandom": "bool",
+        "includeVideoBlock": "bool",
+        "singleVideoBlock": "bool",
+        "singleVideoFullRandom": "bool",
+        "includeAudioAnimationBlock": "bool",
+        "singleAudioAnimationBlock": "bool",
+        "singleAudioAnimationFullRandom": "bool",
 
-        "blockSetRepetitions" : "int",
-        "metablocks" : "int",
-        "randomizeBlocks" : "bool",
-        "randomizeTrials" : "bool",
+        "blockSetRepetitions": "int",
+        "metablocks": "int",
+        "randomizeBlocks": "bool",
+        "randomizeTrials": "bool",
 
         # Visual Options
-        "screenWidth" : "int",
-        "screenHeight" : "int",
+        "screenWidth": "int",
+        "screenHeight": "int",
 
         # Animation Options
-        "animationPointAspect" : "float",
-        "animationPointSize" : "float",
-        "numAnimationPoints" : "intArray",
-        "connectDots" : "bool",
-        "animationFrameAdvance" : "int",
-        "renderCallAhead" : "int",
+        # "animationPointAspect": "float",
+        "animationPointSize": "float",
+        "numAnimationPoints": "intArray",
+        "connectDots": "bool",
+        # "animationFrameAdvance": "int",
+        # "renderCallAhead": "int",
 
         # Audio Options
-        "audioPollWait" : "int",
-        "playbackGain" : "float",
-        "soundOffsets" : "intArray",
-        "audioCallAhead" : "int",
+        # "audioPollWait": "int",
+        "playbackGain": "float",
+        "soundOffsets": "intArray",
+        "audioCallAhead": "int",
 
         # Option to load trial info from folder
-        "loadTrialsFromFolder" : "bool",
+        "loadTrialsFromFolder": "bool",
 
         # Parameters and file specification
-        "videoParams" : "array",
-        "videoFileFormat" : "str",
-        "videoFileExtensions" : "array",
-        "videoFileSubDirectory" : "str",
-        "animationParams" : "array",
-        "animationFileFormat" : "str",
-        "animationFileExtensions" : "array",
-        "animationFileSubDirectory" : "str",
-        "audioParams" : "array",
-        "audioFileFormat" : "str",
-        "audioFileExtensions" : "array",
-        "audioFileSubDirectory" : "str",
-        "synchronizeParameters" : "bool",
+        "videoParams": "array",
+        "videoFileFormat": "str",
+        "videoFileExtensions": "array",
+        "videoFileSubDirectory": "str",
+        "animationParams": "array",
+        "animationFileFormat": "str",
+        "animationFileExtensions": "array",
+        "animationFileSubDirectory": "str",
+        "audioParams": "array",
+        "audioFileFormat": "str",
+        "audioFileExtensions": "array",
+        "audioFileSubDirectory": "str",
+        "synchronizeParameters": "bool",
 
         # Parameter set definitions
-        "pitches" : "str",
-        "pitches.label" : "str",
-        "pitches.labels" : "str",
+        "pitches": "str",
+        "pitches.label": "str",
+        "pitches.labels": "str",
 
-        "visualDurations" : "str",
-        "visualDurations.label" : "str",
-        "visualDurations.labels" : "str",
+        "visualDurations": "str",
+        "visualDurations.label": "str",
+        "visualDurations.labels": "str",
 
-        "audioDurations" : "str",
-        "audioDurations.label" : "str",
-        "audioDurations.labels" : "str",
+        "audioDurations": "str",
+        "audioDurations.label": "str",
+        "audioDurations.labels": "str",
 
-        "frequencies" : "str",
-        "frequencies.label" : "str",
-        "spectrums" : "str",
-        "spectrums.label" : "str",
-        "envelopeDurations" : "array",
-        "envelopeDurations.label" : "str",
-        "envelopeDurations.labels" : "str",
+        "frequencies": "str",
+        "frequencies.label": "str",
+        "spectrums": "str",
+        "spectrums.label": "str",
+        "envelopeDurations": "array",
+        "envelopeDurations.label": "str",
+        "envelopeDurations.labels": "str",
 
         # Answer Labels
-        "question.label" : "str",
-        "answerPositive.label" : "str",
-        "answerNegative.label" : "str",
-        
-        "answerPositive.hotkey" : "str",
-        "answerNegative.hotkey" : "str",
-        "confidence.-2.hotkey" : "str",
-        "confidence.-1.hotkey" : "str",
-        "confidence.0.hotkey" : "str",
-        "confidence.1.hotkey" : "str",
-        "confidence.2.hotkey" : "str",
+        "question.label": "str",
+        "answerPositive.label": "str",
+        "answerNegative.label": "str",
+
+        "answerPositive.hotkey": "str",
+        "answerNegative.hotkey": "str",
+        "confidence.-2.hotkey": "str",
+        "confidence.-1.hotkey": "str",
+        "confidence.0.hotkey": "str",
+        "confidence.1.hotkey": "str",
+        "confidence.2.hotkey": "str",
 
         # Response confidence levels
-        "confidenceMin" : "int",
-        "confidenceOrderHighToLow" : "bool",
-        "confidence.-2" : "str",
-        "confidence.-1" : "str",
-        "confidence.0" : "str",
-        "confidence.1" : "str",
-        "confidence.2" : "str",
+        "confidenceMin": "int",
+        "confidenceOrderHighToLow": "bool",
+        "confidence.-2": "str",
+        "confidence.-1": "str",
+        "confidence.0": "str",
+        "confidence.1": "str",
+        "confidence.2": "str",
 
         # Silence durations
-        "preStimulusSilence" : "int",
-        "postStimulusSilence" : "int",
+        "preStimulusSilence": "int",
+        "postStimulusSilence": "int",
 
         # General text displays
-        "duringTrialText" : "str",
-        "enterResponseText" : "str",
+        "duringTrialText": "str",
+        "enterResponseText": "str",
 
         # Subject feedback options
-        "allowFeedback" : "bool",
-        "accuracyCorrectText" : "str",
-        "accuracyIncorrectText" : "str",
-        "resultsFormatText" : "str",
+        "allowFeedback": "bool",
+        "accuracyCorrectText": "str",
+        "accuracyIncorrectText": "str",
+        "resultsFormatText": "str",
 
         # Experiment Stages
-        "trialDelay" : "int",
-        "numWarmupTrials" : "int",
-        "warmupDelayText" : "str",
-        "firstDelayText" : "str",
-        "trialDelayText" : "str",
+        "trialDelay": "int",
+        "numWarmupTrials": "int",
+        "warmupDelayText": "str",
+        "firstDelayText": "str",
+        "trialDelayText": "str",
 
         # Intro screen
-        "introScreenTitle" : "str",
-        "introScreenText" : "str",
+        "introScreenTitle": "str",
+        "introScreenText": "str",
 
         # Warmup prep screen
-        "preWarmupTitle" : "str",
-        "preWarmupText" : "str",
-        
+        "preWarmupTitle": "str",
+        "preWarmupText": "str",
+
         # Warmup mode stimulus/response screen
-        "warmupScreenTrialTitle" : "str",
-        "warmupScreenTrialText" : "str",
+        "warmupScreenTrialTitle": "str",
+        "warmupScreenTrialText": "str",
 
         # Pre-trial instruction screen
-        "preTrialTitle" : "str",
-        "preTrialText" : "str",
+        "preTrialTitle": "str",
+        "preTrialText": "str",
 
         # Stim/response screen
-        "testScreenTrialTitle" : "str",
-        "testScreenTrialText" : "str",
+        "testScreenTrialTitle": "str",
+        "testScreenTrialText": "str",
 
         # Response block orientation
-        "statusOrientation" : "str",
+        "statusOrientation": "str",
 
         # Completion announcement screen
-        "completionTitle" : "str",
-        "completionText" : "str"
+        "completionTitle": "str",
+        "completionText": "str"
+
+    }
+
+    parser = PropertiesParser(raw)
+    e, properties = parser.parseProperties(typeDict)
+
+    return e, properties
+
+
+def readSIProperties(p):
+    e, raw = readPropertiesFile(p)
+
+    # If e returns false, return with the line that caused an error
+    if not e:
+        return False, "Unable to parse the properties file at '{0}'. Please make sure that the file matches the new formatting requirements".format(raw)
+
+    typeDict = {
+        # Experiment Data
+        "experimentID": "str",
+        "subExperimentID": "str",
+
+        # Flags
+        "debug": "bool",
+        "fullScreen": "bool",
+
+        # Experiment Details
+        "includeAudioBlock": "bool",
+        "singleAudioBlock": "bool",
+        "singleAudioFullRandom": "bool",
+        "includeAnimationBlock": "bool",
+        "singleAnimationBlock": "bool",
+        "singleAnimationFullRandom": "bool",
+        "includeVideoBlock": "bool",
+        "singleVideoBlock": "bool",
+        "singleVideoFullRandom": "bool",
+        "includeAudioAnimationBlock": "bool",
+        "singleAudioAnimationBlock": "bool",
+        "singleAudioAnimationFullRandom": "bool",
+
+        "blockSetRepetitions": "int",
+        "metablocks": "int",
+        "randomizeBlocks": "bool",
+        "randomizeTrials": "bool",
+
+        # Visual Options
+        "screenWidth": "int",
+        "screenHeight": "int",
+        "showTickMarks": "bool",
+        "statusOrientation": "str",
+
+        # Animation Options
+        # "animationPointAspect": "float",
+        "animationPointSize": "float",
+        "numAnimationPoints": "intArray",
+        "connectDots": "bool",
+
+        # Audio Options
+        "playbackGain": "float",
+        "soundOffsets": "intArray",
+
+        # Option to load trial info from folder
+        "loadTrialsFromFolder": "bool",
+
+        # Parameters and file specification
+        "videoParams": "array",
+        "videoFileFormat": "str",
+        "videoFileExtensions": "array",
+        "videoFileSubDirectory": "str",
+        "animationParams": "array",
+        "animationFileFormat": "str",
+        "animationFileExtensions": "array",
+        "animationFileSubDirectory": "str",
+        "audioParams": "array",
+        "audioFileFormat": "str",
+        "audioFileExtensions": "array",
+        "audioFileSubDirectory": "str",
+        "synchronizeParameters": "bool",
+
+        # Parameter set definitions
+        "pitches": "str",
+        "pitches.label": "str",
+        "pitches.labels": "str",
+
+        "visualDurations": "str",
+        "visualDurations.label": "str",
+        "visualDurations.labels": "str",
+
+        "audioDurations": "str",
+        "audioDurations.label": "str",
+        "audioDurations.labels": "str",
+
+        "frequencies": "str",
+        "frequencies.label": "str",
+        "spectrums": "str",
+        "spectrums.label": "str",
+        "envelopeDurations": "array",
+        "envelopeDurations.label": "str",
+        "envelopeDurations.labels": "str",
+
+        # Slider labels
+        "durationLow": "str",
+        "durationHigh": "str",
+        "agreementLow": "str",
+        "agreementHigh": "str",
+
+        # Response levels
+        "durationMin": "int",
+        "durationMax": "int",
+        "agreementMin": "int",
+        "agreementMax": "int",
+
+        # Silence durations
+        "preStimulusSilence": "int",
+        # "postStimulusSilence": "int",
+
+        # General text displays
+        "duringTrialText": "str",
+        "enterResponseText": "str",
+
+        # Subject feedback options
+        "allowFeedback": "bool",
+        "accuracyCorrectText": "str",
+        "accuracyIncorrectText": "str",
+        "resultsFormatText": "str",
+
+        # Experiment Stages
+        "trialDelay": "int",
+        "numWarmupTrials": "int",
+        "warmupDelayText": "str",
+        "firstDelayText": "str",
+        "trialDelayText": "str",
+
+        # Intro screen
+        "introScreenTitle": "str",
+        "introScreenText": "str",
+
+        # Warmup prep screen
+        "preWarmupTitle": "str",
+        "preWarmupText": "str",
+
+        # Warmup mode stimulus/response screen
+        "warmupScreenTrialTitle": "str",
+        "warmupScreenTrialText": "str",
+
+        # Pre-trial instruction screen
+        "preTrialTitle": "str",
+        "preTrialText": "str",
+
+        # Stim/response screen
+        "testScreenTrialTitle": "str",
+        "testScreenTrialText": "str",
+
+        # Completion announcement screen
+        "completionTitle": "str",
+        "completionText": "str"
 
     }
 
