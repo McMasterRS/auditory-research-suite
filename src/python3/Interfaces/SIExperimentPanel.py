@@ -74,11 +74,17 @@ class SIExperimentPanel(QtWidgets.QWidget):
         # Slider values
         self.hsQuestion.setMinimum(self.data.properties["durationMin"])
         self.hsQuestion.setMaximum(self.data.properties["durationMax"])
-        self.hsQuestion.setTickPosition(int((self.data.properties["durationMin"] + self.data.properties["durationMax"]) / 2.0))
+        self.hsQuestion.setValue(int((self.data.properties["durationMin"] + self.data.properties["durationMax"]) / 2.0))
 
         self.hsAgreement.setMinimum(self.data.properties["agreementMin"])
         self.hsAgreement.setMaximum(self.data.properties["agreementMax"])
-        self.hsAgreement.setTickPosition(int((self.data.properties["agreementMin"] + self.data.properties["agreementMax"]) / 2.0))
+        self.hsAgreement.setValue(int((self.data.properties["agreementMin"] + self.data.properties["agreementMax"]) / 2.0))
+
+        if self.data.properties["showTickMarks"] > 0:
+            self.hsQuestion.setTickInterval(self.data.properties["showTickMarks"])
+            self.hsAgreement.setTickInterval(self.data.properties["showTickMarks"])
+            self.hsQuestion.setTickPosition(QtWidgets.QSlider.TicksBothSides)
+            self.hsAgreement.setTickPosition(QtWidgets.QSlider.TicksBothSides)
 
         # Hook up the sliders to their functions
         self.hsQuestion.sliderReleased.connect(lambda: self.toggleSliders("question"))

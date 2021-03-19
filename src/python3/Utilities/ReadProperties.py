@@ -240,7 +240,7 @@ def readSIProperties(p):
         # Visual Options
         "screenWidth": "int",
         "screenHeight": "int",
-        "showTickMarks": "bool",
+        "showTickMarks": "int",
 
         # Animation Options
         "animationPointSize": "float",

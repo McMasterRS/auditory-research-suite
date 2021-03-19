@@ -415,7 +415,7 @@ p, li { white-space: pre-wrap; }
                <number>3</number>
               </property>
               <property name="topMargin">
-               <number>0</number>
+               <number>3</number>
               </property>
               <property name="rightMargin">
                <number>3</number>
@@ -519,7 +519,7 @@ p, li { white-space: pre-wrap; }
                <number>3</number>
               </property>
               <property name="topMargin">
-               <number>0</number>
+               <number>3</number>
               </property>
               <property name="rightMargin">
                <number>3</number>
