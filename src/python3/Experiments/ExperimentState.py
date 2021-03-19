@@ -1,12 +1,10 @@
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 import os
 import datetime
 import itertools
 import random
-import csv
 from Utilities.GetPath import *
 from _version import __version__, __versionDate__
-import numpy as np
 
 
 class ExperimentState:
@@ -42,6 +40,8 @@ class ExperimentState:
 
         self.instanceCount = {"Audio": 0, "Animation": 0, "AudioAnimation": 0}
         self.repCount = {"Audio": 0, "Animation": 0, "AudioAnimation": 0}
+        # Yes, I could just use fancy maths to make this obsolite, but this makes the code far more readable
+        self.currentMetablockRepCount = {"Audio": 0, "Animation": 0, "AudioAnimation": 0}
 
         self.currentMetablockTrial = -1
         self.currentMetablockBlock = 0
@@ -213,12 +213,15 @@ class ExperimentState:
 
             # Always incriment the rep number and reset the current trial
             self.repCount[self.blocks[self.currentBlock]["type"]] += 1
+            self.currentMetablockRepCount[self.blocks[self.currentBlock]["type"]] += 1
             self.currentTrial = 0
+
+            newBlock = False
 
             # If we're in a single block
             if self.data.properties["single{0}Block".format(self.blocks[self.currentBlock]["type"])]:
                 # If we have repetitions left
-                if self.repCount[self.blocks[self.currentBlock]["type"]] < self.data.properties["blockSetRepetitions"]:
+                if self.currentMetablockRepCount[self.blocks[self.currentBlock]["type"]] < self.data.properties["blockSetRepetitions"]:
                     # If FullRandom is enabled, randomize
                     if self.data.properties["single{0}FullRandom".format(self.blocks[self.currentBlock]["type"])]:
                         random.shuffle(self.blocks[self.currentBlock]["data"])
@@ -228,27 +231,29 @@ class ExperimentState:
 
                 # If we dont have repetitions left, move to the next block
                 else:
-                    self.instanceCount[self.blocks[self.currentBlock]["type"]] += 1
-                    self.currentBlock += 1
-                    self.currentMetablockBlock += 1
-                    self.totalBlockCount += 1
-                    self.currentBlockTrial = 0
+                    newBlock = True
 
             # If we're not in a single block, move to the next block
             else:
+                newBlock = True
+
+            # Updates counters for the new block
+            if newBlock:
+                self.instanceCount[self.blocks[self.currentBlock]["type"]] += 1
                 self.currentBlock += 1
                 self.currentMetablockBlock += 1
                 self.totalBlockCount += 1
                 self.currentBlockTrial = 0
 
-            if (self.data.properties["debug"]):
-                print("New block")
+                if (self.data.properties["debug"]):
+                    print("New block")
 
             # If we've finished the current metablock, move to the next
             if self.currentBlock == len(self.blocks):
 
                 self.currentMetablockTrial = 0
                 self.currentMetablockBlock = 0
+                self.currentMetablockRepCount = {"Audio": 0, "Animation": 0, "AudioAnimation": 0}
                 self.currentMetablock += 1
 
                 # Shuffle the trials if required
