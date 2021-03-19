@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>Setup</class>
+ <widget class="QWidget" name="Setup">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -109,7 +109,7 @@
           <item>
            <widget class="QLineEdit" name="tbDataDirectory">
             <property name="text">
-             <string/>
+             <string>C:/Users/Tom/Documents/Github/auditory-research-suite/datafiles/examples</string>
             </property>
            </widget>
           </item>
@@ -155,7 +155,7 @@
               <string>Use Data Directory</string>
              </property>
              <property name="checked">
-              <bool>true</bool>
+              <bool>false</bool>
              </property>
             </widget>
            </item>
@@ -165,7 +165,7 @@
               <string>Use Specified Directory</string>
              </property>
              <property name="checked">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -192,7 +192,7 @@
               <bool>false</bool>
              </property>
              <property name="text">
-              <string/>
+              <string>C:/Users/Tom/Documents/Github/auditory-research-suite/src/python3/testFiles</string>
              </property>
             </widget>
            </item>
@@ -222,6 +222,11 @@
              <item>
               <property name="text">
                <string>toj.properties</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>AV7B-si.properties</string>
               </property>
              </item>
             </widget>

@@ -1,7 +1,8 @@
 import os
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from Utilities.GetPath import *
-from Utilities.ReadProperties import readTojProperties
+from Utilities.ReadProperties import readTojProperties, readSIProperties
+
 
 class ExperimentData:
     def __init__(self, RAID, subjID, sessID, dataDir, demo, properties, propertiesVer):
@@ -13,6 +14,7 @@ class ExperimentData:
         self.properties = properties
         self.propertiesVer = propertiesVer
 
+
 class ExperimentSetup(QtWidgets.QWidget):
     def __init__(self, parent):
         super(QtWidgets.QWidget, self).__init__()
@@ -22,7 +24,7 @@ class ExperimentSetup(QtWidgets.QWidget):
 
         # Setup UI
         uic.loadUi(getGui('TOJSetup.ui'), self)
-        self.tbDataDirectory.setText(os.getcwd())
+        # self.tbDataDirectory.setText(os.getcwd())
         self.btBrowse.clicked.connect(lambda: self.browseDataDirectory("data"))
         self.btBrowseProperties.clicked.connect(lambda: self.browseDataDirectory("prop"))
         self.rbDataDir.toggled.connect(self.toggleProperties)
@@ -61,23 +63,26 @@ class ExperimentSetup(QtWidgets.QWidget):
             msgbox = QtWidgets.QMessageBox.critical(self, "Error - File Not Found", "Unable to locate file {0}".format(propFile))
             return
 
-        # Check if the properties file can be parsed
-        e, properties = readTojProperties(propFile)
+        # Check which properties file to open and make sure it can be parsed
+        if self.cbProperties.currentText() == "toj.properties":
+            e, properties = readTojProperties(propFile)
+        elif self.cbProperties.currentText() == "AV7B-si.properties":
+            e, properties = readSIProperties(propFile)
+
         if not e:
             QtWidgets.QMessageBox.critical(self, "Error - Unable to parse properties", properties)
             return
 
         d = ExperimentData(
-            RAID = self.tbRAID.text(),
-            subjID = self.tbSubjID.text(),
-            sessID = self.tbSessionID.text(),
-            dataDir = self.tbDataDirectory.text(),
-            demo = self.cbDemo.isChecked(),
-            properties = properties,
-            propertiesVer = self.cbProperties.currentText()
+            RAID=self.tbRAID.text(),
+            subjID=self.tbSubjID.text(),
+            sessID=self.tbSessionID.text(),
+            dataDir=self.tbDataDirectory.text(),
+            demo=self.cbDemo.isChecked(),
+            properties=properties,
+            propertiesVer=self.cbProperties.currentText()
         )
 
         self.done = True
         self.parent.startExperiment(d)
         self.close()
-        
