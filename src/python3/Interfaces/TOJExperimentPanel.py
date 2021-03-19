@@ -1,9 +1,5 @@
-import os
-import operator
-import datetime
-import itertools
-import random
-from PyQt5 import QtWidgets, QtGui, uic, QtCore
+
+from PyQt5 import QtWidgets, uic
 from Utilities.GetPath import *
 
 from Interfaces.ExperimentSetup import ExperimentSetup
@@ -118,8 +114,11 @@ class TOJExperimentPanel(QtWidgets.QWidget):
         # Moving to info after warmup trials
         elif self.getState() == "TRIAL_FIRST_DELAY":
             if self.currentPage != 1:
-                self.currentPage = 1
-                self.setText("introScreen", "preTrial", "warmupScreenTrial", "completion")
+                if self.checkResponse() == True:
+                    self.currentPage = 1
+                    self.setText("introScreen", "preTrial", "warmupScreenTrial", "completion")
+                else:
+                    return
             else:
                 self.currentPage = 2
                 self.resetTrialUI()
@@ -155,8 +154,23 @@ class TOJExperimentPanel(QtWidgets.QWidget):
     #               Experiment                #
     ###########################################
 
+    # Used in the warmup trials to ensure that an input has been selected
+    def checkResponse(self):
+        if not self.rbAnswerPositive.isChecked() and not self.rbAnswerNegative.isChecked():
+            msgbox = QtWidgets.QMessageBox.critical(self, "Error", "Please select a response")
+            return False
+
+        for button in self.confidenceButtons:
+            if button.isChecked():
+                return True
+
+        msgbox = QtWidgets.QMessageBox.critical(self, "Error", "Please select a confidence level")
+        return False
+
+    # Actually extracts the response from the UI
+
     def getResponse(self):
-            # Make sure a response is selected
+        # Make sure a response is selected
         if self.rbAnswerPositive.isChecked():
             response = self.rbAnswerPositive.text()
         elif self.rbAnswerNegative.isChecked():
