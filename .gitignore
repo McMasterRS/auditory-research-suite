@@ -10,3 +10,4 @@ bin
 .env
 
 src/python3/test.csv
+.vscode/settings.json
