@@ -1,0 +1,42 @@
+# Python3 implementation of the Auditory Research Suite
+
+## Specifics of the python 3 version
+
+### Output file
+Output is saved to a .csv file with the same name and in the same folder as the properties file
+
+### Properties files
+Properties files must contain all of the properties defined in the example files (see the Example Properties folder in the module directory).
+
+When loading from the data directory, the first properties file found will be the one used, so make sure that it contains only the file that you want to run
+
+# New properties
+
+## General
+
+### usePlaylist (true/false)
+Enables the playlist based trial loading system, where the list of trials for each block is loaded from a CSV file in the data directory. 
+
+### playlistName (string)
+sets the name of the playlist file to be loaded or created if usePlaylist is enabled. 
+
+### loadTrialsFromFolder (true/false)
+If set to true, blocks will be created by iterating over all files in the respective folders for each block. Otherwise, the older parameter based block building system will be used.
+If usePlayist is enabled and no playlist file exists, this sets the method that will be used to build the playlist file.
+
+## si.properties
+
+### duration.label (string)
+defines the text that will appear above the topmost slider on the SI interface
+
+### agreement.label (string)
+defines the text that will appear above the bottommost slider on the SI interface
+
+### postStimulusSilence (int)
+defines the length of the delay in milliseconds after the stimulus has been shown
+
+# Modified properties
+
+All text properties must now be on one line. They can still use HTML tags as required.
+showTickMarks in si.properties has been modified from a bool to an integer, where the value set dictates the distance between each tick, and disables ticks when set to 0
+
