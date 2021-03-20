@@ -126,21 +126,25 @@ class SIState(ExperimentState):
     # Save the data to file
     def saveCSV(self):
         filename = os.path.splitext(self.data.propFile)[0] + ".csv"
-        with open(filename, "w", newline="") as csvfile:
+        if not os.path.exists(filename):
+            with open(filename, "w", newline="") as csvfile:
+                csvWriter = csv.writer(csvfile, delimiter=',')
+                # headers
+                csvWriter.writerow(["exp_id", "sub_exp_id", "exp_build",
+                                    "exp_build_date", "ra_id", "subject",
+                                    "session", "trial_num", "block_num",
+                                    "metablock_num", "block_instance",
+                                    "repetition_num", "trial_in_metablock",
+                                    "block_in_metablock", "trial_in_block",
+                                    "time_stamp", "audioFile", "visFile",
+                                    "audioOffset", "numDots", "animationStart",
+                                    "aniStrikeDelay", "audioStart", "audioToneDelay",
+                                    "subjDurationResponse", "subjDurationValue",
+                                    "subjAgreementResponse", "subjAgreementValue"
+                                    ])
+
+        with open(filename, "a", newline="") as csvfile:
             csvWriter = csv.writer(csvfile, delimiter=',')
-            # headers
-            csvWriter.writerow(["exp_id", "sub_exp_id", "exp_build",
-                                "exp_build_date", "ra_id", "subject",
-                                "session", "trial_num", "block_num",
-                                "metablock_num", "block_instance",
-                                "repetition_num", "trial_in_metablock",
-                                "block_in_metablock", "trial_in_block",
-                                "time_stamp", "audioFile", "visFile",
-                                "audioOffset", "numDots", "animationStart",
-                                "aniStrikeDelay", "audioStart", "audioToneDelay",
-                                "subjDurationResponse", "subjDurationValue",
-                                "subjAgreementResponse", "subjAgreementValue"
-                                ])
 
             # rows
             for trial in self.trials:
