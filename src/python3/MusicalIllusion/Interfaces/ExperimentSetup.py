@@ -1,7 +1,7 @@
 import os
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
-from Utilities.GetPath import *
-from Utilities.ReadProperties import readTojProperties, readSIProperties
+from MusicalIllusion.Utilities.GetPath import *
+from MusicalIllusion.Utilities.ReadProperties import readTojProperties, readSIProperties
 
 
 class ExperimentData:
@@ -58,7 +58,7 @@ class ExperimentSetup(QtWidgets.QWidget):
         if self.rbDataDir.isChecked():
             for filename in os.listdir(self.tbDataDirectory.text()):
                 if os.path.splitext(filename)[1] == ".properties":
-                    propFile = os.path.join(path, filename)
+                    propFile = os.path.join(self.tbDataDirectory.text(), filename)
         else:
             propFile = self.tbPropertiesFile.text()
 
@@ -82,7 +82,7 @@ class ExperimentSetup(QtWidgets.QWidget):
             subjID=self.tbSubjID.text(),
             sessID=self.tbSessionID.text(),
             dataDir=self.tbDataDirectory.text(),
-            demo=self.cbDemo.isChecked(),
+            demo=False,  # self.cbDemo.isChecked(),
             properties=properties,
             propFile=propFile,
             propertiesVer=self.cbProperties.currentText()

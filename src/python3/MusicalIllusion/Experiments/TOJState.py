@@ -1,7 +1,7 @@
 import os
 import csv
-from Utilities.GetPath import *
-from Experiments.ExperimentState import ExperimentState
+from MusicalIllusion.Utilities.GetPath import *
+from MusicalIllusion.Experiments.ExperimentState import ExperimentState
 from _version import __version__, __versionDate__
 import numpy as np
 

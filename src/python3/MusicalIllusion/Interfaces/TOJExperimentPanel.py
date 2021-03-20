@@ -1,10 +1,10 @@
 
 from PyQt5 import QtWidgets, uic
-from Utilities.GetPath import *
+from MusicalIllusion.Utilities.GetPath import *
 
-from Interfaces.ExperimentSetup import ExperimentSetup
-from Visualizer.Visualizer import Visualizer
-from Experiments.TOJState import TOJState
+from MusicalIllusion.Interfaces.ExperimentSetup import ExperimentSetup
+from MusicalIllusion.Visualizer.Visualizer import Visualizer
+from MusicalIllusion.Experiments.TOJState import TOJState
 
 
 class TOJExperimentPanel(QtWidgets.QWidget):

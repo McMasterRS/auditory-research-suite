@@ -1,4 +1,4 @@
-from Utilities.PropertiesParser import PropertiesParser
+from MusicalIllusion.Utilities.PropertiesParser import PropertiesParser
 
 # Read the file and extract a dict with all the data
 

@@ -3,7 +3,7 @@ import numpy as np
 from PyQt5 import QtCore
 from datetime import datetime
 
-from Visualizer.VisualizerData import VisualizerData
+from MusicalIllusion.Visualizer.VisualizerData import VisualizerData
 
 
 class Visualizer():

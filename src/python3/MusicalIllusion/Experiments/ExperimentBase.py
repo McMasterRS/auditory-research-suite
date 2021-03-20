@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets
-from Interfaces.ExperimentSetup import ExperimentSetup
-from Interfaces.SIExperimentPanel import SIExperimentPanel
-from Interfaces.TOJExperimentPanel import TOJExperimentPanel
+from MusicalIllusion.Interfaces.ExperimentSetup import ExperimentSetup
+from MusicalIllusion.Interfaces.SIExperimentPanel import SIExperimentPanel
+from MusicalIllusion.Interfaces.TOJExperimentPanel import TOJExperimentPanel
 
 
 class ExperimentBase(QtWidgets.QWidget):

@@ -4,7 +4,7 @@ import csv
 import datetime
 import itertools
 import random
-from Utilities.GetPath import *
+from MusicalIllusion.Utilities.GetPath import *
 from _version import __version__, __versionDate__
 
 
@@ -87,7 +87,6 @@ class ExperimentState:
             for filename in os.listdir(path):
                 if os.path.splitext(filename)[1][1:] in self.data.properties["{0}FileExtensions".format(prefix)]:
                     filenames.append(os.path.join(path, filename))
-                    print(os.path.join(path, filename))
 
             if len(filenames) == 0:
                 msgbox = QtWidgets.QMessageBox.warning(self.parent, "Warning - No files detected for {0} block".format(prefix),
@@ -259,9 +258,6 @@ class ExperimentState:
             self.blocks.append(self.blockPrototypes[block].copy())
 
         self.shuffleBlocks()
-
-        if (self.data.properties["debug"]):
-            print(self.blocks)
 
     def shuffleBlocks(self):
         if (self.data.properties["randomizeBlocks"]):

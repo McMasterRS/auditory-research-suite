@@ -4,11 +4,11 @@ import datetime
 import itertools
 import random
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
-from Utilities.GetPath import *
+from MusicalIllusion.Utilities.GetPath import *
 
-from Interfaces.ExperimentSetup import ExperimentSetup
-from Visualizer.Visualizer import Visualizer
-from Experiments.SIState import SIState
+from MusicalIllusion.Interfaces.ExperimentSetup import ExperimentSetup
+from MusicalIllusion.Visualizer.Visualizer import Visualizer
+from MusicalIllusion.Experiments.SIState import SIState
 
 
 class SIExperimentPanel(QtWidgets.QWidget):
@@ -80,6 +80,7 @@ class SIExperimentPanel(QtWidgets.QWidget):
         self.hsAgreement.setMaximum(self.data.properties["agreementMax"])
         self.hsAgreement.setValue(int((self.data.properties["agreementMin"] + self.data.properties["agreementMax"]) / 2.0))
 
+        # Slider tick marks
         if self.data.properties["showTickMarks"] > 0:
             self.hsQuestion.setTickInterval(self.data.properties["showTickMarks"])
             self.hsAgreement.setTickInterval(self.data.properties["showTickMarks"])
