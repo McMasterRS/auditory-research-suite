@@ -88,8 +88,8 @@ class SIExperimentPanel(QtWidgets.QWidget):
             self.hsAgreement.setTickPosition(QtWidgets.QSlider.TicksBothSides)
 
         # Hook up the sliders to their functions
-        self.hsQuestion.sliderReleased.connect(lambda: self.toggleSliders("question"))
-        self.hsAgreement.sliderReleased.connect(lambda: self.toggleSliders("agreement"))
+        self.hsQuestion.valueChanged.connect(lambda: self.toggleSliders("question"))
+        self.hsAgreement.valueChanged.connect(lambda: self.toggleSliders("agreement"))
 
         # Populate the text boxes with data
         self.setText("introScreen", "preWarmup", "warmupScreenTrial", "completion")

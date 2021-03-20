@@ -14,7 +14,7 @@ class ExperimentBase(QtWidgets.QWidget):
     def startExperiment(self, data):
         if data.propertiesVer == "toj.properties":
             self.interface = TOJExperimentPanel(self)
-        elif data.propertiesVer == "AV7B-si.properties":
+        elif data.propertiesVer == "si.properties":
             self.interface = SIExperimentPanel(self)
 
         self.interface.startExperiment(data)

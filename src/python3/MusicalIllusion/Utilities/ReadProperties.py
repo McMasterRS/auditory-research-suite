@@ -72,15 +72,11 @@ def readTojProperties(p):
         "screenHeight": "int",
 
         # Animation Options
-        # "animationPointAspect": "float",
         "animationPointSize": "float",
         "numAnimationPoints": "intArray",
         "connectDots": "bool",
-        # "animationFrameAdvance": "int",
-        # "renderCallAhead": "int",
 
         # Audio Options
-        # "audioPollWait": "int",
         "playbackGain": "float",
         "soundOffsets": "intArray",
         "audioCallAhead": "int",
@@ -105,7 +101,6 @@ def readTojProperties(p):
         "audioFileFormat": "str",
         "audioFileExtensions": "array",
         "audioFileSubDirectory": "str",
-        "synchronizeParameters": "bool",
 
         # Parameter set definitions
         "pitches": "str",
@@ -190,9 +185,6 @@ def readTojProperties(p):
         # Stim/response screen
         "testScreenTrialTitle": "str",
         "testScreenTrialText": "str",
-
-        # Response block orientation
-        "statusOrientation": "str",
 
         # Completion announcement screen
         "completionTitle": "str",

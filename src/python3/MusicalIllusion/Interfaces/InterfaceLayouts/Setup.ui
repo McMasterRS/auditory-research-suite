@@ -209,7 +209,7 @@
              </item>
              <item>
               <property name="text">
-               <string>AV7B-si.properties</string>
+               <string>si.properties</string>
               </property>
              </item>
             </widget>
