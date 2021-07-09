@@ -164,7 +164,7 @@ class SIState(ExperimentState):
                     trial["animationDelay"] = "NA"
                     trial["numDots"] = 0
                 else:
-                    os.path.basename(trial["visFile"])
+                    visFileName = os.path.basename(trial["visFile"])
 
                 csvWriter.writerow([
                     trial["exp_id"],
