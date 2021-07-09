@@ -66,7 +66,8 @@ class Visualizer():
         if not self.data.audio.isPlaying():
             self.audComplete.stop()
             self.parent.state.currentTrialData.update(self.timings)
-            self.parent.state.updateState()
+            if self.parent.data.propertiesVer == 'si.properties':
+                self.parent.state.updateState()
         return
 
     def plotData(self):
